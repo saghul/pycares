@@ -3,5 +3,4 @@
 - channel init options: domains, lookups, sock_sndbuf, sock_rcvbuf, sortlist
 - documentation
 - tests
-- package as a standalone project: pycares
 
