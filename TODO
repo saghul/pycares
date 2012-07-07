@@ -1,6 +1,5 @@
 
 - test on Windows and Linux
-- fix leak in case of error: ares_free not called!
 - channel init options: domains, lookups, sock_sndbuf, sock_rcvbuf, sortlist
 - documentation
 - tests

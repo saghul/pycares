@@ -74,7 +74,7 @@ query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int an
     int parse_status;
     char ip[INET6_ADDRSTRLEN];
     char **ptr;
-    struct hostent *hostent;
+    struct hostent *hostent = NULL;
     PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     callback = (PyObject *)arg;
@@ -114,7 +114,6 @@ query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int an
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
-    ares_free_hostent(hostent);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -126,7 +125,9 @@ callback:
     Py_XDECREF(result);
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
-
+    if (hostent) {
+        ares_free_hostent(hostent);
+    }
     Py_DECREF(callback);
     PyGILState_Release(gstate);
 }
@@ -139,7 +140,7 @@ query_aaaa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int
     int parse_status;
     char ip[INET6_ADDRSTRLEN];
     char **ptr;
-    struct hostent *hostent;
+    struct hostent *hostent = NULL;
     PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     callback = (PyObject *)arg;
@@ -179,7 +180,6 @@ query_aaaa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
-    ares_free_hostent(hostent);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -191,7 +191,9 @@ callback:
     Py_XDECREF(result);
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
-
+    if (hostent) {
+        ares_free_hostent(hostent);
+    }
     Py_DECREF(callback);
     PyGILState_Release(gstate);
 }
@@ -202,7 +204,7 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     int parse_status;
-    struct hostent *hostent;
+    struct hostent *hostent = NULL;
     PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     callback = (PyObject *)arg;
@@ -236,7 +238,6 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
     tmp = PyString_FromString(hostent->h_name);
     PyList_Append(dns_result, tmp);
     Py_DECREF(tmp);
-    ares_free_hostent(hostent);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -248,7 +249,9 @@ callback:
     Py_XDECREF(result);
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
-
+    if (hostent) {
+        ares_free_hostent(hostent);
+    }
     Py_DECREF(callback);
     PyGILState_Release(gstate);
 }
@@ -262,6 +265,7 @@ query_mx_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     struct ares_mx_reply *mx_reply, *mx_ptr;
     PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
+    mx_reply = NULL;
     callback = (PyObject *)arg;
     ASSERT(callback);
 
@@ -300,7 +304,6 @@ query_mx_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
-    ares_free_data(mx_reply);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -312,7 +315,9 @@ callback:
     Py_XDECREF(result);
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
-
+    if (mx_reply) {
+        ares_free_data(mx_reply);
+    }
     Py_DECREF(callback);
     PyGILState_Release(gstate);
 }
@@ -324,7 +329,7 @@ query_ns_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     PyGILState_STATE gstate = PyGILState_Ensure();
     int parse_status;
     char **ptr;
-    struct hostent *hostent;
+    struct hostent *hostent = NULL;
     PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     callback = (PyObject *)arg;
@@ -363,7 +368,6 @@ query_ns_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
-    ares_free_hostent(hostent);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -375,7 +379,9 @@ callback:
     Py_XDECREF(result);
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
-
+    if (hostent) {
+        ares_free_hostent(hostent);
+    }
     Py_DECREF(callback);
     PyGILState_Release(gstate);
 }
@@ -389,6 +395,7 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     struct ares_txt_reply *txt_reply, *txt_ptr;
     PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
+    txt_reply = NULL;
     callback = (PyObject *)arg;
     ASSERT(callback);
 
@@ -425,7 +432,6 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
-    ares_free_data(txt_reply);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -437,7 +443,9 @@ callback:
     Py_XDECREF(result);
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
-
+    if (txt_reply) {
+        ares_free_data(txt_reply);
+    }
     Py_DECREF(callback);
     PyGILState_Release(gstate);
 }
@@ -448,7 +456,7 @@ query_soa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     int parse_status;
-    struct ares_soa_reply *soa_reply;
+    struct ares_soa_reply *soa_reply = NULL;
     PyObject *dns_result, *errorno, *result, *callback;
 
     callback = (PyObject *)arg;
@@ -487,7 +495,6 @@ query_soa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     PyStructSequence_SET_ITEM(dns_result, 5, PyInt_FromLong((long)soa_reply->expire));
     PyStructSequence_SET_ITEM(dns_result, 6, PyInt_FromLong((long)soa_reply->minttl));
 
-    ares_free_data(soa_reply);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -499,7 +506,9 @@ callback:
     Py_XDECREF(result);
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
-
+    if (soa_reply) {
+        ares_free_data(soa_reply);
+    }
     Py_DECREF(callback);
     PyGILState_Release(gstate);
 }
@@ -513,6 +522,7 @@ query_srv_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     struct ares_srv_reply *srv_reply, *srv_ptr;
     PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
+    srv_reply = NULL;
     callback = (PyObject *)arg;
     ASSERT(callback);
 
@@ -553,7 +563,6 @@ query_srv_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
-    ares_free_data(srv_reply);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -565,7 +574,9 @@ callback:
     Py_XDECREF(result);
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
-
+    if (srv_reply) {
+        ares_free_data(srv_reply);
+    }
     Py_DECREF(callback);
     PyGILState_Release(gstate);
 }
@@ -579,6 +590,7 @@ query_naptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
     struct ares_naptr_reply *naptr_reply, *naptr_ptr;
     PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
+    naptr_reply = NULL;
     callback = (PyObject *)arg;
     ASSERT(callback);
 
@@ -621,7 +633,6 @@ query_naptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
-    ares_free_data(naptr_reply);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -633,7 +644,9 @@ callback:
     Py_XDECREF(result);
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
-
+    if (naptr_reply) {
+        ares_free_data(naptr_reply);
+    }
     Py_DECREF(callback);
     PyGILState_Release(gstate);
 }
