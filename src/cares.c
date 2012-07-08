@@ -881,6 +881,8 @@ Channel_func_gethostbyname(Channel *self, PyObject *args)
     int family;
     PyObject *callback;
 
+    CHECK_CHANNEL(self);
+
     if (!PyArg_ParseTuple(args, "siO:gethostbyname", &name, &family, &callback)) {
         return NULL;
     }
@@ -906,6 +908,8 @@ Channel_func_gethostbyaddr(Channel *self, PyObject *args)
     struct in_addr addr4;
     struct in6_addr addr6;
     PyObject *callback;
+
+    CHECK_CHANNEL(self);
 
     if (!PyArg_ParseTuple(args, "siO:gethostbyaddr", &name, &family, &callback)) {
         return NULL;
@@ -955,6 +959,8 @@ Channel_func_getnameinfo(Channel *self, PyObject *args)
     struct sockaddr_in sa4;
     struct sockaddr_in6 sa6;
     PyObject *callback;
+
+    CHECK_CHANNEL(self);
 
     if (!PyArg_ParseTuple(args, "(si)iO:getnameinfo", &addr, &port, &flags, &callback)) {
         return NULL;
