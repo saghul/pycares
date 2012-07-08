@@ -47,6 +47,10 @@ init_pycares(void)
     }
     PyCaresModule_AddObject(pycares, "errno", errno_module);
 
+    /* Exceptions */
+    PyExc_AresError = PyErr_NewException("pycares.AresError", NULL, NULL);
+    PyCaresModule_AddType(pycares, "AresError", (PyTypeObject *)PyExc_AresError);
+
     /* Cleanup ares on exit */
     Py_AtExit(_ares_cleanup);
 
