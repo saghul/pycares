@@ -1130,6 +1130,46 @@ Channel_func_timeout(Channel *self, PyObject *args)
 }
 
 
+static PyObject *
+Channel_func_getsock(Channel *self)
+{
+    int i, bitmask;
+    ares_socket_t socks[ARES_GETSOCK_MAXNUM];
+    PyObject *tpl, *rfds, *wfds, *item;
+
+    CHECK_CHANNEL(self);
+
+    tpl = PyTuple_New(2);
+    rfds = PyList_New(0);
+    wfds = PyList_New(0);
+    if (!tpl || !rfds || !wfds) {
+        PyErr_NoMemory();
+        Py_XDECREF(tpl);
+        Py_XDECREF(rfds);
+        Py_XDECREF(wfds);
+        return NULL;
+    }
+
+    bitmask = ares_getsock(self->channel, socks, ARES_GETSOCK_MAXNUM);
+    for(i=0; i < ARES_GETSOCK_MAXNUM; i++) {
+        if(ARES_GETSOCK_READABLE(bitmask, i)) {
+            item = PyInt_FromLong((long)socks[i]);
+            PyList_Append(rfds, item);
+            Py_DECREF(item);
+        }
+        if(ARES_GETSOCK_WRITABLE(bitmask, i)) {
+            item = PyInt_FromLong((long)socks[i]);
+            PyList_Append(wfds, item);
+            Py_DECREF(item);
+        }
+    }
+
+    PyTuple_SET_ITEM(tpl, 0, rfds);
+    PyTuple_SET_ITEM(tpl, 1, wfds);
+    return tpl;
+}
+
+
 static int
 set_nameservers(Channel *self, PyObject *value)
 {
@@ -1457,6 +1497,7 @@ Channel_tp_methods[] = {
     { "cancel", (PyCFunction)Channel_func_cancel, METH_NOARGS, "Cancel all pending queries on this resolver" },
     { "destroy", (PyCFunction)Channel_func_destroy, METH_NOARGS, "Destroy this channel, it will no longer be usable" },
     { "process_fd", (PyCFunction)Channel_func_process_fd, METH_VARARGS, "Process file descriptors actions" },
+    { "getsock", (PyCFunction)Channel_func_getsock, METH_NOARGS, "Set of file descriptors the application needs to poll" },
     { "set_local_ip4", (PyCFunction)Channel_func_set_local_ip4, METH_VARARGS, "Set source IPv4 address" },
     { "set_local_ip6", (PyCFunction)Channel_func_set_local_ip6, METH_VARARGS, "Set source IPv6 address" },
     { "set_local_dev", (PyCFunction)Channel_func_set_local_dev, METH_VARARGS, "Set source device name" },
