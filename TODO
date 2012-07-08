@@ -1,6 +1,4 @@
 
-- test on Windows
 - channel init options: domains, lookups, sock_sndbuf, sock_rcvbuf, sortlist
 - documentation
-- tests
 
