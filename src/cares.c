@@ -1179,31 +1179,64 @@ Channel_func_getsock(Channel *self)
 static int
 set_nameservers(Channel *self, PyObject *value)
 {
+    const char *default_encoding;
     char *server;
     int i, r, length, ret;
     struct ares_addr_node *servers;
-    PyObject *server_list = value;
-    PyObject *item;
+    Bool is_buffer;
+    Py_buffer pbuf;
+    PyObject *server_list, *item, *encoded;
 
+    is_buffer = False;
+    servers = NULL;
+    server_list = value;
+    default_encoding = PyUnicode_GetDefaultEncoding();
     ret = 0;
 
-    if (!PyList_Check(server_list)) {
-        PyErr_SetString(PyExc_TypeError, "servers argument must be a list");
+    if (!PySequence_Check(server_list)) {
+        PyErr_SetString(PyExc_TypeError, "servers argument must be a sequence");
 	return -1;
     }
 
-    length = PyList_Size(server_list);
+    length = PySequence_Size(server_list);
     servers = PyMem_Malloc(sizeof(struct ares_addr_node) * length);
+    if (!servers) {
+        PyErr_NoMemory();
+        ret = -1;
+        goto end;
+    }
 
     for (i = 0; i < length; i++) {
-        item = PyList_GetItem(server_list, i);
+        item = PySequence_GetItem(server_list, i);
         if (!item) {
             ret = -1;
             goto end;
         }
 
-        server = PyString_AsString(item);
+        if (PyUnicode_Check(item)) {
+            is_buffer = False;
+            encoded = PyUnicode_AsEncodedString(item, default_encoding, "strict");
+            if (!encoded) {
+                Py_DECREF(item);
+                ret = -1;
+                goto end;
+            }
+            server = PyBytes_AsString(encoded);
+        } else {
+            is_buffer = True;
+            if (PyObject_GetBuffer(item, &pbuf, PyBUF_CONTIG_RO) < 0) {
+                Py_DECREF(item);
+                ret = -1;
+                goto end;
+            }
+            server = pbuf.buf;
+        }
+
         if (!server) {
+            if (is_buffer) {
+                PyBuffer_Release(&pbuf);
+            }
+            Py_DECREF(item);
             ret = -1;
             goto end;
         }
@@ -1214,19 +1247,27 @@ set_nameservers(Channel *self, PyObject *value)
             servers[i].family = AF_INET6;
         } else {
             PyErr_SetString(PyExc_ValueError, "invalid IP address");
+            if (is_buffer) {
+                PyBuffer_Release(&pbuf);
+            }
+            Py_DECREF(item);
             ret = -1;
             goto end;
+        }
+
+        if (is_buffer) {
+            PyBuffer_Release(&pbuf);
         }
 
         if (i > 0) {
             servers[i-1].next = &servers[i];
         }
+
+        Py_DECREF(item);
     }
 
-    if (length > 0) {
+    if (servers) {
         servers[length-1].next = NULL;
-    } else {
-        servers = NULL;
     }
 
     r = ares_set_servers(self->channel, servers);

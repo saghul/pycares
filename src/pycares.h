@@ -5,6 +5,7 @@
 /* python */
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
+#include "bytesobject.h"
 #include "structmember.h"
 #include "structseq.h"
 
