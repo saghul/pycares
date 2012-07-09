@@ -21,10 +21,7 @@ class DNSTest(unittest2.TestCase):
                 break
             timeout = self.channel.timeout()
             if timeout == 0.0:
-                for fd in read_fds:
-                    self.channel.process_fd(fd, pycares.ARES_SOCKET_BAD)
-                for fd in write_fds:
-                    self.channel.process_fd(pycares.ARES_SOCKET_BAD, fd)
+                self.channel.process_fd(pycares.ARES_SOCKET_BAD, pycares.ARES_SOCKET_BAD)
                 continue
             rlist, wlist, xlist = select.select(read_fds, write_fds, [], timeout)
             for fd in rlist:
