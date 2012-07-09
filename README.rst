@@ -11,7 +11,7 @@ DNS requests and name resolves asynchronously.
 Documentation
 =============
 
-http://readthedocs.org/docs/pycares/ (Not yet available)
+http://readthedocs.org/docs/pycares/
 
 
 Building
