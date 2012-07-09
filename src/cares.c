@@ -1344,69 +1344,6 @@ Channel_servers_set(Channel *self, PyObject *value, void *closure)
 }
 
 
-static PyObject *
-fdset2list(fd_set set)
-{
-    int i;
-    PyObject *lst, *item;
-    
-    lst = PyList_New(0);
-    if (!lst) {
-        PyErr_NoMemory();
-        return NULL;
-    }
-
-    for (i = 0; i < FD_SETSIZE; i++) {
-        if (FD_ISSET(i, &set)) {
-            item = PyInt_FromLong((long)i);
-            PyList_Append(lst, item);
-            Py_DECREF(item);
-        }
-    }
-    return lst;
-}
-
-static PyObject *
-Channel_fds_get(Channel *self, void *closure)
-{
-    int nfds;
-    fd_set read_fds, write_fds;
-    PyObject *tpl, *rfds, *wfds;
-
-    UNUSED_ARG(closure);
-    CHECK_CHANNEL(self);
-
-    tpl = PyTuple_New(2);
-    if (!tpl) {
-        PyErr_NoMemory();
-        return NULL;
-    }
-
-    FD_ZERO(&read_fds);
-    FD_ZERO(&write_fds);
-
-    nfds = ares_fds(self->channel, &read_fds, &write_fds);
-    if (nfds == 0) {
-        rfds = PyList_New(0);
-        wfds = PyList_New(0);
-    } else {
-        rfds = fdset2list(read_fds);
-        wfds = fdset2list(write_fds);
-    }
-
-    if (!rfds || !wfds) {
-        Py_DECREF(tpl);
-        Py_XDECREF(rfds);
-        Py_XDECREF(wfds);
-        return NULL;
-    }
-
-    PyTuple_SET_ITEM(tpl, 0, rfds);
-    PyTuple_SET_ITEM(tpl, 1, wfds);
-    return tpl;
-}
-
-
 static int
 Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
 {
@@ -1554,7 +1491,6 @@ Channel_tp_methods[] = {
 
 
 static PyGetSetDef Channel_tp_getsets[] = {
-    {"fds", (getter)Channel_fds_get, 0, "Set of file descriptors the application needs to poll", NULL},
     {"servers", (getter)Channel_servers_get, (setter)Channel_servers_set, "DNS nameservers", NULL},
     {NULL}
 };
