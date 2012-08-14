@@ -1,3 +1,10 @@
+Version 0.2.0
+=============
+ - Fixed checking port number boundaries
+ - Refactored unicode support
+ - Encode given hostnames with idna encoding
+   for gethostbyname and query
+
 Version 0.1.0
 =============
  - Initial release
