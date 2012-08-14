@@ -13,7 +13,6 @@
 #if PY_MAJOR_VERSION >= 3
     #define PYCARES_PYTHON3
     #define PyInt_FromLong PyLong_FromLong
-    #define PyString_FromString PyUnicode_FromString
 #endif
 
 /* c-ares */

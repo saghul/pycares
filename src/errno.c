@@ -4,7 +4,7 @@
 static void
 inscode(PyObject *module_dict, PyObject *other_dict, const char *name, int code)
 {
-    PyObject *error_name = PyString_FromString(name);
+    PyObject *error_name = Py_BuildValue("s", name);
     PyObject *error_code = PyInt_FromLong((long) code);
 
     /* Don't bother checking for errors; they'll be caught at the end
@@ -31,7 +31,7 @@ Errno_func_strerror(PyObject *obj, PyObject *args)
         return NULL;
     }
 
-    return PyString_FromString(ares_strerror(errorno));
+    return Py_BuildValue("s", ares_strerror(errorno));
 }
 
 
