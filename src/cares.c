@@ -792,17 +792,18 @@ Channel_func_query(Channel *self, PyObject *args)
 {
     char *name;
     int query_type;
-    PyObject *callback;
+    PyObject *callback, *ret;
 
     CHECK_CHANNEL(self);
 
-    if (!PyArg_ParseTuple(args, "siO:query", &name, &query_type, &callback)) {
+    if (!PyArg_ParseTuple(args, "etiO:query", "idna", &name, &query_type, &callback)) {
         return NULL;
     }
 
     if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
+        ret = NULL;
+        goto finally;
     }
 
     Py_INCREF(callback);
@@ -866,11 +867,16 @@ Channel_func_query(Channel *self, PyObject *args)
         {
             Py_DECREF(callback);
             PyErr_SetString(PyExc_AresError, "invalid query type specified");
-            return NULL;
+            ret = NULL;
+            goto finally;
         }
     }
+    ret = Py_None;
 
-    Py_RETURN_NONE;
+finally:
+    PyMem_Free(name);
+    Py_XINCREF(ret);
+    return ret;
 }
 
 
@@ -879,23 +885,28 @@ Channel_func_gethostbyname(Channel *self, PyObject *args)
 {
     char *name;
     int family;
-    PyObject *callback;
+    PyObject *callback, *ret;
 
     CHECK_CHANNEL(self);
 
-    if (!PyArg_ParseTuple(args, "siO:gethostbyname", &name, &family, &callback)) {
+    if (!PyArg_ParseTuple(args, "etiO:gethostbyname", "idna", &name, &family, &callback)) {
         return NULL;
     }
 
     if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
+        ret = NULL;
+        goto finally;
     }
 
     Py_INCREF(callback);
     ares_gethostbyname(self->channel, name, family, &host_cb, (void *)callback);
+    ret = Py_None;
 
-    Py_RETURN_NONE;
+finally:
+    PyMem_Free(name);
+    Py_XINCREF(ret);
+    return ret;
 }
 
 
@@ -913,7 +924,7 @@ Channel_func_gethostbyaddr(Channel *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "siO:gethostbyaddr", &name, &family, &callback)) {
         return NULL;
-        }
+    }
 
     if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
