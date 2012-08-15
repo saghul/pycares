@@ -32,7 +32,13 @@ class DNSTest(unittest2.TestCase):
     def test_gethostbyaddr(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
-        self.channel.gethostbyaddr('127.0.0.1', socket.AF_INET, cb)
+        self.channel.gethostbyaddr('127.0.0.1', cb)
+        self.wait()
+
+    def test_gethostbyaddr6(self):
+        def cb(result, errorno):
+            self.assertEqual(errorno, None)
+        self.channel.gethostbyaddr('::1', cb)
         self.wait()
 
     def test_gethostbyname(self):

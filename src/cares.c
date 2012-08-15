@@ -922,7 +922,7 @@ Channel_func_gethostbyaddr(Channel *self, PyObject *args)
 
     CHECK_CHANNEL(self);
 
-    if (!PyArg_ParseTuple(args, "siO:gethostbyaddr", &name, &family, &callback)) {
+    if (!PyArg_ParseTuple(args, "sO:gethostbyaddr", &name, &callback)) {
         return NULL;
     }
 
@@ -931,24 +931,16 @@ Channel_func_gethostbyaddr(Channel *self, PyObject *args)
         return NULL;
     }
 
-    if (family == AF_INET) {
-        if (pycares_inet_pton(AF_INET, name, &addr4) == 1) {
-            length = sizeof(struct in_addr);
-            address = (void *)&addr4;
-        } else {
-            PyErr_SetString(PyExc_ValueError, "invalid IP address");
-            return NULL;
-        }
-    } else if (family == AF_INET6) {
-        if (pycares_inet_pton(AF_INET6, name, &addr6) == 1) {
-            length = sizeof(struct in6_addr);
-            address = (void *)&addr6;
-        } else {
-            PyErr_SetString(PyExc_ValueError, "invalid IP address");
-            return NULL;
-        }
+    if (pycares_inet_pton(AF_INET, name, &addr4) == 1) {
+        length = sizeof(struct in_addr);
+        address = (void *)&addr4;
+        family = AF_INET;
+    } else if (pycares_inet_pton(AF_INET6, name, &addr6) == 1) {
+        length = sizeof(struct in6_addr);
+        address = (void *)&addr6;
+        family = AF_INET6;
     } else {
-        PyErr_SetString(PyExc_ValueError, "invalid address family");
+        PyErr_SetString(PyExc_ValueError, "invalid IP address");
         return NULL;
     }
 
