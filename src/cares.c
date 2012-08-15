@@ -1,8 +1,14 @@
 
-#ifndef PYCARES_WINDOWS
-    #include <netdb.h>
-#else
+#ifdef PYCARES_WINDOWS
     #include <winsock.h>
+    #include <winsock2.h>
+    #include "inet_net_pton.h"
+    #include "inet_ntop.h"
+#else /* __POSIX__ */
+    #include <arpa/inet.h>
+    #include <netdb.h>
+    #define ares_inet_ntop(w,x,y,z) inet_ntop(w,x,y,z)
+    #define ares_inet_pton(x,y,z) inet_pton(x,y,z)
 #endif
 #include "nameser.h"
 
