@@ -18,6 +18,8 @@
 /* c-ares */
 #define CARES_STATICLIB 1
 #include "ares.h"
+#include "inet_net_pton.h"
+#include "inet_ntop.h"
 
 /* Custom types */
 typedef int Bool;
@@ -45,17 +47,6 @@ typedef int Bool;
         }                                                                   \
     } while(0)                                                              \
 
-#ifdef PYCARES_WINDOWS
-    #include <inet_net_pton.h>
-    #include <inet_ntop.h>
-    #define pycares_inet_pton ares_inet_pton
-    #define pycares_inet_ntop ares_inet_ntop
-#else /* __POSIX__ */
-    #include <arpa/inet.h>
-    #define pycares_inet_pton inet_pton
-    #define pycares_inet_ntop inet_ntop
-#endif
-
 #define CHECK_CHANNEL(ch)                                                           \
     do {                                                                            \
         if (!ch->channel) {                                                         \
@@ -72,6 +63,14 @@ typedef int Bool;
             Py_DECREF(exc_data);                                                    \
         }                                                                           \
     } while(0)                                                                      \
+
+
+/* Needed includes */
+#ifdef PYCARES_WINDOWS
+    #include <winsock2.h>
+#else /* __POSIX__ */
+    #include <arpa/inet.h>
+#endif
 
 
 /* Python types */

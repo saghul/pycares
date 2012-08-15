@@ -31,7 +31,7 @@ struct sockaddr_in6 uv_ip6_addr(const char* ip, int port) {
 
     addr.sin6_family = AF_INET6;
     addr.sin6_port = htons(port);
-    pycares_inet_pton(AF_INET6, ip, &addr.sin6_addr);
+    ares_inet_pton(AF_INET6, ip, &addr.sin6_addr);
 
     return addr;
 }
@@ -106,7 +106,7 @@ query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int an
     }
 
     for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
-        pycares_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
+        ares_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
         tmp = Py_BuildValue("s", ip);
         if (tmp == NULL) {
             break;
@@ -172,7 +172,7 @@ query_aaaa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int
     }
 
     for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
-        pycares_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
+        ares_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
         tmp = Py_BuildValue("s", ip);
         if (tmp == NULL) {
             break;
@@ -698,10 +698,10 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
     }
     for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
         if (hostent->h_addrtype == AF_INET) {
-            pycares_inet_ntop(AF_INET, *ptr, ip, INET_ADDRSTRLEN);
+            ares_inet_ntop(AF_INET, *ptr, ip, INET_ADDRSTRLEN);
             tmp = Py_BuildValue("s", ip);
         } else if (hostent->h_addrtype == AF_INET6) {
-            pycares_inet_ntop(AF_INET6, *ptr, ip, INET6_ADDRSTRLEN);
+            ares_inet_ntop(AF_INET6, *ptr, ip, INET6_ADDRSTRLEN);
             tmp = Py_BuildValue("s", ip);
         } else {
             continue;
@@ -931,11 +931,11 @@ Channel_func_gethostbyaddr(Channel *self, PyObject *args)
         return NULL;
     }
 
-    if (pycares_inet_pton(AF_INET, name, &addr4) == 1) {
+    if (ares_inet_pton(AF_INET, name, &addr4) == 1) {
         length = sizeof(struct in_addr);
         address = (void *)&addr4;
         family = AF_INET;
-    } else if (pycares_inet_pton(AF_INET6, name, &addr6) == 1) {
+    } else if (ares_inet_pton(AF_INET6, name, &addr6) == 1) {
         length = sizeof(struct in6_addr);
         address = (void *)&addr6;
         family = AF_INET6;
@@ -979,11 +979,11 @@ Channel_func_getnameinfo(Channel *self, PyObject *args)
         return NULL;
     }
 
-    if (pycares_inet_pton(AF_INET, addr, &addr4) == 1) {
+    if (ares_inet_pton(AF_INET, addr, &addr4) == 1) {
         sa4 = uv_ip4_addr(addr, port);
         sa = (struct sockaddr *)&sa4;
         length = sizeof(struct sockaddr_in);
-    } else if (pycares_inet_pton(AF_INET6, addr, &addr6) == 1) {
+    } else if (ares_inet_pton(AF_INET6, addr, &addr6) == 1) {
         sa6 = uv_ip6_addr(addr, port);
         sa = (struct sockaddr *)&sa6;
         length = sizeof(struct sockaddr_in6);
@@ -1030,7 +1030,7 @@ Channel_func_set_local_ip4(Channel *self, PyObject *args)
         return NULL;
     }
 
-    if (pycares_inet_pton(AF_INET, ip, &addr4) == 1) {
+    if (ares_inet_pton(AF_INET, ip, &addr4) == 1) {
         ares_set_local_ip4(self->channel, ntohl(addr4.s_addr));
     } else {
         PyErr_SetString(PyExc_ValueError, "invalid IP address");
@@ -1053,7 +1053,7 @@ Channel_func_set_local_ip6(Channel *self, PyObject *args)
         return NULL;
     }
 
-    if (pycares_inet_pton(AF_INET6, ip, &addr6) == 1) {
+    if (ares_inet_pton(AF_INET6, ip, &addr6) == 1) {
         ares_set_local_ip6(self->channel, addr6.s6_addr);
     } else {
         PyErr_SetString(PyExc_ValueError, "invalid IP address");
@@ -1244,9 +1244,9 @@ set_nameservers(Channel *self, PyObject *value)
             goto end;
         }
 
-        if (pycares_inet_pton(AF_INET, server, &servers[i].addr.addr4) == 1) {
+        if (ares_inet_pton(AF_INET, server, &servers[i].addr.addr4) == 1) {
             servers[i].family = AF_INET;
-        } else if (pycares_inet_pton(AF_INET6, server, &servers[i].addr.addr6) == 1) {
+        } else if (ares_inet_pton(AF_INET6, server, &servers[i].addr.addr6) == 1) {
             servers[i].family = AF_INET6;
         } else {
             PyErr_SetString(PyExc_ValueError, "invalid IP address");
@@ -1315,10 +1315,10 @@ Channel_servers_get(Channel *self, void *closure)
 
     for (server = servers; server != NULL; server = server->next) {
         if (server->family == AF_INET) {
-            pycares_inet_ntop(AF_INET, &(server->addr.addr4), ip, INET_ADDRSTRLEN);
+            ares_inet_ntop(AF_INET, &(server->addr.addr4), ip, INET_ADDRSTRLEN);
             tmp = Py_BuildValue("s", ip);
         } else {
-            pycares_inet_ntop(AF_INET6, &(server->addr.addr6), ip, INET6_ADDRSTRLEN);
+            ares_inet_ntop(AF_INET6, &(server->addr.addr6), ip, INET6_ADDRSTRLEN);
             tmp = Py_BuildValue("s", ip);
         }
         if (tmp == NULL) {
