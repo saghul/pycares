@@ -57,11 +57,9 @@ Ares Channel
         Callback signature: ``callback(result, errorno)``
 
 
-    .. py:method:: gethostbyaddr(name, family, callback)
+    .. py:method:: gethostbyaddr(name, callback)
 
         :param string name: Name to query.
-
-        :param int family: Socket family.
 
         :param callable callback: Callback to be called with the result of the query.
 
