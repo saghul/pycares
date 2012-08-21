@@ -1,3 +1,10 @@
+Version 0.3.0
+=============
+ - Simplified gethostbyaddr interface
+ - Added reverse_address method
+ - Added PTR query support
+ - Fixed pyuv resolver example
+
 Version 0.2.0
 =============
  - Fixed checking port number boundaries
