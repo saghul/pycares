@@ -137,6 +137,11 @@ class DNSTest(unittest2.TestCase):
         self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
         self.wait()
 
+    def test_reverse_address(self):
+        s = '1.2.3.4'
+        expected = '4.3.2.1.in-addr.arpa'
+        self.assertEqual(pycares.reverse_address(s), expected)
+
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
