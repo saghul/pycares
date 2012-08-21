@@ -394,6 +394,72 @@ callback:
 
 
 static void
+query_ptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int answer_len)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    int parse_status;
+    char *addr = "0.0.0.0";
+    char **ptr;
+    struct hostent *hostent = NULL;
+    PyObject *dns_result, *errorno, *tmp, *result, *callback;
+
+    callback = (PyObject *)arg;
+    ASSERT(callback);
+
+    if (status != ARES_SUCCESS) {
+        errorno = PyInt_FromLong((long)status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    /* addr is only used to populate the hostent struct, it's not used to validate the response */
+    parse_status = ares_parse_ptr_reply(answer_buf, answer_len, addr, sizeof(addr)-1, AF_INET, &hostent);
+    if (parse_status != ARES_SUCCESS) {
+        errorno = PyInt_FromLong((long)parse_status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    dns_result = PyList_New(0);
+    if (!dns_result) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        errorno = PyInt_FromLong((long)ARES_ENOMEM);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    for (ptr = hostent->h_aliases; *ptr != NULL; ptr++) {
+        tmp = Py_BuildValue("s", *ptr);
+        if (tmp == NULL) {
+            break;
+        }
+        PyList_Append(dns_result, tmp);
+        Py_DECREF(tmp);
+    }
+    errorno = Py_None;
+    Py_INCREF(Py_None);
+
+callback:
+    result = PyObject_CallFunctionObjArgs(callback, dns_result, errorno, NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(callback);
+    }
+    Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
+    if (hostent) {
+        ares_free_hostent(hostent);
+    }
+    Py_DECREF(callback);
+    PyGILState_Release(gstate);
+}
+
+
+static void
 query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int answer_len)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
@@ -848,6 +914,12 @@ Channel_func_query(Channel *self, PyObject *args)
         case T_NS:
         {
             ares_query(self->channel, name, C_IN, T_NS, &query_ns_cb, (void *)callback);
+            break;
+        }
+
+        case T_PTR:
+        {
+            ares_query(self->channel, name, C_IN, T_PTR, &query_ptr_cb, (void *)callback);
             break;
         }
 

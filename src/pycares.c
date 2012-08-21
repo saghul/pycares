@@ -159,6 +159,7 @@ init_pycares(void)
     PyModule_AddIntConstant(pycares, "QUERY_TYPE_MX", T_MX);
     PyModule_AddIntConstant(pycares, "QUERY_TYPE_NAPTR", T_NAPTR);
     PyModule_AddIntConstant(pycares, "QUERY_TYPE_NS", T_NS);
+    PyModule_AddIntConstant(pycares, "QUERY_TYPE_PTR", T_PTR);
     PyModule_AddIntConstant(pycares, "QUERY_TYPE_SOA", T_SOA);
     PyModule_AddIntConstant(pycares, "QUERY_TYPE_SRV", T_SRV);
     PyModule_AddIntConstant(pycares, "QUERY_TYPE_TXT", T_TXT);
