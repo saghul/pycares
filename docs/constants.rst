@@ -18,7 +18,7 @@ Channel flags
 .. py:data:: pycares.ARES_FLAG_NOCHECKRESP
 
 .. seealso::
-    `c-ares documentation <http://c-ares.haxx.se/ares_init.html>`_
+    `c-ares documentation for ares_init <http://c-ares.haxx.se/ares_init.html>`_
 
 
 Nameinfo constants
@@ -41,7 +41,7 @@ Nameinfo constants
 .. py:data:: pycares.ARES_NI_IDN_USE_STD3_ASCII_RULES
 
 .. seealso::
-    `c-ares documentation <http://c-ares.haxx.se/ares_getnameinfo.html>`_
+    `c-ares documentation for ares_getnameinfo <http://c-ares.haxx.se/ares_getnameinfo.html>`_
 
 Others
 ======
