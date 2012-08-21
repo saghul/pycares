@@ -6,8 +6,7 @@ import socket
 
 class DNSResolver(object):
     def __init__(self, loop):
-        self.timeout = 3.0
-        self._channel = pycares.Channel(timeout=self.timeout, sock_state_cb=self._sock_state_cb)
+        self._channel = pycares.Channel(sock_state_cb=self._sock_state_cb)
         self.loop = loop
         self._timer = pyuv.Timer(self.loop)
         self._fd_map = {}
@@ -19,10 +18,10 @@ class DNSResolver(object):
                 handle = pyuv.Poll(self.loop, fd)
                 handle.fd = fd
                 self._fd_map[fd] = handle
-                if not self._timer.active:
-                    self._timer.start(self._timer_cb, self.timeout, self.timeout)
             else:
                 handle = self._fd_map[fd]
+            if not self._timer.active:
+                self._timer.start(self._timer_cb, 1.0, 1.0)
             handle.start(pyuv.UV_READABLE if readable else 0 | pyuv.UV_WRITABLE if writable else 0, self._poll_cb)
         else:
             # Socket is now closed
