@@ -99,6 +99,7 @@ Ares Channel
             - ``QUERY_TYPE_MX``
             - ``QUERY_TYPE_NAPTR``
             - ``QUERY_TYPE_NS``
+            - ``QUERY_TYPE_PTR``
             - ``QUERY_TYPE_SOA``
             - ``QUERY_TYPE_SRV``
             - ``QUERY_TYPE_TXT``
