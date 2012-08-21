@@ -22,6 +22,7 @@ Objects
     :titlesonly:
 
     channel
+    utils
     constants
     errno
 
