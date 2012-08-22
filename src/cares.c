@@ -1429,22 +1429,24 @@ static int
 Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
 {
     int r, flags, tries, ndots, tcp_port, udp_port, optmask;
+    char *lookups;
     double timeout;
     struct ares_options options;
-    PyObject *servers, *domains, *lookups, *sock_state_cb;
+    PyObject *servers, *domains, *sock_state_cb;
 
     static char *kwlist[] = {"flags", "timeout", "tries", "ndots", "tcp_port", "udp_port", "servers", "domains", "lookups", "sock_state_cb", NULL};
 
     optmask = 0;
     flags = tries = ndots = tcp_port = udp_port = timeout = -1;
-    servers = domains = lookups = sock_state_cb = NULL;
+    lookups = NULL;
+    servers = domains = sock_state_cb = NULL;
 
     if (self->channel) {
         PyErr_SetString(PyExc_AresError, "Object already initialized");
         return -1;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|idiiiiOOOO:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers, &domains, &lookups, &sock_state_cb)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|idiiiiOOsO:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers, &domains, &lookups, &sock_state_cb)) {
         return -1;
     }
 
@@ -1492,6 +1494,10 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
         optmask |= ARES_OPT_SOCK_STATE_CB;
         Py_INCREF(sock_state_cb);
         self->sock_state_cb = sock_state_cb;
+    }
+    if (lookups) {
+        options.lookups = lookups;
+        optmask |= ARES_OPT_LOOKUPS;
     }
 
     r = ares_init_options(&self->channel, &options, optmask);
