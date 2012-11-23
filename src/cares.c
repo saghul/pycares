@@ -1178,14 +1178,14 @@ Channel_func_process_fd(Channel *self, PyObject *args)
 static inline void
 timeval_from_double(double d, struct timeval *tv)
 {
-    tv->tv_sec = floor(d);
-    tv->tv_usec = fmod(d, 1.0) * 1000000.0;
+    tv->tv_sec = (long)floor(d);
+    tv->tv_usec = (long)(fmod(d, 1.0) * 1000000.0);
 }
 
 static inline double
 double_from_timeval(struct timeval *tv)
 {
-    return tv->tv_sec + (double)(tv->tv_usec / 1000000.0);
+    return (double)tv->tv_sec + (double)(tv->tv_usec / 1000000.0);
 }
 
 static PyObject *
@@ -1437,7 +1437,8 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     static char *kwlist[] = {"flags", "timeout", "tries", "ndots", "tcp_port", "udp_port", "servers", "domains", "lookups", "sock_state_cb", NULL};
 
     optmask = 0;
-    flags = tries = ndots = tcp_port = udp_port = timeout = -1;
+    flags = tries = ndots = tcp_port = udp_port = -1;
+    timeout = -1.0;
     lookups = NULL;
     servers = domains = sock_state_cb = NULL;
 
