@@ -61,17 +61,25 @@ class cares_build_ext(build_ext):
             self.libraries.append('iphlpapi')
             self.libraries.append('psapi')
             self.libraries.append('ws2_32')
+            self.libraries.append('advapi32')
 
     def build_cares(self):
         #self.debug_mode =  bool(self.debug) or hasattr(sys, 'gettotalrefcount')
+        win32_msvc = self.compiler.compiler_type == 'msvc'
         def build():
             cflags = '-fPIC'
             env = os.environ.copy()
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building c-ares...')
-            exec_process(['make', 'libcares.a'], cwd=self.cares_dir, env=env)
+            if win32_msvc:
+                exec_process(['nmake', '/f', 'Makefile.msvc'], cwd=self.cares_dir, env=env)
+            else:
+                exec_process(['make', 'libcares.a'], cwd=self.cares_dir, env=env)
         def clean():
-            exec_process(['make', 'clean'], cwd=self.cares_dir)
+            if win32_msvc:
+                exec_process(['nmake', '/f', 'Makefile.msvc', 'clean'], cwd=self.cares_dir, env=env)
+            else:
+                exec_process(['make', 'clean'], cwd=self.cares_dir)
         if self.cares_clean_compile:
             clean()
         if not os.path.exists(os.path.join(self.cares_dir, 'libcares.a')):
