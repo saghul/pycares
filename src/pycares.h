@@ -36,6 +36,11 @@ typedef int Bool;
     #define PYCARES_WINDOWS
 #endif
 
+#if defined(_MSC_VER)
+    #define __func__ __FUNCTION__
+    #define inline __inline
+#endif
+
 #define ASSERT(x)                                                           \
     do {                                                                    \
         if (!(x)) {                                                         \
