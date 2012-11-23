@@ -1,7 +1,7 @@
 
-===================================
-pycares: Python interface to c-ares
-===================================
+====================================
+pycares: Python interface for c-ares
+====================================
 
 .. image:: https://secure.travis-ci.org/saghul/pycares.png?branch=master
     :target: http://travis-ci.org/saghul/pycares
@@ -31,11 +31,16 @@ Mac OSX:
 ::
 
     (XCode needs to be installed)
-    export CC="gcc -isysroot /Developer/SDKs/MacOSX10.6.sdk"
     export ARCHFLAGS="-arch x86_64"
     ./build_inplace
 
-Microsoft Windows:
+Microsoft Windows (with Visual Studio 2008):
+
+::
+
+    ./build_inplace
+
+Microsoft Windows (with MinGW, not recommended):
 
 ::
 
@@ -50,12 +55,12 @@ There are several ways of running the test ruite:
 
 - Run the test with the current Python interpreter:
 
- From the toplevel directory, run: `nosetests -v -w tests/`
+  From the toplevel directory, run: ``nosetests -v -w tests/``
 
 - Use Tox to run the test suite in several virtualenvs with several interpreters
 
- From the toplevel directory, run: `tox -e py26,py27,py32` this will run the test suite
- on Python 2.6, 2.7 and 3.2 (you'll need to have them installed beforehand)
+  From the toplevel directory, run: ``tox -e py26,py27,py32`` this will run the test suite
+  on Python 2.6, 2.7 and 3.2 (you'll need to have them installed beforehand)
 
 
 Author
