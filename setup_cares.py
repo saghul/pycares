@@ -47,6 +47,10 @@ class cares_build_ext(build_ext):
             # Dirty hack to avoid linking with more than one C runtime when using MinGW
             self.compiler.dll_libraries = [lib for lib in self.compiler.dll_libraries if not lib.startswith('msvcr')]
         self.force = self.cares_clean_compile
+        if self.compiler.compiler_type == 'msvc':
+            self.cares_lib = os.path.join(self.cares_dir, 'libcares.a')
+        else:
+            self.cares_lib = os.path.join(self.cares_dir, 'cares.lib')
         self.build_cares()
         build_ext.build_extensions(self)
 
@@ -72,17 +76,17 @@ class cares_build_ext(build_ext):
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building c-ares...')
             if win32_msvc:
-                exec_process(['nmake', '/f', 'Makefile.msvc'], cwd=self.cares_dir, env=env)
+                exec_process('cmd.exe /C vcbuild.bat', cwd=self.cares_dir, env=env, shell=True)
             else:
                 exec_process(['make', 'libcares.a'], cwd=self.cares_dir, env=env)
         def clean():
             if win32_msvc:
-                exec_process(['nmake', '/f', 'Makefile.msvc', 'clean'], cwd=self.cares_dir, env=env)
+                exec_process('cmd.exe /C vcbuild.bat clean', cwd=self.cares_dir, env=env, shell=True)
             else:
                 exec_process(['make', 'clean'], cwd=self.cares_dir)
         if self.cares_clean_compile:
             clean()
-        if not os.path.exists(os.path.join(self.cares_dir, 'libcares.a')):
+        if not os.path.exists(self.cares_lib):
             log.info('c-ares needs to be compiled.')
             build()
         else:
