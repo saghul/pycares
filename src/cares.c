@@ -1425,11 +1425,71 @@ Channel_servers_set(Channel *self, PyObject *value, void *closure)
 }
 
 
+static void process_domains(PyObject *domains, char ***rdomains, int *ndomains)
+{
+    Py_ssize_t i, n;
+    PyObject *item;
+    char **ptr, **c_domains;
+    char *arg_str, *tmp_str;
+
+    c_domains = NULL;
+
+    *rdomains = NULL;
+    *ndomains = 0;
+
+    n = PySequence_Length(domains);
+    if (n == 0) {
+        return;
+    }
+    c_domains = (char **)PyMem_Malloc(sizeof(char *) * n);
+    if (!c_domains) {
+        PyErr_NoMemory();
+        goto cleanup;
+    }
+    i = 0;
+    while (i < n) {
+        item = PySequence_GetItem(domains, i);
+#ifdef PYCARES_PYTHON3
+        if (!item || !PyArg_Parse(item, "y;args contains a non-string value", &arg_str)) {
+#else
+        if (!item || !PyArg_Parse(item, "s;args contains a non-string value", &arg_str)) {
+#endif
+            Py_XDECREF(item);
+            goto cleanup;
+        }
+        Py_DECREF(item);
+        tmp_str = (char *) PyMem_Malloc(strlen(arg_str) + 1);
+        if (!tmp_str) {
+            PyErr_NoMemory();
+            goto cleanup;
+        }
+        strcpy(tmp_str, arg_str);
+        c_domains[i] = tmp_str;
+        i++;
+    }
+
+    *rdomains = c_domains;
+    *ndomains = n;
+    return;
+
+cleanup:
+    *rdomains = NULL;
+    *ndomains = -1;
+    if (c_domains) {
+        for (ptr = c_domains; *ptr != NULL; ptr++) {
+            PyMem_Free(*ptr);
+        }
+        PyMem_Free(c_domains);
+    }
+}
+
+
 static int
 Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
 {
-    int r, flags, tries, ndots, tcp_port, udp_port, optmask;
+    int r, flags, tries, ndots, tcp_port, udp_port, optmask, ndomains;
     char *lookups;
+    char **c_domains;
     double timeout;
     struct ares_options options;
     PyObject *servers, *domains, *sock_state_cb;
@@ -1448,6 +1508,11 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     }
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|idiiiiOOsO:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers, &domains, &lookups, &sock_state_cb)) {
+        return -1;
+    }
+
+    if (!PySequence_Check(domains)) {
+        PyErr_SetString(PyExc_TypeError, "domains must be sequence");
         return -1;
     }
 
@@ -1499,6 +1564,15 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     if (lookups) {
         options.lookups = lookups;
         optmask |= ARES_OPT_LOOKUPS;
+    }
+    if (domains) {
+        process_domains(domains, &c_domains, &ndomains);
+        if (ndomains == -1) {
+            goto error;
+        }
+        options.domains = c_domains;
+        options.ndomains = ndomains;
+        optmask |= ARES_OPT_DOMAINS;
     }
 
     r = ares_init_options(&self->channel, &options, optmask);
