@@ -1511,7 +1511,7 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    if (!PySequence_Check(domains)) {
+    if (domains && !PySequence_Check(domains)) {
         PyErr_SetString(PyExc_TypeError, "domains must be sequence");
         return -1;
     }
