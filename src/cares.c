@@ -1459,17 +1459,18 @@ cleanup:
 static int
 Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
 {
-    int r, flags, tries, ndots, tcp_port, udp_port, optmask, ndomains;
+    int r, flags, tries, ndots, tcp_port, udp_port, optmask, ndomains, socket_send_buffer_size, socket_receive_buffer_size;
     char *lookups;
     char **c_domains;
     double timeout;
     struct ares_options options;
     PyObject *servers, *domains, *sock_state_cb;
 
-    static char *kwlist[] = {"flags", "timeout", "tries", "ndots", "tcp_port", "udp_port", "servers", "domains", "lookups", "sock_state_cb", NULL};
+    static char *kwlist[] = {"flags", "timeout", "tries", "ndots", "tcp_port", "udp_port",
+                             "servers", "domains", "lookups", "sock_state_cb", "socket_send_buffer_size", "socket_receive_buffer_size", NULL};
 
     optmask = 0;
-    flags = tries = ndots = tcp_port = udp_port = -1;
+    flags = tries = ndots = tcp_port = udp_port = socket_send_buffer_size = socket_receive_buffer_size = -1;
     timeout = -1.0;
     lookups = NULL;
     c_domains = NULL;
@@ -1480,7 +1481,8 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|idiiiiOOsO:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers, &domains, &lookups, &sock_state_cb)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|idiiiiOOsOii:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers,
+                                                                                     &domains, &lookups, &sock_state_cb, &socket_send_buffer_size, &socket_receive_buffer_size)) {
         return -1;
     }
 
@@ -1521,6 +1523,14 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     if (udp_port != -1) {
         options.udp_port = udp_port;
         optmask |= ARES_OPT_UDP_PORT;
+    }
+    if (socket_send_buffer_size != -1) {
+        options.socket_send_buffer_size = socket_send_buffer_size;
+        optmask |= ARES_OPT_SOCK_SNDBUF;
+    }
+    if (socket_receive_buffer_size != -1) {
+        options.socket_receive_buffer_size = socket_receive_buffer_size;
+        optmask |= ARES_OPT_SOCK_RCVBUF;
     }
     if (sock_state_cb) {
         options.sock_state_cb = ares__sock_state_cb;
