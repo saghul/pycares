@@ -1097,41 +1097,21 @@ Channel_func_destroy(Channel *self)
 
 
 static PyObject *
-Channel_func_set_local_ip4(Channel *self, PyObject *args)
+Channel_func_set_local_ip(Channel *self, PyObject *args)
 {
     char *ip;
     struct in_addr addr4;
+    struct in6_addr addr6;
 
     CHECK_CHANNEL(self);
 
-    if (!PyArg_ParseTuple(args, "s:set_local_ip4", &ip)) {
+    if (!PyArg_ParseTuple(args, "s:set_local_ip", &ip)) {
         return NULL;
     }
 
     if (ares_inet_pton(AF_INET, ip, &addr4) == 1) {
         ares_set_local_ip4(self->channel, ntohl(addr4.s_addr));
-    } else {
-        PyErr_SetString(PyExc_ValueError, "invalid IP address");
-        return NULL;
-    }
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-Channel_func_set_local_ip6(Channel *self, PyObject *args)
-{
-    char *ip;
-    struct in6_addr addr6;
-
-    CHECK_CHANNEL(self);
-
-    if (!PyArg_ParseTuple(args, "s:set_local_ip6", &ip)) {
-        return NULL;
-    }
-
-    if (ares_inet_pton(AF_INET6, ip, &addr6) == 1) {
+    } else if (ares_inet_pton(AF_INET6, ip, &addr6) == 1) {
         ares_set_local_ip6(self->channel, addr6.s6_addr);
     } else {
         PyErr_SetString(PyExc_ValueError, "invalid IP address");
@@ -1635,8 +1615,7 @@ Channel_tp_methods[] = {
     { "destroy", (PyCFunction)Channel_func_destroy, METH_NOARGS, "Destroy this channel, it will no longer be usable" },
     { "process_fd", (PyCFunction)Channel_func_process_fd, METH_VARARGS, "Process file descriptors actions" },
     { "getsock", (PyCFunction)Channel_func_getsock, METH_NOARGS, "Set of file descriptors the application needs to poll" },
-    { "set_local_ip4", (PyCFunction)Channel_func_set_local_ip4, METH_VARARGS, "Set source IPv4 address" },
-    { "set_local_ip6", (PyCFunction)Channel_func_set_local_ip6, METH_VARARGS, "Set source IPv6 address" },
+    { "set_local_ip", (PyCFunction)Channel_func_set_local_ip, METH_VARARGS, "Set source IP address" },
     { "set_local_dev", (PyCFunction)Channel_func_set_local_dev, METH_VARARGS, "Set source device name" },
     { "timeout", (PyCFunction)Channel_func_timeout, METH_VARARGS, "Determine polling timeout" },
     { NULL }
