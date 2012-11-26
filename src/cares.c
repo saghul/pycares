@@ -1425,11 +1425,24 @@ Channel_servers_set(Channel *self, PyObject *value, void *closure)
 }
 
 
+static void free_domains(char **domains)
+{
+    char **ptr;
+
+    if (domains) {
+        for (ptr = domains; *ptr; ptr++) {
+            PyMem_Free(*ptr);
+        }
+        PyMem_Free(domains);
+    }
+}
+
+
 static void process_domains(PyObject *domains, char ***rdomains, int *ndomains)
 {
     Py_ssize_t i, n;
-    PyObject *item;
-    char **ptr, **c_domains;
+    PyObject *item, *data_fast;
+    char **c_domains;
     char *arg_str, *tmp_str;
 
     c_domains = NULL;
@@ -1437,23 +1450,30 @@ static void process_domains(PyObject *domains, char ***rdomains, int *ndomains)
     *rdomains = NULL;
     *ndomains = 0;
 
-    n = PySequence_Length(domains);
+    if ((data_fast = PySequence_Fast(domains, "argument 1 must be an iterable")) == NULL) {
+        goto cleanup;
+    }
+
+    n = PySequence_Fast_GET_SIZE(data_fast);
+    if (n > INT_MAX) {
+        PyErr_SetString(PyExc_ValueError, "argument 1 is too long");
+        goto cleanup;
+    }
+
     if (n == 0) {
         return;
     }
-    c_domains = (char **)PyMem_Malloc(sizeof(char *) * n);
+
+    c_domains = (char **)PyMem_Malloc(sizeof(char *) * n+1);
     if (!c_domains) {
         PyErr_NoMemory();
         goto cleanup;
     }
+    memset(c_domains, 0, n+1);
     i = 0;
     while (i < n) {
-        item = PySequence_GetItem(domains, i);
-#ifdef PYCARES_PYTHON3
-        if (!item || !PyArg_Parse(item, "y;args contains a non-string value", &arg_str)) {
-#else
+        item = PySequence_Fast_GET_ITEM(data_fast, i);
         if (!item || !PyArg_Parse(item, "s;args contains a non-string value", &arg_str)) {
-#endif
             Py_XDECREF(item);
             goto cleanup;
         }
@@ -1467,6 +1487,7 @@ static void process_domains(PyObject *domains, char ***rdomains, int *ndomains)
         c_domains[i] = tmp_str;
         i++;
     }
+    c_domains[n] = NULL;
 
     *rdomains = c_domains;
     *ndomains = n;
@@ -1475,12 +1496,7 @@ static void process_domains(PyObject *domains, char ***rdomains, int *ndomains)
 cleanup:
     *rdomains = NULL;
     *ndomains = -1;
-    if (c_domains) {
-        for (ptr = c_domains; *ptr != NULL; ptr++) {
-            PyMem_Free(*ptr);
-        }
-        PyMem_Free(c_domains);
-    }
+    free_domains(c_domains);
 }
 
 
@@ -1500,6 +1516,7 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     flags = tries = ndots = tcp_port = udp_port = -1;
     timeout = -1.0;
     lookups = NULL;
+    c_domains = NULL;
     servers = domains = sock_state_cb = NULL;
 
     if (self->channel) {
@@ -1508,11 +1525,6 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     }
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|idiiiiOOsO:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers, &domains, &lookups, &sock_state_cb)) {
-        return -1;
-    }
-
-    if (domains && !PySequence_Check(domains)) {
-        PyErr_SetString(PyExc_TypeError, "domains must be sequence");
         return -1;
     }
 
@@ -1581,6 +1593,8 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
         goto error;
     }
 
+    free_domains(c_domains);
+
     if (servers) {
         return set_nameservers(self, servers);
     }
@@ -1588,6 +1602,7 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     return 0;
 
 error:
+    free_domains(c_domains);
     Py_XDECREF(sock_state_cb);
     return -1;
 }
