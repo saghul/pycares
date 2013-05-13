@@ -4,7 +4,7 @@ from distutils.core import setup, Extension
 from setup_cares import cares_build_ext
 
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 setup(name             = "pycares",
       version          = __version__,
