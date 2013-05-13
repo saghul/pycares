@@ -27,6 +27,7 @@ CARES_OBJS = \
 	src\ares__read_line.obj \
 	src\ares__timeval.obj \
 	src\ares_cancel.obj \
+	src\ares_create_query.obj \
 	src\ares_data.obj \
 	src\ares_destroy.obj \
 	src\ares_expand_name.obj \
@@ -42,7 +43,6 @@ CARES_OBJS = \
 	src\ares_init.obj \
 	src\ares_library_init.obj \
 	src\ares_llist.obj \
-	src\ares_mkquery.obj \
 	src\ares_nowarn.obj \
 	src\ares_options.obj \
 	src\ares_parse_a_reply.obj \
