@@ -73,6 +73,7 @@ typedef struct {
     PyObject_HEAD
     PyObject *sock_state_cb;
     ares_channel channel;
+    Bool lib_initialized;
 } Channel;
 
 static PyTypeObject ChannelType;

@@ -5,15 +5,6 @@
 #include "errno.c"
 
 
-static void
-_ares_cleanup(void)
-{
-    if (ares_lib_initialized) {
-        ares_library_cleanup();
-    }
-}
-
-
 /* adapted from ares_gethostbyaddr.c */
 static PyObject *
 pycares_func_reverse_address(PyObject *obj, PyObject *args)
@@ -104,9 +95,6 @@ init_pycares(void)
     /* Exceptions */
     PyExc_AresError = PyErr_NewException("pycares.AresError", NULL, NULL);
     PyCaresModule_AddType(pycares, "AresError", (PyTypeObject *)PyExc_AresError);
-
-    /* Cleanup ares on exit */
-    Py_AtExit(_ares_cleanup);
 
     /* Initialize PyStructSequence types */
     if (AresHostResultType.tp_name == 0)

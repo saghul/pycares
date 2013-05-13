@@ -8,8 +8,6 @@
 #endif
 #include "nameser.h"
 
-static Bool ares_lib_initialized = False;
-
 static PyObject* PyExc_AresError;
 
 
@@ -1492,7 +1490,7 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
         RAISE_ARES_EXCEPTION(r);
         return -1;
     }
-    ares_lib_initialized = True;
+    self->lib_initialized = True;
 
     memset(&options, 0, sizeof(struct ares_options));
 
@@ -1579,6 +1577,7 @@ Channel_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     self->channel = NULL;
+    self->lib_initialized = False;
     return (PyObject *)self;
 }
 
@@ -1605,6 +1604,9 @@ Channel_tp_dealloc(Channel *self)
     if (self->channel) {
         ares_destroy(self->channel);
         self->channel = NULL;
+    }
+    if (self->lib_initialized) {
+        ares_library_cleanup();
     }
     Channel_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
