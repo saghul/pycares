@@ -87,12 +87,12 @@ class cares_build_ext(build_ext):
             if win32_msvc:
                 exec_process('cmd.exe /C vcbuild.bat', cwd=self.cares_dir, env=env, shell=True)
             else:
-                exec_process(['make', 'libcares.a'], cwd=self.cares_dir, env=env)
+                exec_process(['gmake', 'libcares.a'], cwd=self.cares_dir, env=env)
         def clean():
             if win32_msvc:
                 exec_process('cmd.exe /C vcbuild.bat clean', cwd=self.cares_dir, shell=True)
             else:
-                exec_process(['make', 'clean'], cwd=self.cares_dir)
+                exec_process(['gmake', 'clean'], cwd=self.cares_dir)
         if self.cares_clean_compile:
             clean()
         if not os.path.exists(self.cares_lib):
