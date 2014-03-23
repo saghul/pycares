@@ -14,6 +14,13 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
     try:
         sub = subprocess.Popen(args=cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
         stdout, stderr = sub.communicate(input=input)
+        
+        if type(stdout) != type(""):
+            # decode on Python 3
+            # do nothing on Python 2 (it just doesn't care about encoding anyway)
+            stdout = stdout.decode("ascii", "ignore")
+            stderr = stderr.decode("ascii", "ignore")
+
         returncode = sub.returncode
         if not silent:
             sys.stdout.write(stdout)
@@ -80,12 +87,12 @@ class cares_build_ext(build_ext):
             if win32_msvc:
                 exec_process('cmd.exe /C vcbuild.bat', cwd=self.cares_dir, env=env, shell=True)
             else:
-                exec_process(['make', 'libcares.a'], cwd=self.cares_dir, env=env)
+                exec_process(['gmake', 'libcares.a'], cwd=self.cares_dir, env=env)
         def clean():
             if win32_msvc:
                 exec_process('cmd.exe /C vcbuild.bat clean', cwd=self.cares_dir, shell=True)
             else:
-                exec_process(['make', 'clean'], cwd=self.cares_dir)
+                exec_process(['gmake', 'clean'], cwd=self.cares_dir)
         if self.cares_clean_compile:
             clean()
         if not os.path.exists(self.cares_lib):
