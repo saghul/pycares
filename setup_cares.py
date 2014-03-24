@@ -46,6 +46,10 @@ def exec_make(cmdline, *args, **kwargs):
     assert isinstance(cmdline, list)
 
     for make in makes:
+
+        if "bsd" in sys.platform and make == "make":
+            log.warn("Running plain make on BSD-derived system. It will likely fail. Consider installing GNU make from the ports collection.")
+
         try:
             return exec_process([make] + cmdline, *args, catch_enoent=False, **kwargs)
         except OSError as e:
