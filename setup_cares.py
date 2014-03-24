@@ -14,6 +14,13 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
     try:
         sub = subprocess.Popen(args=cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
         stdout, stderr = sub.communicate(input=input)
+
+        if type(stdout) != type(""):
+            # decode on Python 3
+            # do nothing on Python 2 (it just doesn't care about encoding anyway)
+            stdout = stdout.decode(sys.getdefaultencoding(), "replace")
+            stderr = stderr.decode(sys.getdefaultencoding(), "replace")
+
         returncode = sub.returncode
         if not silent:
             sys.stdout.write(stdout)
