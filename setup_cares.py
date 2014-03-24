@@ -1,4 +1,5 @@
 
+import errno
 import os
 import subprocess
 import sys
@@ -8,7 +9,7 @@ from distutils.command.build_ext import build_ext
 from distutils.errors import DistutilsError
 
 
-def exec_process(cmdline, silent=True, input=None, **kwargs):
+def exec_process(cmdline, silent=True, catch_enoent=True, input=None, **kwargs):
     """Execute a subprocess and returns the returncode, stdout buffer and stderr buffer.
     Optionally prints stdout and stderr while running."""
     try:
@@ -26,13 +27,29 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
             sys.stdout.write(stdout)
             sys.stderr.write(stderr)
     except OSError as e:
-        if e.errno == 2:
+        if e.errno == errno.ENOENT and catch_enoent:
             raise DistutilsError('"%s" is not present on this system' % cmdline[0])
         else:
             raise
     if returncode != 0:
         raise DistutilsError('Got return value %d while executing "%s", stderr output was:\n%s' % (returncode, " ".join(cmdline), stderr.rstrip("\n")))
     return stdout
+
+
+def exec_make(cmdline, *args, **kwargs):
+    assert isinstance(cmdline, list)
+    makes = ["make"]
+    if "bsd" in sys.platform:
+        makes.insert(0, "gmake")
+    for make in makes:
+        if "bsd" in sys.platform and make == "make":
+            log.warn("Running plain make on BSD-derived system. It will likely fail. Consider installing GNU make from the ports collection.")
+        try:
+            return exec_process([make] + cmdline, *args, catch_enoent=False, **kwargs)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+    raise DistutilsError('"make" is not present on this system')
 
 
 class cares_build_ext(build_ext):
@@ -87,12 +104,12 @@ class cares_build_ext(build_ext):
             if win32_msvc:
                 exec_process('cmd.exe /C vcbuild.bat', cwd=self.cares_dir, env=env, shell=True)
             else:
-                exec_process(['make', 'libcares.a'], cwd=self.cares_dir, env=env)
+                exec_make(['libcares.a'], cwd=self.cares_dir, env=env)
         def clean():
             if win32_msvc:
                 exec_process('cmd.exe /C vcbuild.bat clean', cwd=self.cares_dir, shell=True)
             else:
-                exec_process(['make', 'clean'], cwd=self.cares_dir)
+                exec_make(['clean'], cwd=self.cares_dir)
         if self.cares_clean_compile:
             clean()
         if not os.path.exists(self.cares_lib):
