@@ -53,9 +53,7 @@ def exec_make(cmdline, *args, **kwargs):
         try:
             return exec_process([make] + cmdline, *args, catch_enoent=False, **kwargs)
         except OSError as e:
-            if e.errno == errno.ENOENT:
-                pass
-            else:
+            if e.errno != errno.ENOENT:
                 raise
     
     raise DistutilsError('"make" is not present on this system')
