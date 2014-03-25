@@ -36,17 +36,13 @@ def exec_process(cmdline, silent=True, catch_enoent=True, input=None, **kwargs):
     return stdout
 
 def exec_make(cmdline, *args, **kwargs):
-    # our makefiles use several GNU extensions
-    # so try 'gmake' first, and if it doesn't exist, 'make'
-    # on FreeBSD, 'make' is BSD make, GNU make has to be installed from ports 
-    # on GNU/Linux, 'make' is GNU make, and 'gmake' doesn't always exist 
-    # (if it does, it's an alias for make, so no problem here)
-    makes = ["gmake", "make"]
+    makes = ["make"]
+    if "bsd" in sys.platform:
+        makes.insert(0, "gmake")
 
     assert isinstance(cmdline, list)
 
     for make in makes:
-
         if "bsd" in sys.platform and make == "make":
             log.warn("Running plain make on BSD-derived system. It will likely fail. Consider installing GNU make from the ports collection.")
 
