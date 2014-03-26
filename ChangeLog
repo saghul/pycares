@@ -1,3 +1,11 @@
+Version 0.6.0
+=============
+ - Added asyncio integration example
+ - Added event loop integration documantation
+ - Mention Python 3.4 support
+ - Fixed setup_cares.py to properly work with Python 3
+ - Fix build on BSD systems
+
 Version 0.5.0
 =============
  - Updated to c-ares 1.10.0
