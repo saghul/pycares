@@ -25,4 +25,5 @@ Objects
     utils
     constants
     errno
+    event_loops
 
