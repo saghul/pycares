@@ -1237,11 +1237,9 @@ set_nameservers(Channel *self, PyObject *value)
     char *server;
     int i, r, length, ret;
     struct ares_addr_node *servers;
-    Bool is_buffer;
     Py_buffer pbuf;
     PyObject *server_list, *item, *data_fast;
 
-    is_buffer = False;
     servers = NULL;
     server_list = value;
     ret = 0;
