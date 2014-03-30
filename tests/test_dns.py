@@ -134,7 +134,7 @@ class DNSTest(unittest2.TestCase):
         self.assertRaises(pycares.AresError, self.channel.gethostbyname, 'google.com', socket.AF_INET, lambda *x: None)
 
     def test_query_bad_type(self):
-        self.assertRaises(pycares.AresError, self.channel.query, 'google.com', 667, lambda *x: None)
+        self.assertRaises(ValueError, self.channel.query, 'google.com', 667, lambda *x: None)
         self.wait()
 
     def test_query_timeout(self):

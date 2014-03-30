@@ -938,7 +938,7 @@ Channel_func_query(Channel *self, PyObject *args)
         default:
         {
             Py_DECREF(callback);
-            PyErr_SetString(PyExc_AresError, "invalid query type specified");
+            PyErr_SetString(PyExc_ValueError, "invalid query type specified");
             ret = NULL;
             goto finally;
         }
