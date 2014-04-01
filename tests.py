@@ -78,11 +78,11 @@ class DNSTest(unittest2.TestCase):
         self.channel.query('ipv6.google.com', pycares.QUERY_TYPE_AAAA, cb)
         self.wait()
 
-    #def test_query_cname(self):
-    #    def cb(result, errorno):
-    #        self.assertEqual(errorno, None)
-    #    self.channel.query('www.google.com', pycares.QUERY_TYPE_CNAME, cb)
-    #    self.wait()
+    def test_query_cname(self):
+        def cb(result, errorno):
+            self.assertEqual(errorno, None)
+        self.channel.query('livechat.ripe.net', pycares.QUERY_TYPE_CNAME, cb)
+        self.wait()
 
     def test_query_mx(self):
         def cb(result, errorno):
