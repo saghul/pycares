@@ -91,6 +91,10 @@ init_pycares(void)
         goto fail;
     }
     PyCaresModule_AddObject(pycares, "errno", errno_module);
+#ifdef PYCARES_PYTHON3
+    PyDict_SetItemString(PyImport_GetModuleDict(), pycares_errorno_module.m_name, errno_module);
+    Py_DECREF(errno_module);
+#endif
 
     /* Exceptions */
     PyExc_AresError = PyErr_NewException("pycares.AresError", NULL, NULL);
