@@ -1,3 +1,9 @@
+Version 0.6.1
+=============
+ - Raise ValueError if query type is not valid
+ - Re-enabled CNAME test
+ - Fixed importing from errno submodule in Python 3
+
 Version 0.6.0
 =============
  - Added asyncio integration example
