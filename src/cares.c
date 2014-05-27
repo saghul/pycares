@@ -1270,10 +1270,8 @@ set_nameservers(Channel *self, PyObject *value)
     for (i = 0; i < length; i++) {
         item = PySequence_Fast_GET_ITEM(data_fast, i);
         if (!item || !PyArg_Parse(item, "s*;args contains a non-string value", &pbuf)) {
-            Py_XDECREF(item);
             goto end;
         }
-        Py_DECREF(item);
         server = pbuf.buf;
 
         if (ares_inet_pton(AF_INET, server, &servers[i].addr.addr4) == 1) {
