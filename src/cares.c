@@ -1273,7 +1273,6 @@ set_nameservers(Channel *self, PyObject *value)
             Py_XDECREF(item);
             goto end;
         }
-        Py_DECREF(item);
         server = pbuf.buf;
 
         if (ares_inet_pton(AF_INET, server, &servers[i].addr.addr4) == 1) {
