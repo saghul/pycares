@@ -1,3 +1,7 @@
+Version 0.6.2
+=============
+ - Fix crash due to a refcount bug
+
 Version 0.6.1
 =============
  - Raise ValueError if query type is not valid
