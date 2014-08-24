@@ -53,6 +53,13 @@ class DNSTest(unittest2.TestCase):
         self.channel.gethostbyname('localhost', socket.AF_INET, cb)
         self.wait()
 
+    def test_gethostbyname_small_timeout(self):
+        def cb(result, errorno):
+            self.assertEqual(errorno, None)
+        self.channel = pycares.Channel(timeout=0.5, tries=1)
+        self.channel.gethostbyname('localhost', socket.AF_INET, cb)
+        self.wait()
+
     def test_getnameinfo(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
