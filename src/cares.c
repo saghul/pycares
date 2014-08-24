@@ -1187,7 +1187,10 @@ Channel_func_timeout(Channel *self, PyObject *args)
     }
 
     tvp = ares_timeout(self->channel, maxtvp, &tv);
-    return PyFloat_FromDouble(double_from_timeval(tvp));
+    if (tvp == NULL)
+        return PyFloat_FromDouble(0.0);
+    else
+        return PyFloat_FromDouble(double_from_timeval(tvp));
 }
 
 
