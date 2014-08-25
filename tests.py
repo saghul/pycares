@@ -162,6 +162,16 @@ class DNSTest(unittest2.TestCase):
         expected = '4.3.2.1.in-addr.arpa'
         self.assertEqual(pycares.reverse_address(s), expected)
 
+    def test_channel_timeout(self):
+        def cb(result, errorno):
+            self.assertEqual(errorno, pycares.errno.ARES_ECANCELLED)
+        self.channel = pycares.Channel(timeout=0.5, tries=1)
+        self.channel.gethostbyname('google.com', socket.AF_INET, cb)
+        timeout = self.channel.timeout()
+        self.assertTrue(timeout > 0.0)
+        self.channel.cancel()
+        self.wait()
+
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
