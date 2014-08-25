@@ -3,6 +3,9 @@
 pycares: Python interface for c-ares
 ====================================
 
+.. image:: https://badge.fury.io/py/pycares.png
+    :target: http://badge.fury.io/py/pycares
+
 .. image:: https://secure.travis-ci.org/saghul/pycares.png?branch=master
     :target: http://travis-ci.org/saghul/pycares
 
