@@ -1498,7 +1498,7 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
         optmask |= ARES_OPT_FLAGS;
     }
     if (timeout != -1) {
-        options.timeout = (int)timeout * 1000;
+        options.timeout = (int)(timeout * 1000);
         optmask |= ARES_OPT_TIMEOUTMS;
     }
     if (tries != -1) {
