@@ -1,3 +1,8 @@
+Version 0.6.3
+=============
+ - Fix crash if ares_timeout returns NULL
+ - Fix initializing channel with float timeouts < 1
+
 Version 0.6.2
 =============
  - Fix crash due to a refcount bug
