@@ -2,7 +2,7 @@
 
 from distutils.core import setup, Extension
 from setup_cares import cares_build_ext
-
+import codecs
 
 __version__ = "0.6.3"
 
@@ -12,7 +12,7 @@ setup(name             = "pycares",
       author_email     = "saghul@gmail.com",
       url              = "http://github.com/saghul/pycares",
       description      = "Python interface for c-ares",
-      long_description = open("README.rst").read(),
+      long_description = codecs.open("README.rst", encoding="utf-8").read(),
       platforms        = ["POSIX", "Microsoft Windows"],
       classifiers      = [
           "Development Status :: 5 - Production/Stable",
