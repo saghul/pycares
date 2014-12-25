@@ -1,5 +1,6 @@
 # coding=utf8
 
+from __future__ import print_function
 from distutils.core import setup, Extension
 if os.name != 'posix' or sys.platform == 'darwin':
     from setup_cares import cares_build_ext
@@ -11,7 +12,6 @@ import codecs
 import io
 import subprocess
 import sys
-from __future__ import print_function
 
 __version__ = "0.6.3"
 libcares_version_required = '1.10.0'
