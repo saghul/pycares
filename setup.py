@@ -2,53 +2,57 @@
 
 from __future__ import print_function
 from distutils.core import setup, Extension
+import codecs
 import sys
 import os
-import codecs
 import io
 import subprocess
 
 __version__ = "0.6.3"
 libcares_version_required = '1.10.0'
 
+
 def call(command):
-  pipe = subprocess.Popen(command, shell=True,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE)
-  pipe.wait()
-  return pipe
+    pipe = subprocess.Popen(command, shell=True,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    pipe.wait()
+    return pipe
+
 
 def pkg_config_version_check(pkg, version):
-  pipe = call('pkg-config --print-errors --exists "%s >= %s"' %
-              (pkg, version))
-  if pipe.returncode == 0:
-    print('%s >= %s detected' % (pkg, version))
-  else:
-    print(pipe.stderr.read())
-    raise SystemExit('Error: %s >= %s not found' % (pkg, version))
+    pipe = call('pkg-config --print-errors --exists "%s >= %s"' %
+                (pkg, version))
+    if pipe.returncode == 0:
+        print('%s >= %s detected' % (pkg, version))
+    else:
+        print(pipe.stderr.read())
+        raise SystemExit('Error: %s >= %s not found' % (pkg, version))
+
 
 def pkg_config_parse(opt, pkg):
-  pipe = call("pkg-config %s %s" % (opt, pkg))
-  output = pipe.stdout.read()
-  opt = opt[-2:]
-  #return [str(x, encoding='utf-8').lstrip(opt) for x in output.split()]i
-  return [str(x).lstrip(opt) for x in output.split()]
+    pipe = call("pkg-config %s %s" % (opt, pkg))
+    output = pipe.stdout.read()
+    opt = opt[-2:]
+    #return [str(x, encoding='utf-8').lstrip(opt) for x in output.split()]i
+    #return [str(x).lstrip(opt) for x in output.split()]
+    return [x.decode('UTF-8').lstrip(opt) for x in output.split()]
 
-pkg_config_version_check ('libcares', libcares_version_required)
-print(pkg_config_parse('--libs-only-l',   'libcares'))
+pkg_config_version_check('libcares', libcares_version_required)
+print(pkg_config_parse('--libs-only-l',   'libcares').lstrip('-l'))
 if os.name != 'posix' or sys.platform == 'darwin':
-  runtime_library_dirs = []
-  include_dirs         = ['./deps/c-ares/src/']
-  library_dirs         = []
-  libraries            = []
-  from setup_cares import cares_build_ext
-  cmdclass             = {'build_ext': cares_build_ext}
+    runtime_library_dirs = []
+    include_dirs         = ['./deps/c-ares/src/']
+    library_dirs         = []
+    libraries            = []
+    from setup_cares import cares_build_ext
+    cmdclass             = {'build_ext': cares_build_ext}
 else:
-  runtime_library_dirs = [] #pkg_config_parse('--libs-only-L',   'libcares')
-  include_dirs         = [] #pkg_config_parse('--cflags-only-I', 'libcares')
-  library_dirs         = [] #pkg_config_parse('--libs-only-L',   'libcares')
-  libraries            = pkg_config_parse('--libs-only-l',   'libcares')
-  cmdclass             = {}
+    runtime_library_dirs = [] #pkg_config_parse('--libs-only-L',   'libcares')
+    include_dirs         = [] #pkg_config_parse('--cflags-only-I', 'libcares')
+    library_dirs         = [] #pkg_config_parse('--libs-only-L',   'libcares')
+    libraries            = pkg_config_parse('--libs-only-l',   'libcares')
+    cmdclass             = {}
 
 setup(name             = "pycares",
       version          = __version__,
