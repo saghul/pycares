@@ -15,7 +15,7 @@ import io
 import subprocess
 
 __version__ = "0.6.3"
-libares_version_required = '1.10.0'
+libcares_version_required = '1.10.0'
 
 def call(command):
   pipe = subprocess.Popen(command, shell=True,
@@ -39,7 +39,7 @@ def pkg_config_parse(opt, pkg):
   opt = opt[-2:]
   return [x.lstrip(opt) for x in output.split()]
 
-pkg_config_version_check ('libares', libares_version_required)
+pkg_config_version_check ('libcares', libcares_version_required)
 if sys.platform == 'win32':
   runtime_library_dirs = []
 else:
@@ -74,9 +74,9 @@ setup(name             = "pycares",
       ext_modules  = [Extension('pycares',
                                 sources = ['src/pycares.c'],
                                 define_macros=[('MODULE_VERSION', __version__)],
-                                include_dirs = pkg_config_parse('--cflags-only-I', 'libares'),
-                                library_dirs = pkg_config_parse('--libs-only-L', 'libares'),
-                                libraries    = pkg_config_parse('--libs-only-l', 'libares'),
+                                include_dirs = pkg_config_parse('--cflags-only-I', 'libcares'),
+                                library_dirs = pkg_config_parse('--libs-only-L', 'libcares'),
+                                libraries    = pkg_config_parse('--libs-only-l', 'libcares'),
                                 runtime_library_dirs = runtime_library_dirs,
                      )]
      )
