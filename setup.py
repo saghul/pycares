@@ -39,10 +39,11 @@ def pkg_config_parse(opt, pkg):
   pipe = call("pkg-config %s %s" % (opt, pkg))
   output = pipe.stdout.read()
   opt = opt[-2:]
-  #return [str(x, encoding='utf-8').lstrip(opt) for x in output.split()]
+  #return [str(x, encoding='utf-8').lstrip(opt) for x in output.split()]i
   return [str(x).lstrip(opt) for x in output.split()]
 
 pkg_config_version_check ('libcares', libcares_version_required)
+print(pkg_config_parse('--libs-only-l',   'libcares'))
 if os.name != 'posix' or sys.platform == 'darwin':
   runtime_library_dirs = []
   include_dirs         = ['./deps/c-ares/src/']
