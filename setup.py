@@ -1,7 +1,12 @@
 # coding=utf8
 
 from distutils.core import setup, Extension
-from setup_cares import cares_build_ext
+if os.name != 'posix' or sys.platform == 'darwin':
+    from setup_cares import cares_build_ext
+else:
+    def cares_build_ext(build_ext):
+        def build_extensions:
+            return
 import codecs
 
 __version__ = "0.6.3"
