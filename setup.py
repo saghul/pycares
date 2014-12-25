@@ -5,9 +5,13 @@ if os.name != 'posix' or sys.platform == 'darwin':
     from setup_cares import cares_build_ext
 else:
     def cares_build_ext(build_ext):
-        def build_extensions:
-            return
+        def build_extensions(self):
+            return 0
 import codecs
+import io
+import subprocess
+import sys
+from __future__ import print_function
 
 __version__ = "0.6.3"
 libcares_version_required = '1.10.0'
@@ -23,9 +27,9 @@ def pkg_config_version_check(pkg, version):
   pipe = call('pkg-config --print-errors --exists "%s >= %s"' %
               (pkg, version))
   if pipe.returncode == 0:
-    print '%s >= %s detected' % (pkg, version)
+    print('%s >= %s detected' % (pkg, version))
   else:
-    print pipe.stderr.read()
+    print(pipe.stderr.read())
     raise SystemExit('Error: %s >= %s not found' % (pkg, version))
 
 def pkg_config_parse(opt, pkg):
