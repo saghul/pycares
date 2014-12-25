@@ -15,7 +15,7 @@ import io
 import subprocess
 
 __version__ = "0.6.3"
-libcares_version_required = '1.10.0'
+libares_version_required = '1.10.0'
 
 def call(command):
   pipe = subprocess.Popen(command, shell=True,
