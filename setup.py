@@ -4,14 +4,6 @@ from __future__ import print_function
 from distutils.core import setup, Extension
 import sys
 import os
-if os.name != 'posix' or sys.platform == 'darwin':
-    from setup_cares import cares_build_ext
-else:
-    def cares_build_ext(build_ext):
-        def build_extensions(self):
-            return 0
-        def ensure_finalized(self):
-            return 0
 import codecs
 import io
 import subprocess
@@ -49,6 +41,7 @@ if os.name != 'posix' or sys.platform == 'darwin':
   include_dirs         = ['./deps/c-ares/src/']
   library_dirs         = []
   libraries            = []
+  from setup_cares import cares_build_ext
   cmdclass             = {'build_ext': cares_build_ext}
 else:
   runtime_library_dirs = [] #pkg_config_parse('--libs-only-L',   'libcares')
