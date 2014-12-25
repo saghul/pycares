@@ -74,9 +74,9 @@ setup(name             = "pycares",
       ext_modules  = [Extension('pycares',
                                 sources = ['src/pycares.c'],
                                 define_macros=[('MODULE_VERSION', __version__)],
-                                include_dirs = pkg_config_parse('--cflags-only-I', 'libcares'),
-                                library_dirs = pkg_config_parse('--libs-only-L', 'libcares'),
-                                libraries    = pkg_config_parse('--libs-only-l', 'libcares'),
+                                include_dirs = pkg_config_parse('--cflags-only-I', 'libares'),
+                                library_dirs = pkg_config_parse('--libs-only-L', 'libares'),
+                                libraries    = pkg_config_parse('--libs-only-l', 'libares'),
                                 runtime_library_dirs = runtime_library_dirs,
                      )]
      )
