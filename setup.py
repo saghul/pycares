@@ -10,6 +10,8 @@ else:
     def cares_build_ext(build_ext):
         def build_extensions(self):
             return 0
+        def ensure_finalized(self):
+            return 0
 import codecs
 import io
 import subprocess
@@ -37,7 +39,8 @@ def pkg_config_parse(opt, pkg):
   pipe = call("pkg-config %s %s" % (opt, pkg))
   output = pipe.stdout.read()
   opt = opt[-2:]
-  return [str(x, encoding='utf-8').lstrip(opt) for x in output.split()]
+  #return [str(x, encoding='utf-8').lstrip(opt) for x in output.split()]
+  return [str(x).lstrip(opt) for x in output.split()]
 
 pkg_config_version_check ('libcares', libcares_version_required)
 if sys.platform == 'win32':
@@ -70,7 +73,7 @@ setup(name             = "pycares",
           "Programming Language :: Python :: 3.3",
           "Programming Language :: Python :: 3.4"
       ],
-      cmdclass     = {'build_ext': cares_build_ext},
+#      cmdclass     = {'build_ext': cares_build_ext},
       ext_modules  = [Extension('pycares',
                                 sources = ['src/pycares.c'],
                                 define_macros=[('MODULE_VERSION', __version__)],
