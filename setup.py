@@ -43,10 +43,18 @@ def pkg_config_parse(opt, pkg):
   return [str(x).lstrip(opt) for x in output.split()]
 
 pkg_config_version_check ('libcares', libcares_version_required)
-if sys.platform == 'win32':
+if os.name != 'posix' or sys.platform == 'darwin':
   runtime_library_dirs = []
+  include_dirs         = ['./deps/c-ares/src/']
+  library_dirs         = []
+  libraries            = []
+  cmdclass             = {'build_ext': cares_build_ext}
 else:
-  runtime_library_dirs = pkg_config_parse('--libs-only-L', 'libcares')
+  runtime_library_dirs = [] #pkg_config_parse('--libs-only-L',   'libcares')
+  include_dirs         = [] #pkg_config_parse('--cflags-only-I', 'libcares')
+  library_dirs         = [] #pkg_config_parse('--libs-only-L',   'libcares')
+  libraries            = pkg_config_parse('--libs-only-l',   'libcares')
+  cmdclass             = {}
 
 setup(name             = "pycares",
       version          = __version__,
@@ -73,13 +81,13 @@ setup(name             = "pycares",
           "Programming Language :: Python :: 3.3",
           "Programming Language :: Python :: 3.4"
       ],
-#      cmdclass     = {'build_ext': cares_build_ext},
+      cmdclass     = cmdclass,
       ext_modules  = [Extension('pycares',
                                 sources = ['src/pycares.c'],
                                 define_macros=[('MODULE_VERSION', __version__)],
-                                include_dirs = pkg_config_parse('--cflags-only-I', 'libcares'),
-                                library_dirs = pkg_config_parse('--libs-only-L', 'libcares'),
-                                libraries    = pkg_config_parse('--libs-only-l', 'libcares'),
+                                include_dirs = include_dirs,
+                                library_dirs = library_dirs,
+                                libraries    = libraries,
                                 runtime_library_dirs = runtime_library_dirs,
                      )]
      )
