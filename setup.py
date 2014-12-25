@@ -5,6 +5,29 @@ from setup_cares import cares_build_ext
 import codecs
 
 __version__ = "0.6.3"
+c-ares_version_required = '1.10.0'
+
+def call(command):
+  pipe = subprocess.Popen(command, shell=True,
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE)
+  pipe.wait()
+  return pipe
+
+def pkg_config_version_check(pkg, version):
+  pipe = call('pkg-config --print-errors --exists "%s >= %s"' %
+              (pkg, version))
+  if pipe.returncode == 0:
+    print '%s >= %s detected' % (pkg, version)
+  else:
+    print pipe.stderr.read()
+    raise SystemExit('Error: %s >= %s not found' % (pkg, version))
+
+def pkg_config_parse(opt, pkg):
+  pipe = call("pkg-config %s %s" % (opt, pkg))
+  output = pipe.stdout.read()
+  opt = opt[-2:]
+  return [x.lstrip(opt) for x in output.split()]
 
 setup(name             = "pycares",
       version          = __version__,
@@ -35,6 +58,10 @@ setup(name             = "pycares",
       ext_modules  = [Extension('pycares',
                                 sources = ['src/pycares.c'],
                                 define_macros=[('MODULE_VERSION', __version__)]
+                                include_dirs = pkg_config_parse('--cflags-only-I', 'cairo'),
+                                library_dirs = pkg_config_parse('--libs-only-L', 'cairo'),
+                                libraries    = pkg_config_parse('--libs-only-l', 'cairo'),
+                                runtime_library_dirs = runtime_library_dirs,
                      )]
      )
 
