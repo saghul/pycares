@@ -12,6 +12,7 @@ import codecs
 import io
 import subprocess
 import sys
+import os
 
 __version__ = "0.6.3"
 libcares_version_required = '1.10.0'
