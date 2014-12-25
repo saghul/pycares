@@ -37,7 +37,7 @@ def pkg_config_parse(opt, pkg):
   pipe = call("pkg-config %s %s" % (opt, pkg))
   output = pipe.stdout.read()
   opt = opt[-2:]
-  return [x.lstrip(opt) for x in output.split()]
+  return [str(x, encoding='utf-8').lstrip(opt) for x in output.split()]
 
 pkg_config_version_check ('libcares', libcares_version_required)
 if sys.platform == 'win32':
