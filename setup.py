@@ -4,6 +4,7 @@
 #https://docs.python.org/2/distutils/extending.html
 import logging as log
 from setuptools import setup, Extension, Command
+from distutils.errors import DistutilsOptionError
 import codecs
 import sys
 import os
@@ -28,8 +29,8 @@ class ext_static(Command):
         self.ext_static = False
 
     def finalize_options(self):
-        #assert self.ext_static not in (False, True), 'Specify True!'
-        self.ext_static = True
+        if self.ext_static not in (False, True):
+            raise DistutilsOptionError('Specify True!')
 
     def run(self):
         if self.ext_static == True:
@@ -38,19 +39,35 @@ class ext_static(Command):
             libcares_static = True
 
 
-def call(command):
-    try:
-        pipe = subprocess.Popen(command, shell=True,
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE)
-        pipe.wait()
-    except:
-        e.args += (command,)
-        log.debug('%s: %s' % (command, pipe.sterr.read()))
-        raise
+def call(command, opt=None):
+    pipe = subprocess.Popen(command, shell=True,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+    pipe.wait()
 
-    log.debug('%s - stdout: %s' % (command, pipe.stdout))
-    return pipe
+    pipe.stdout = pipe.stdout.read()
+    pipe.stdout = pipe.stdout.split()
+    #pipe.stdout = [x.decode(sys.stdout.encoding) for x in pipe.stdout.split()]
+    if opt != None:
+        pipe.stdout = [x.decode(sys.stdout.encoding).ltrim(opt) for x in pipe.stdout]
+    else:
+        pipe.stdout = [x.decode(sys.stdout.encoding) for x in pipe.stdout]
+    pipe.stderr = pipe.stderr.read()
+    pipe.stderr = pipe.stderr.split()
+    #pipe.stderr = [x.decode(sys.stderr.encoding) for x in pipe.stderr.split()]
+    if opt != None:
+        pipe.stderr = [x.decode(sys.stderr.encoding).ltrim(opt) for x in pipe.stderr]
+    else:
+        pipe.stderr = [x.decode(sys.stderr.encoding) for x in pipe.stderr]
+    #log.error('%s - stdout: %s' % (command, [x.decode(sys.stdout.encoding) for x in pipe.stdout.split()]))
+    #log.error('%s - stderr: %s' % (command, [x.decode(sys.stderr.encoding) for x in pipe.stderr.split()]))
+    log.error('%s - stdout: %s' % (command, pipe.stdout))
+    log.error('%s - stderr: %s' % (command, pipe.stderr))
+    if pipe.returncode != 0:
+        log.debug('%s - returncode: %i' % (command, pipe.returncode))
+        raise SystemExit(pipe.stderr)
+    else:
+        return pipe
 
 
 def pkg_config_version_check(pkg, version):
@@ -65,10 +82,11 @@ def pkg_config_version_check(pkg, version):
 
 def pkg_config_parse(opt, pkg):
     pipe = call("pkg-config %s %s" % (opt, pkg))
-    output = pipe.stdout.read()
-    if output == None:
+    output = pipe.stdout
+    if output != None:
         opt = opt[-2:]
-        return [x.decode(sys.stdout.encoding).lstrip(opt) for x in output.split()]
+        #return [x.lstrip(opt) for x in output.split()]
+        return output
     else:
         return []
 
