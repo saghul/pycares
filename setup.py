@@ -22,14 +22,15 @@ class enable_ext_static(Command):
     user_option = [ ('enable_ext_static=', None, 'Specify enable'), ]
 
     def initialize_options(self):
-        return
+        self.enable_ext_static = None
 
     def finalize_options(self):
-        return
+        assert self.enable_ext_static in (None, 'enable'), 'Specify enable!'
 
     def run(self):
-        global libcares_static
-        libcares_static = True
+        if self.enable_ext_static == 'enable':
+            global libcares_static
+            libcares_static = True
 
 
 def call(command):
