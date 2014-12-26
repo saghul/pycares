@@ -4,7 +4,6 @@
 #https://docs.python.org/2/distutils/extending.html
 import logging as log
 from setuptools import setup, Extension, Command
-from distutils.errors import DistutilsOptionError
 import codecs
 import sys
 import os
@@ -18,19 +17,18 @@ __version__ = "0.6.3"
 libcares_version_required = '1.10.0'
 libcares_static = False
 
-#run: setup.py build ext-static
+#run: setup.py ext-static build
 #see: python setup.py --help-commands
 class ext_static(Command):
     description = """Build the included libcares and link the Python module static [default: False]."""
-    user_options = [('ext-static=', None, 'x')]
+    user_options = [('ext-static=', None, 'enables build with static bundled libcares')]
     boolean_options = ['ext-static']
 
     def initialize_options(self):
-        self.ext_static = False
+        self.ext_static = None 
 
     def finalize_options(self):
-        if self.ext_static not in (False, True):
-            raise DistutilsOptionError('Specify True!')
+        self.ext_static = True
 
     def run(self):
         if self.ext_static == True:
