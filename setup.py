@@ -1,9 +1,9 @@
 # coding=utf8
 
-from __future__ import print_function
+#USE DISTUTILS_DEBUG for debugging
 #https://docs.python.org/2/distutils/extending.html
-from distutils.command.build_py import build_ext as _build_ext_static
-from setuptools import setup, Extension
+import logging as log
+from setuptools import setup, Extension, Command
 import codecs
 import sys
 import os
@@ -17,27 +17,45 @@ __version__ = "0.6.3"
 libcares_version_required = '1.10.0'
 libcares_static = False
 
-class build_ext_static(_build_ext_static):
-    """Build the included libcares and link the Python module static."""
-    libcares_static = True
+class enable_ext_static(Command):
+    description = """Build the included libcares and link the Python module static."""
+    user_option = [ ('enable_ext_static=', None, 'Specify enable'), ]
+
+    def initialize_options(self):
+        return
+
+    def finalize_options(self):
+        return
+
+    def run(self):
+        global libcares_static
+        libcares_static = True
+
 
 def call(command):
-    pipe = subprocess.call(command, shell=True,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    pipe.wait()
+    try:
+        pipe = subprocess.Popen(command, shell=True,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
+        pipe.wait()
+    except Exception, e:
+        e.args += (command,)
+        log.debug('%s: %s' % (command, pipe.sterr.read()))
+        raise
+
+    log.debug('%s - stdout: %s' % (command, pipe.stdout))
     return pipe
 
 
 def pkg_config_version_check(pkg, version):
-    pipe = call('pkg-config --print-errors --exists "%s >= %s"' %
-                (pkg, version))
-    if pipe.returncode == 0:
-        print('%s >= %s detected' % (pkg, version))
-    else:
-        print(pipe.stderr.read())
+    try:
+        pipe = call('pkg-config --print-errors --exists "%s >= %s"' %
+                    (pkg, version))
+    except Exception, e:
+        log.error(e)
         raise SystemExit('Error: %s >= %s not found' % (pkg, version))
 
+    log.debug('%s >= %s detected' % (pkg, version))
 
 def pkg_config_parse(opt, pkg):
     pipe = call("pkg-config %s %s" % (opt, pkg))
@@ -51,15 +69,16 @@ if libcares_static == True:
     include_dirs         = ['./deps/c-ares/src/']
     library_dirs         = []
     libraries            = []
-    cmdclass             = {'build_ext': cares_build_ext}
+    cmdclass             = {'build_ext': cares_build_ext,
+            'enable_ext_static': enable_ext_static}
 elif libcares_static == False:
     pkg_config_version_check('libcares', libcares_version_required)
-    print(pkg_config_parse('--libs-only-l',   'libcares'))
+    log.debug(pkg_config_parse('--libs-only-l',   'libcares'))
     runtime_library_dirs = pkg_config_parse('--libs-only-L',   'libcares')
     include_dirs         = pkg_config_parse('--cflags-only-I', 'libcares')
     library_dirs         = pkg_config_parse('--libs-only-L',   'libcares')
     libraries            = pkg_config_parse('--libs-only-l',   'libcares')
-    cmdclass             = {}
+    cmdclass             = {'enable_ext_static': enable_ext_static}
 
 setup(name             = "pycares",
       version          = __version__,
