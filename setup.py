@@ -38,7 +38,7 @@ def call(command):
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
         pipe.wait()
-    except Exception, e:
+    except:
         e.args += (command,)
         log.debug('%s: %s' % (command, pipe.sterr.read()))
         raise
@@ -51,8 +51,8 @@ def pkg_config_version_check(pkg, version):
     try:
         pipe = call('pkg-config --print-errors --exists "%s >= %s"' %
                     (pkg, version))
-    except Exception, e:
-        log.error(e)
+    except:
+        log.error(sys.exc_info()[0])
         raise SystemExit('Error: %s >= %s not found' % (pkg, version))
 
     log.debug('%s >= %s detected' % (pkg, version))
