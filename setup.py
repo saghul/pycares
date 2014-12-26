@@ -60,8 +60,11 @@ def pkg_config_version_check(pkg, version):
 def pkg_config_parse(opt, pkg):
     pipe = call("pkg-config %s %s" % (opt, pkg))
     output = pipe.stdout.read()
-    opt = opt[-2:]
-    return [x.decode(sys.stdout.encoding).lstrip(opt) for x in output.split()]
+    if output == None:
+        opt = opt[-2:]
+        return [x.decode(sys.stdout.encoding).lstrip(opt) for x in output.split()]
+    else:
+        return []
 
 if libcares_static == True:
     from setup_cares import cares_build_ext
