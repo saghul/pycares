@@ -81,11 +81,10 @@ def pkg_config_version_check(pkg, version):
     log.debug('%s >= %s detected' % (pkg, version))
 
 def pkg_config_parse(opt, pkg):
-    pipe = call("pkg-config %s %s" % (opt, pkg))
+    opt = opt[-2:]
+    pipe = call("pkg-config %s %s" % (opt, pkg), opt)
     output = pipe.stdout
     if output != None:
-        opt = opt[-2:]
-        #return [x.lstrip(opt) for x in output.split()]
         return output
     else:
         return []
