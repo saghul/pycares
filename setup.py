@@ -47,20 +47,13 @@ def call(command, opt=None):
 
     pipe.stdout = pipe.stdout.read()
     pipe.stdout = pipe.stdout.split()
-    #pipe.stdout = [x.decode(sys.stdout.encoding) for x in pipe.stdout.split()]
     if opt != None:
-        pipe.stdout = [x.decode(sys.stdout.encoding).ltrim(opt) for x in pipe.stdout]
+        pipe.stdout = [x.decode(sys.stdout.encoding).lstrip(opt) for x in pipe.stdout]
     else:
         pipe.stdout = [x.decode(sys.stdout.encoding) for x in pipe.stdout]
     pipe.stderr = pipe.stderr.read()
     pipe.stderr = pipe.stderr.split()
-    #pipe.stderr = [x.decode(sys.stderr.encoding) for x in pipe.stderr.split()]
-    if opt != None:
-        pipe.stderr = [x.decode(sys.stderr.encoding).ltrim(opt) for x in pipe.stderr]
-    else:
-        pipe.stderr = [x.decode(sys.stderr.encoding) for x in pipe.stderr]
-    #log.error('%s - stdout: %s' % (command, [x.decode(sys.stdout.encoding) for x in pipe.stdout.split()]))
-    #log.error('%s - stderr: %s' % (command, [x.decode(sys.stderr.encoding) for x in pipe.stderr.split()]))
+    pipe.stderr = [x.decode(sys.stderr.encoding) for x in pipe.stderr]
     log.error('%s - stdout: %s' % (command, pipe.stdout))
     log.error('%s - stderr: %s' % (command, pipe.stderr))
     if pipe.returncode != 0:
@@ -81,11 +74,9 @@ def pkg_config_version_check(pkg, version):
     log.debug('%s >= %s detected' % (pkg, version))
 
 def pkg_config_parse(opt, pkg):
-    opt = opt[-2:]
-    pipe = call("pkg-config %s %s" % (opt, pkg), opt)
-    output = pipe.stdout
-    if output != None:
-        return output
+    pipe = call("pkg-config %s %s" % (opt, pkg), opt[-2:])
+    if pipe.stdout != None:
+        return pipe.stdout
     else:
         return []
 
