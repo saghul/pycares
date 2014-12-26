@@ -17,18 +17,23 @@ __version__ = "0.6.3"
 libcares_version_required = '1.10.0'
 libcares_static = False
 
-class enable_ext_static(Command):
-    description = """Build the included libcares and link the Python module static."""
-    user_options = [ ('enable-ext-static=', None, 'Specify enable'), ]
+#run: setup.py build ext-static
+#see: python setup.py --help-commands
+class ext_static(Command):
+    description = """Build the included libcares and link the Python module static [default: False]."""
+    user_options = [('ext-static=', None, 'x')]
+    boolean_options = ['ext-static']
 
     def initialize_options(self):
-        self.enable_ext_static = False
+        self.ext_static = False
 
     def finalize_options(self):
-        assert self.enable_ext_static in (None, 'enable'), 'Specify enable!'
+        #assert self.ext_static not in (False, True), 'Specify True!'
+        self.ext_static = True
 
     def run(self):
-        if self.enable_ext_static == 'enable':
+        if self.ext_static == True:
+            log.debug('ext-static enabled!')
             global libcares_static
             libcares_static = True
 
@@ -74,7 +79,7 @@ if libcares_static == True:
     library_dirs         = []
     libraries            = []
     cmdclass             = {'build_ext': cares_build_ext,
-            'enable-ext-static': enable_ext_static}
+            'ext-static': ext_static}
 elif libcares_static == False:
     pkg_config_version_check('libcares', libcares_version_required)
     log.debug(pkg_config_parse('--libs-only-l',   'libcares'))
@@ -82,7 +87,7 @@ elif libcares_static == False:
     include_dirs         = pkg_config_parse('--cflags-only-I', 'libcares')
     library_dirs         = pkg_config_parse('--libs-only-L',   'libcares')
     libraries            = pkg_config_parse('--libs-only-l',   'libcares')
-    cmdclass             = {'enable-ext-static': enable_ext_static}
+    cmdclass             = {'ext_static': ext_static}
 
 setup(name             = "pycares",
       version          = __version__,
