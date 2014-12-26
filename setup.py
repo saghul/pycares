@@ -1,19 +1,28 @@
 # coding=utf8
 
 from __future__ import print_function
+#https://docs.python.org/2/distutils/extending.html
+from distutils.command.build_py import build_py as _build_py_static
 from distutils.core import setup, Extension
 import codecs
 import sys
 import os
 import io
-import subprocess
+try:
+    import subprocess32 as subprocess #backported python3 subprocess in python2
+except:
+    import subprocess
 
 __version__ = "0.6.3"
 libcares_version_required = '1.10.0'
+libcares_static = False
 
+class build_py_static(_build_py_static):
+    """Build the Python source with included libcares and link static."""
+    libcares_static = True
 
 def call(command):
-    pipe = subprocess.Popen(command, shell=True,
+    pipe = subprocess.call(command, shell=True,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     pipe.wait()
@@ -34,22 +43,21 @@ def pkg_config_parse(opt, pkg):
     pipe = call("pkg-config %s %s" % (opt, pkg))
     output = pipe.stdout.read()
     opt = opt[-2:]
-    return [x.decode('UTF-8').lstrip(opt) for x in output.split()]
+    return [x.decode(sys.stdout.encoding).lstrip(opt) for x in output.split()]
 
-pkg_config_version_check('libcares', libcares_version_required)
-print(pkg_config_parse('--libs-only-l',   'libcares'))
-
-if os.name != 'posix' or sys.platform == 'darwin':
+if libcares_static == True:
+    from setup_cares import cares_build_ext
     runtime_library_dirs = []
     include_dirs         = ['./deps/c-ares/src/']
     library_dirs         = []
     libraries            = []
-    from setup_cares import cares_build_ext
     cmdclass             = {'build_ext': cares_build_ext}
-else:
-    runtime_library_dirs = [] #pkg_config_parse('--libs-only-L',   'libcares')
-    include_dirs         = [] #pkg_config_parse('--cflags-only-I', 'libcares')
-    library_dirs         = [] #pkg_config_parse('--libs-only-L',   'libcares')
+else if libcares_static == False:
+    pkg_config_version_check('libcares', libcares_version_required)
+    print(pkg_config_parse('--libs-only-l',   'libcares'))
+    runtime_library_dirs = pkg_config_parse('--libs-only-L',   'libcares')
+    include_dirs         = pkg_config_parse('--cflags-only-I', 'libcares')
+    library_dirs         = pkg_config_parse('--libs-only-L',   'libcares')
     libraries            = pkg_config_parse('--libs-only-l',   'libcares')
     cmdclass             = {}
 
