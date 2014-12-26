@@ -46,18 +46,19 @@ def call(command, opt=None):
     pipe.wait()
 
     pipe.stdout = pipe.stdout.read()
-    pipe.stdout = pipe.stdout.split()
     if pipe.stdout != None:
+        if sys.version_info[0] >= 3:
+            pipe.stdout = pipe.stdout.decode(sys.stdout.encoding) #get str
+        pipe.stdout = pipe.stdout.split()
         if opt != None:
-            pipe.stdout = [x.decode(sys.stdout.encoding).lstrip(opt) for x in pipe.stdout]
-        else:
-            pipe.stdout = [x.decode(sys.stdout.encoding) for x in pipe.stdout]
+            pipe.stdout = [x.lstrip(opt) for x in pipe.stdout]
     pipe.stderr = pipe.stderr.read()
-    pipe.stderr = pipe.stderr.split()
     if pipe.stderr != None:
-        pipe.stderr = [x.decode(sys.stderr.encoding) for x in pipe.stderr]
-    log.error('%s - stdout: %s' % (command, pipe.stdout))
-    log.error('%s - stderr: %s' % (command, pipe.stderr))
+        if sys.version_info[0] >= 3:
+            pipe.stderr = pipe.stderr.decode(sys.stderr.encoding) #get str
+        pipe.stderr = pipe.stderr.split()
+    log.debug('%s - stdout: %s' % (command, pipe.stdout))
+    log.debug('%s - stderr: %s' % (command, pipe.stderr))
     if pipe.returncode != 0:
         log.debug('%s - returncode: %i' % (command, pipe.returncode))
         raise SystemExit(pipe.stderr)
