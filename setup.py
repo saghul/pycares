@@ -52,7 +52,7 @@ if libcares_static == True:
     library_dirs         = []
     libraries            = []
     cmdclass             = {'build_ext': cares_build_ext}
-else if libcares_static == False:
+elif libcares_static == False:
     pkg_config_version_check('libcares', libcares_version_required)
     print(pkg_config_parse('--libs-only-l',   'libcares'))
     runtime_library_dirs = pkg_config_parse('--libs-only-L',   'libcares')
