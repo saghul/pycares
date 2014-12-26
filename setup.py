@@ -19,10 +19,10 @@ libcares_static = False
 
 class enable_ext_static(Command):
     description = """Build the included libcares and link the Python module static."""
-    user_option = [ ('enable_ext_static=', None, 'Specify enable'), ]
+    user_options = [ ('enable-ext-static=', None, 'Specify enable'), ]
 
     def initialize_options(self):
-        self.enable_ext_static = None
+        self.enable_ext_static = False
 
     def finalize_options(self):
         assert self.enable_ext_static in (None, 'enable'), 'Specify enable!'
@@ -74,7 +74,7 @@ if libcares_static == True:
     library_dirs         = []
     libraries            = []
     cmdclass             = {'build_ext': cares_build_ext,
-            'enable_ext_static': enable_ext_static}
+            'enable-ext-static': enable_ext_static}
 elif libcares_static == False:
     pkg_config_version_check('libcares', libcares_version_required)
     log.debug(pkg_config_parse('--libs-only-l',   'libcares'))
@@ -82,7 +82,7 @@ elif libcares_static == False:
     include_dirs         = pkg_config_parse('--cflags-only-I', 'libcares')
     library_dirs         = pkg_config_parse('--libs-only-L',   'libcares')
     libraries            = pkg_config_parse('--libs-only-l',   'libcares')
-    cmdclass             = {'enable_ext_static': enable_ext_static}
+    cmdclass             = {'enable-ext-static': enable_ext_static}
 
 setup(name             = "pycares",
       version          = __version__,
