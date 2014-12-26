@@ -2,8 +2,8 @@
 
 from __future__ import print_function
 #https://docs.python.org/2/distutils/extending.html
-from distutils.command.build_py import build_py as _build_py_static
-from distutils.core import setup, Extension
+from distutils.command.build_py import build_ext as _build_ext_static
+from setuptools import setup, Extension
 import codecs
 import sys
 import os
@@ -17,8 +17,8 @@ __version__ = "0.6.3"
 libcares_version_required = '1.10.0'
 libcares_static = False
 
-class build_py_static(_build_py_static):
-    """Build the Python source with included libcares and link static."""
+class build_ext_static(_build_ext_static):
+    """Build the included libcares and link the Python module static."""
     libcares_static = True
 
 def call(command):
