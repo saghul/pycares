@@ -58,39 +58,44 @@ class cares_build_ext(build_ext):
     user_options = build_ext.user_options
     user_options.extend([
         ("cares-clean-compile", None, "Clean c-ares tree before compilation"),
+        ("use-system-libcares", None, "Use the system provided libcares, instead of the bundled one"),
     ])
     boolean_options = build_ext.boolean_options
-    boolean_options.extend(["cares-clean-compile"])
+    boolean_options.extend(["cares-clean-compile","use-system-libcares"])
 
     def initialize_options(self):
         build_ext.initialize_options(self)
         self.cares_clean_compile = 0
+        self.use_system_libcares = 0
 
     def build_extensions(self):
-        if self.compiler.compiler_type == 'mingw32':
-            # Dirty hack to avoid linking with more than one C runtime when using MinGW
-            self.compiler.dll_libraries = [lib for lib in self.compiler.dll_libraries if not lib.startswith('msvcr')]
-        self.force = self.cares_clean_compile
-        if self.compiler.compiler_type == 'msvc':
-            self.cares_lib = os.path.join(self.cares_dir, 'cares.lib')
-        else:
-            self.cares_lib = os.path.join(self.cares_dir, 'libcares.a')
-        self.build_cares()
-        # Set compiler options
-        if self.compiler.compiler_type == 'mingw32':
-            self.compiler.add_library_dir(self.cares_dir)
+        if self.use_system_libcares:
             self.compiler.add_library('cares')
-        self.extensions[0].extra_objects = [self.cares_lib]
-        self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src'))
-        if sys.platform.startswith('linux'):
-            self.compiler.add_library('rt')
-        elif sys.platform == 'win32':
+        else:
+            if self.compiler.compiler_type == 'mingw32':
+                # Dirty hack to avoid linking with more than one C runtime when using MinGW
+                self.compiler.dll_libraries = [lib for lib in self.compiler.dll_libraries if not lib.startswith('msvcr')]
+            self.force = self.cares_clean_compile
             if self.compiler.compiler_type == 'msvc':
-                self.extensions[0].extra_link_args = ['/NODEFAULTLIB:libcmt']
-                self.compiler.add_library('advapi32')
-            self.compiler.add_library('iphlpapi')
-            self.compiler.add_library('psapi')
-            self.compiler.add_library('ws2_32')
+                self.cares_lib = os.path.join(self.cares_dir, 'cares.lib')
+            else:
+                self.cares_lib = os.path.join(self.cares_dir, 'libcares.a')
+            self.build_cares()
+            # Set compiler options
+            if self.compiler.compiler_type == 'mingw32':
+                self.compiler.add_library_dir(self.cares_dir)
+                self.compiler.add_library('cares')
+            self.extensions[0].extra_objects = [self.cares_lib]
+            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src'))
+            if sys.platform.startswith('linux'):
+                self.compiler.add_library('rt')
+            elif sys.platform == 'win32':
+                if self.compiler.compiler_type == 'msvc':
+                    self.extensions[0].extra_link_args = ['/NODEFAULTLIB:libcmt']
+                    self.compiler.add_library('advapi32')
+                self.compiler.add_library('iphlpapi')
+                self.compiler.add_library('psapi')
+                self.compiler.add_library('ws2_32')
         build_ext.build_extensions(self)
 
     def build_cares(self):
