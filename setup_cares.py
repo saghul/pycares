@@ -2,7 +2,8 @@
 import errno
 import os
 try:
-    import subprocess32 as subprocess #backported python3 subprocess in python2
+    # backported python3 subprocess in python2
+    import subprocess32 as subprocess
 except:
     import subprocess
 import sys
@@ -11,6 +12,7 @@ import io
 from distutils import log
 from distutils.command.build_ext import build_ext
 from distutils.errors import DistutilsError
+
 
 def exec_process(cmdline, silent=True, catch_enoent=True, input=None, **kwargs):
     """Execute a subprocess and returns the returncode, stdout buffer and stderr buffer.
@@ -64,7 +66,7 @@ class cares_build_ext(build_ext):
         ("use-system-libcares", None, "Use the system provided libcares, instead of the bundled one"),
     ])
     boolean_options = build_ext.boolean_options
-    boolean_options.extend(["cares-clean-compile","use-system-libcares"])
+    boolean_options.extend(["cares-clean-compile", "use-system-libcares"])
 
     def initialize_options(self):
         build_ext.initialize_options(self)
@@ -115,8 +117,9 @@ class cares_build_ext(build_ext):
         build_ext.build_extensions(self)
 
     def build_cares(self):
-        #self.debug_mode =  bool(self.debug) or hasattr(sys, 'gettotalrefcount')
+        # self.debug_mode =  bool(self.debug) or hasattr(sys, 'gettotalrefcount')
         win32_msvc = self.compiler.compiler_type == 'msvc'
+
         def build():
             cflags = '-fPIC'
             env = os.environ.copy()
@@ -126,6 +129,7 @@ class cares_build_ext(build_ext):
                 exec_process('cmd.exe /C vcbuild.bat', cwd=self.cares_dir, env=env, shell=True)
             else:
                 exec_make(['libcares.a'], cwd=self.cares_dir, env=env)
+
         def clean():
             if win32_msvc:
                 exec_process('cmd.exe /C vcbuild.bat clean', cwd=self.cares_dir, shell=True)
@@ -139,6 +143,7 @@ class cares_build_ext(build_ext):
         else:
             log.info('No need to build c-ares.')
 
+
 def call(command, opt=None):
     pipe = subprocess.Popen(command, shell=True,
                                    stdout=subprocess.PIPE,
@@ -146,16 +151,16 @@ def call(command, opt=None):
     pipe.wait()
 
     pipe.stdout = pipe.stdout.read()
-    if pipe.stdout != None:
+    if pipe.stdout is not None:
         if sys.version_info[0] >= 3:
-            pipe.stdout = pipe.stdout.decode(sys.stdout.encoding) #get str
+            pipe.stdout = pipe.stdout.decode(sys.stdout.encoding)  # get str
         pipe.stdout = pipe.stdout.split()
-        if opt != None:
+        if opt is not None:
             pipe.stdout = [x.lstrip(opt) for x in pipe.stdout]
     pipe.stderr = pipe.stderr.read()
-    if pipe.stderr != None:
+    if pipe.stderr is not None:
         if sys.version_info[0] >= 3:
-            pipe.stderr = pipe.stderr.decode(sys.stderr.encoding) #get str
+            pipe.stderr = pipe.stderr.decode(sys.stderr.encoding)  # get str
         pipe.stderr = pipe.stderr.split()
     log.debug('%s - stdout: %s' % (command, pipe.stdout))
     log.debug('%s - stderr: %s' % (command, pipe.stderr))
@@ -176,10 +181,10 @@ def pkg_config_version_check(pkg, version):
 
     log.debug('%s >= %s detected' % (pkg, version))
 
+
 def pkg_config_parse(opt, pkg):
     pipe = call("pkg-config %s %s" % (opt, pkg), opt[-2:])
-    if pipe.stdout != None:
+    if pipe.stdout is not None:
         return pipe.stdout
     else:
         return []
-

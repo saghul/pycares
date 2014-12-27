@@ -4,7 +4,8 @@ from setuptools import setup, Extension
 from setup_cares import cares_build_ext
 import codecs
 try:
-    import subprocess32 as subprocess #backported python3 subprocess in python2
+    # backported python3 subprocess in python2
+    import subprocess32 as subprocess
 except:
     import subprocess
 
@@ -42,4 +43,3 @@ setup(name             = "pycares",
                                 define_macros=[('MODULE_VERSION', __version__)],
                      )]
      )
-
