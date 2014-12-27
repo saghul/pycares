@@ -21,7 +21,7 @@ def exec_process(cmdline, silent=True, catch_enoent=True, input=None, **kwargs):
         sub = subprocess.Popen(args=cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
         stdout, stderr = sub.communicate(input=input)
 
-        if type(stdout) != type(""):
+        if not isinstance(stdout, str):
             # decode on Python 3
             # do nothing on Python 2 (it just doesn't care about encoding anyway)
             stdout = stdout.decode(sys.getdefaultencoding(), "replace")
@@ -146,21 +146,25 @@ class cares_build_ext(build_ext):
 
 def call(command, opt=None):
     pipe = subprocess.Popen(command, shell=True,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
     pipe.wait()
 
     pipe.stdout = pipe.stdout.read()
     if pipe.stdout is not None:
-        if sys.version_info[0] >= 3:
-            pipe.stdout = pipe.stdout.decode(sys.stdout.encoding)  # get str
+        if not isinstance(stdout, str):
+            # decode on Python 3
+            # do nothing on Python 2 (it just doesn't care about encoding anyway)
+            pipe.stdout = pipe.stdout.decode(sys.stdout.encoding)
         pipe.stdout = pipe.stdout.split()
         if opt is not None:
             pipe.stdout = [x.lstrip(opt) for x in pipe.stdout]
     pipe.stderr = pipe.stderr.read()
     if pipe.stderr is not None:
-        if sys.version_info[0] >= 3:
-            pipe.stderr = pipe.stderr.decode(sys.stderr.encoding)  # get str
+        if not isinstance(stdout, str):
+            # decode on Python 3
+            # do nothing on Python 2 (it just doesn't care about encoding anyway)
+            pipe.stderr = pipe.stderr.decode(sys.stderr.encoding)
         pipe.stderr = pipe.stderr.split()
     log.debug('%s - stdout: %s' % (command, pipe.stdout))
     log.debug('%s - stderr: %s' % (command, pipe.stderr))
