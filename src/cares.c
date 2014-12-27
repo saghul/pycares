@@ -6,7 +6,7 @@
     #include <arpa/inet.h>
     #include <netdb.h>
 #endif
-#include "nameser.h"
+#include <arpa/nameser.h>
 
 static PyObject* PyExc_AresError;
 

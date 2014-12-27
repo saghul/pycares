@@ -1,10 +1,16 @@
 # coding=utf8
 
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 from setup_cares import cares_build_ext
 import codecs
+try:
+    # backported python3 subprocess in python2
+    import subprocess32 as subprocess
+except:
+    import subprocess
 
 __version__ = "0.6.3"
+libcares_version_required = '1.10.0'
 
 setup(name             = "pycares",
       version          = __version__,
@@ -34,7 +40,6 @@ setup(name             = "pycares",
       cmdclass     = {'build_ext': cares_build_ext},
       ext_modules  = [Extension('pycares',
                                 sources = ['src/pycares.c'],
-                                define_macros=[('MODULE_VERSION', __version__)]
+                                define_macros=[('MODULE_VERSION', __version__)],
                      )]
      )
-
