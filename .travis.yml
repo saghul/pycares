@@ -1,11 +1,13 @@
 language: python
+sudo: false
 python:
   - "2.6"
   - "2.7"
   - "3.2"
   - "3.3"
+  - "3.4"
 install:
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors unittest2; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then travis_retry pip install unittest2; fi
   - python setup.py install
 script:
   - ./tests.py
