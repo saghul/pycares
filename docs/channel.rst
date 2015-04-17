@@ -1,15 +1,15 @@
-.. _Channel:
+.. _channel:
 
 
 .. currentmodule:: pycares
 
 
-============
-Ares Channel
-============
+====================================
+:py:class:`Channel`  -  Ares Channel
+====================================
 
 
-.. py:class:: pycares.Channel(flags, timeout, tries, ndots, tcp_port, udp_port, servers, domains, lookups, sock_state_cb)
+.. py:class:: Channel([flags, timeout, tries, ndots, tcp_port, udp_port, servers, domains, lookups, sock_state_cb, socket_send_buffer_size, socket_receive_buffer_size, rotate])
 
     :param int flags: Flags controlling the behavior of the resolver. See ``constants``
         for available values.
@@ -40,6 +40,12 @@ Ares Channel
 
     :param callable sock_state_cb: A callback function to be invoked when a
         socket changes state. Callback signature: ``sock_state_cb(self, fd, readable, writable)``
+
+    :param int socket_send_buffer_size: Size for the created socket's send buffer.
+
+    :param int socket_receive_buffer_size: Size for the created socket's receive buffer.
+
+    :param bool rotate: If set to True, the nameservers are rotated when doing queries.
 
     The c-ares ``Channel`` provides asynchronous DNS operations.
 
@@ -155,5 +161,4 @@ Ares Channel
     .. py:attribute:: servers
 
         List of nameservers to use for DNS queries.
-
 
