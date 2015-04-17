@@ -80,6 +80,18 @@ class DNSTest(unittest2.TestCase):
         self.channel.query('hgf8g2od29hdohid.com', pycares.QUERY_TYPE_A, cb)
         self.wait()
 
+    def test_query_a_rotate(self):
+        def cb(result, errorno):
+            self.assertEqual(errorno, None)
+            self.count += 1
+        self.count = 0
+        self.channel = pycares.Channel(timeout=1.0, tries=1, rotate=True)
+        self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
+        self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
+        self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
+        self.wait()
+        self.assertEqual(self.count, 3)
+
     def test_query_aaaa(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)

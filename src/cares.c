@@ -1457,10 +1457,11 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     char **c_domains;
     double timeout;
     struct ares_options options;
-    PyObject *servers, *domains, *sock_state_cb;
+    PyObject *servers, *domains, *sock_state_cb, *rotate;
 
     static char *kwlist[] = {"flags", "timeout", "tries", "ndots", "tcp_port", "udp_port",
-                             "servers", "domains", "lookups", "sock_state_cb", "socket_send_buffer_size", "socket_receive_buffer_size", NULL};
+                             "servers", "domains", "lookups", "sock_state_cb",
+                             "socket_send_buffer_size", "socket_receive_buffer_size", "rotate", NULL};
 
     optmask = 0;
     flags = tries = ndots = tcp_port = udp_port = socket_send_buffer_size = socket_receive_buffer_size = -1;
@@ -1468,14 +1469,16 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     lookups = NULL;
     c_domains = NULL;
     servers = domains = sock_state_cb = NULL;
+    rotate = Py_False;
 
     if (self->channel) {
         PyErr_SetString(PyExc_AresError, "Object already initialized");
         return -1;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|idiiiiOOsOii:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers,
-                                                                                     &domains, &lookups, &sock_state_cb, &socket_send_buffer_size, &socket_receive_buffer_size)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|idiiiiOOsOiiO!:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers,
+                                                                                       &domains, &lookups, &sock_state_cb, &socket_send_buffer_size, &socket_receive_buffer_size,
+                                                                                       &PyBool_Type, &rotate)) {
         return -1;
     }
 
@@ -1544,6 +1547,9 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
         options.domains = c_domains;
         options.ndomains = ndomains;
         optmask |= ARES_OPT_DOMAINS;
+    }
+    if (rotate == Py_True) {
+        optmask |= ARES_OPT_ROTATE;
     }
 
     r = ares_init_options(&self->channel, &options, optmask);
