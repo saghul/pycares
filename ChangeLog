@@ -1,3 +1,10 @@
+Version 0.7.0
+=============
+ - setup: Fix decoding in non-UTF-8 environments
+ - build: updated Travis build process
+ - Add rotate option
+ - Update documentation
+
 Version 0.6.3
 =============
  - Fix crash if ares_timeout returns NULL
