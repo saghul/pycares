@@ -1,4 +1,4 @@
-# coding=utf8
+# coding=utf-8
 
 from distutils.core import setup, Extension
 from setup_cares import cares_build_ext
