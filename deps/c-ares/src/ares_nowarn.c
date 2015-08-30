@@ -1,5 +1,5 @@
 
-/* Copyright (C) 2010-2012 by Daniel Stenberg
+/* Copyright (C) 2010-2013 by Daniel Stenberg
  *
  * Permission to use, copy, modify, and distribute this
  * software and its documentation for any purpose and without
