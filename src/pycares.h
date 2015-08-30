@@ -109,6 +109,21 @@ static PyStructSequence_Desc ares_nameinfo_result_desc = {
     2
 };
 
+static PyTypeObject AresQuerySimpleResultType;
+
+static PyStructSequence_Field ares_query_simple_result_fields[] = {
+    {"host", ""},
+    {"ttl", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc ares_query_simple_result_desc = {
+    "ares_query_simple_result",
+    NULL,
+    ares_query_simple_result_fields,
+    2
+};
+
 static PyTypeObject AresQueryMXResultType;
 
 static PyStructSequence_Field ares_query_mx_result_fields[] = {

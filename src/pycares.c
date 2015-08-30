@@ -105,6 +105,8 @@ init_pycares(void)
         PyStructSequence_InitType(&AresHostResultType, &ares_host_result_desc);
     if (AresNameinfoResultType.tp_name == 0)
         PyStructSequence_InitType(&AresNameinfoResultType, &ares_nameinfo_result_desc);
+    if (AresQuerySimpleResultType.tp_name == 0)
+        PyStructSequence_InitType(&AresQuerySimpleResultType, &ares_query_simple_result_desc);
     if (AresQueryMXResultType.tp_name == 0)
         PyStructSequence_InitType(&AresQueryMXResultType, &ares_query_mx_result_desc);
     if (AresQuerySOAResultType.tp_name == 0)

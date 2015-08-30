@@ -70,6 +70,9 @@ class DNSTest(unittest2.TestCase):
     def test_query_a(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
+            for r in result:
+                self.assertNotEqual(r.host, None)
+                self.assertTrue(r.ttl >= 0)
         self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
         self.wait()
 
@@ -95,6 +98,9 @@ class DNSTest(unittest2.TestCase):
     def test_query_aaaa(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
+            for r in result:
+                self.assertNotEqual(r.host, None)
+                self.assertTrue(r.ttl >= 0)
         self.channel.query('ipv6.google.com', pycares.QUERY_TYPE_AAAA, cb)
         self.wait()
 

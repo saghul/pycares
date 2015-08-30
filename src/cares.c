@@ -8,6 +8,9 @@
 #endif
 #include "nameser.h"
 
+#define PYCARES_ADDRTTL_SIZE 256
+
+
 static PyObject* PyExc_AresError;
 
 
@@ -73,8 +76,9 @@ query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int an
     PyGILState_STATE gstate = PyGILState_Ensure();
     int parse_status;
     char ip[INET6_ADDRSTRLEN];
-    char **ptr;
-    struct hostent *hostent = NULL;
+    int i;
+    struct ares_addrttl addrttls[PYCARES_ADDRTTL_SIZE];
+    int naddrttls = PYCARES_ADDRTTL_SIZE;
     PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     callback = (PyObject *)arg;
@@ -87,7 +91,7 @@ query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int an
         goto callback;
     }
 
-    parse_status = ares_parse_a_reply(answer_buf, answer_len, &hostent, NULL, NULL);
+    parse_status = ares_parse_a_reply(answer_buf, answer_len, NULL, addrttls, &naddrttls);
     if (parse_status != ARES_SUCCESS) {
         errorno = PyInt_FromLong((long)parse_status);
         dns_result = Py_None;
@@ -105,12 +109,14 @@ query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int an
         goto callback;
     }
 
-    for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
-        ares_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
-        tmp = Py_BuildValue("s", ip);
+    for (i = 0; i < naddrttls; i++) {
+        ares_inet_ntop(AF_INET, &addrttls[i].ipaddr, ip, sizeof(ip));
+        tmp = PyStructSequence_New(&AresQuerySimpleResultType);
         if (tmp == NULL) {
             break;
         }
+        PyStructSequence_SET_ITEM(tmp, 0, Py_BuildValue("s", ip));
+        PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)addrttls[i].ttl));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
@@ -125,10 +131,8 @@ callback:
     Py_XDECREF(result);
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
-    if (hostent) {
-        ares_free_hostent(hostent);
-    }
     Py_DECREF(callback);
+
     PyGILState_Release(gstate);
 }
 
@@ -139,8 +143,9 @@ query_aaaa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int
     PyGILState_STATE gstate = PyGILState_Ensure();
     int parse_status;
     char ip[INET6_ADDRSTRLEN];
-    char **ptr;
-    struct hostent *hostent = NULL;
+    int i;
+    struct ares_addr6ttl addrttls[PYCARES_ADDRTTL_SIZE];
+    int naddrttls = PYCARES_ADDRTTL_SIZE;
     PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     callback = (PyObject *)arg;
@@ -153,7 +158,7 @@ query_aaaa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int
         goto callback;
     }
 
-    parse_status = ares_parse_aaaa_reply(answer_buf, answer_len, &hostent, NULL, NULL);
+    parse_status = ares_parse_aaaa_reply(answer_buf, answer_len, NULL, addrttls, &naddrttls);
     if (parse_status != ARES_SUCCESS) {
         errorno = PyInt_FromLong((long)parse_status);
         dns_result = Py_None;
@@ -171,12 +176,14 @@ query_aaaa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int
         goto callback;
     }
 
-    for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
-        ares_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
-        tmp = Py_BuildValue("s", ip);
+    for (i = 0; i < naddrttls; i++) {
+        ares_inet_ntop(AF_INET6, &addrttls[i].ip6addr, ip, sizeof(ip));
+        tmp = PyStructSequence_New(&AresQuerySimpleResultType);
         if (tmp == NULL) {
             break;
         }
+        PyStructSequence_SET_ITEM(tmp, 0, Py_BuildValue("s", ip));
+        PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)addrttls[i].ttl));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
@@ -191,10 +198,8 @@ callback:
     Py_XDECREF(result);
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
-    if (hostent) {
-        ares_free_hostent(hostent);
-    }
     Py_DECREF(callback);
+
     PyGILState_Release(gstate);
 }
 
