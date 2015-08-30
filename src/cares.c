@@ -210,7 +210,7 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
     PyGILState_STATE gstate = PyGILState_Ensure();
     int parse_status;
     struct hostent *hostent = NULL;
-    PyObject *dns_result, *errorno, *tmp, *result, *callback;
+    PyObject *dns_result, *errorno, *result, *callback;
 
     callback = (PyObject *)arg;
     ASSERT(callback);
@@ -230,20 +230,8 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
         goto callback;
     }
 
-    dns_result = PyList_New(0);
-    if (!dns_result) {
-        PyErr_NoMemory();
-        PyErr_WriteUnraisable(Py_None);
-        errorno = PyInt_FromLong((long)ARES_ENOMEM);
-        dns_result = Py_None;
-        Py_INCREF(Py_None);
-        goto callback;
-    }
-
     /* TODO: add TTL */
-    tmp = Py_BuildValue("s", hostent->h_name);
-    PyList_Append(dns_result, tmp);
-    Py_DECREF(tmp);
+    dns_result = Py_BuildValue("s", hostent->h_name);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
