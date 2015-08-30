@@ -52,7 +52,7 @@ ares_parse_txt_reply (const unsigned char *abuf, int alen,
   unsigned int qdcount, ancount, i;
   const unsigned char *aptr;
   const unsigned char *strptr;
-  int status, rr_type, rr_class, rr_len;
+  int status, rr_type, rr_class, rr_len, rr_ttl;
   long len;
   char *hostname = NULL, *rr_name = NULL;
   struct ares_txt_reply *txt_head = NULL;
@@ -105,6 +105,7 @@ ares_parse_txt_reply (const unsigned char *abuf, int alen,
       rr_type = DNS_RR_TYPE (aptr);
       rr_class = DNS_RR_CLASS (aptr);
       rr_len = DNS_RR_LEN (aptr);
+      rr_ttl = DNS_RR_TTL (aptr);
       aptr += RRFIXEDSZ;
       if (aptr + rr_len > abuf + alen)
         {
@@ -163,6 +164,7 @@ ares_parse_txt_reply (const unsigned char *abuf, int alen,
 
               /* Make sure we NULL-terminate */
               txt_curr->txt[substr_len] = 0;
+              txt_curr->ttl = rr_ttl;
 
               strptr += substr_len;
             }
