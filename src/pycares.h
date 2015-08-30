@@ -129,6 +129,7 @@ static PyTypeObject AresQueryMXResultType;
 static PyStructSequence_Field ares_query_mx_result_fields[] = {
     {"host", ""},
     {"priority", ""},
+    {"ttl", ""},
     {NULL}
 };
 
@@ -136,7 +137,7 @@ static PyStructSequence_Desc ares_query_mx_result_desc = {
     "ares_query_mx_result",
     NULL,
     ares_query_mx_result_fields,
-    2
+    3
 };
 
 static PyTypeObject AresQuerySOAResultType;
@@ -149,6 +150,7 @@ static PyStructSequence_Field ares_query_soa_result_fields[] = {
     {"retry", ""},
     {"expires", ""},
     {"minttl", ""},
+    {"ttl", ""},
     {NULL}
 };
 
@@ -156,7 +158,7 @@ static PyStructSequence_Desc ares_query_soa_result_desc = {
     "ares_query_soa_result",
     NULL,
     ares_query_soa_result_fields,
-    7
+    8
 };
 
 static PyTypeObject AresQuerySRVResultType;
@@ -166,6 +168,7 @@ static PyStructSequence_Field ares_query_srv_result_fields[] = {
     {"port", ""},
     {"priority", ""},
     {"weight", ""},
+    {"ttl", ""},
     {NULL}
 };
 
@@ -173,7 +176,7 @@ static PyStructSequence_Desc ares_query_srv_result_desc = {
     "ares_query_srv_result",
     NULL,
     ares_query_srv_result_fields,
-    4
+    5
 };
 
 static PyTypeObject AresQueryNAPTRResultType;
@@ -185,6 +188,7 @@ static PyStructSequence_Field ares_query_naptr_result_fields[] = {
     {"service", ""},
     {"regex", ""},
     {"replacement", ""},
+    {"ttl", ""},
     {NULL}
 };
 
@@ -192,7 +196,7 @@ static PyStructSequence_Desc ares_query_naptr_result_desc = {
     "ares_query_naptr_result",
     NULL,
     ares_query_naptr_result_fields,
-    6
+    7
 };
 
 

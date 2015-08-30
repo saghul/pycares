@@ -113,6 +113,8 @@ class DNSTest(unittest2.TestCase):
     def test_query_mx(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
+            for r in result:
+                self.assertTrue(r.ttl >= 0)
         self.channel.query('google.com', pycares.QUERY_TYPE_MX, cb)
         self.wait()
 
@@ -131,18 +133,23 @@ class DNSTest(unittest2.TestCase):
     def test_query_soa(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
+            self.assertTrue(result.ttl >= 0)
         self.channel.query('google.com', pycares.QUERY_TYPE_SOA, cb)
         self.wait()
 
     def test_query_srv(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
+            for r in result:
+                self.assertTrue(r.ttl >= 0)
         self.channel.query('_xmpp-server._tcp.google.com', pycares.QUERY_TYPE_SRV, cb)
         self.wait()
 
     def test_query_naptr(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
+            for r in result:
+                self.assertTrue(r.ttl >= 0)
         self.channel.query('sip2sip.info', pycares.QUERY_TYPE_NAPTR, cb)
         self.wait()
 

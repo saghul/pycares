@@ -240,6 +240,7 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
         goto callback;
     }
 
+    /* TODO: add TTL */
     tmp = Py_BuildValue("s", hostent->h_name);
     PyList_Append(dns_result, tmp);
     Py_DECREF(tmp);
@@ -306,6 +307,7 @@ query_mx_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
         }
         PyStructSequence_SET_ITEM(tmp, 0, Py_BuildValue("s", mx_ptr->host));
         PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)mx_ptr->priority));
+        PyStructSequence_SET_ITEM(tmp, 2, PyInt_FromLong((long)mx_ptr->ttl));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
@@ -495,6 +497,7 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         goto callback;
     }
 
+    /* TODO: add TTL */
     for (txt_ptr = txt_reply; txt_ptr != NULL; txt_ptr = txt_ptr->next) {
         tmp = Py_BuildValue("s", (const char *)txt_ptr->txt);
         if (tmp == NULL) {
@@ -565,6 +568,7 @@ query_soa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     PyStructSequence_SET_ITEM(dns_result, 4, PyInt_FromLong((long)soa_reply->retry));
     PyStructSequence_SET_ITEM(dns_result, 5, PyInt_FromLong((long)soa_reply->expire));
     PyStructSequence_SET_ITEM(dns_result, 6, PyInt_FromLong((long)soa_reply->minttl));
+    PyStructSequence_SET_ITEM(dns_result, 7, PyInt_FromLong((long)soa_reply->ttl));
 
     errorno = Py_None;
     Py_INCREF(Py_None);
@@ -631,6 +635,7 @@ query_srv_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)srv_ptr->port));
         PyStructSequence_SET_ITEM(tmp, 2, PyInt_FromLong((long)srv_ptr->priority));
         PyStructSequence_SET_ITEM(tmp, 3, PyInt_FromLong((long)srv_ptr->weight));
+        PyStructSequence_SET_ITEM(tmp, 4, PyInt_FromLong((long)srv_ptr->ttl));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
@@ -701,6 +706,7 @@ query_naptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
         PyStructSequence_SET_ITEM(tmp, 3, Py_BuildValue("s", (char *)naptr_ptr->service));
         PyStructSequence_SET_ITEM(tmp, 4, Py_BuildValue("s", (char *)naptr_ptr->regexp));
         PyStructSequence_SET_ITEM(tmp, 5, Py_BuildValue("s", naptr_ptr->replacement));
+        PyStructSequence_SET_ITEM(tmp, 6, PyInt_FromLong((long)naptr_ptr->ttl));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
