@@ -22,7 +22,7 @@ struct sockaddr_in uv_ip4_addr(const char* ip, int port) {
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = inet_addr(ip);
+    ares_inet_pton(AF_INET, ip, &addr.sin_addr.s_addr);
 
     return addr;
 }
