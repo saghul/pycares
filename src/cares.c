@@ -387,10 +387,8 @@ query_ptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     int parse_status;
-    char *addr = "0.0.0.0";
-    char **ptr;
     struct hostent *hostent = NULL;
-    PyObject *dns_result, *errorno, *tmp, *result, *callback;
+    PyObject *dns_result, *errorno, *result, *callback;
 
     callback = (PyObject *)arg;
     ASSERT(callback);
@@ -403,7 +401,7 @@ query_ptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     }
 
     /* addr is only used to populate the hostent struct, it's not used to validate the response */
-    parse_status = ares_parse_ptr_reply(answer_buf, answer_len, addr, sizeof(addr)-1, AF_INET, &hostent);
+    parse_status = ares_parse_ptr_reply(answer_buf, answer_len, NULL, 0, AF_UNSPEC, &hostent);
     if (parse_status != ARES_SUCCESS) {
         errorno = PyInt_FromLong((long)parse_status);
         dns_result = Py_None;
@@ -411,24 +409,7 @@ query_ptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         goto callback;
     }
 
-    dns_result = PyList_New(0);
-    if (!dns_result) {
-        PyErr_NoMemory();
-        PyErr_WriteUnraisable(Py_None);
-        errorno = PyInt_FromLong((long)ARES_ENOMEM);
-        dns_result = Py_None;
-        Py_INCREF(Py_None);
-        goto callback;
-    }
-
-    for (ptr = hostent->h_aliases; *ptr != NULL; ptr++) {
-        tmp = Py_BuildValue("s", *ptr);
-        if (tmp == NULL) {
-            break;
-        }
-        PyList_Append(dns_result, tmp);
-        Py_DECREF(tmp);
-    }
+    dns_result = Py_BuildValue("s", hostent->h_name);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
