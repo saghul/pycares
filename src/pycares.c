@@ -107,12 +107,20 @@ init_pycares(void)
         PyStructSequence_InitType(&AresNameinfoResultType, &ares_nameinfo_result_desc);
     if (AresQuerySimpleResultType.tp_name == 0)
         PyStructSequence_InitType(&AresQuerySimpleResultType, &ares_query_simple_result_desc);
+    if (AresQueryCNAMEResultType.tp_name == 0)
+        PyStructSequence_InitType(&AresQueryCNAMEResultType, &ares_query_cname_result_desc);
     if (AresQueryMXResultType.tp_name == 0)
         PyStructSequence_InitType(&AresQueryMXResultType, &ares_query_mx_result_desc);
+    if (AresQueryNSResultType.tp_name == 0)
+        PyStructSequence_InitType(&AresQueryNSResultType, &ares_query_ns_result_desc);
+    if (AresQueryPTRResultType.tp_name == 0)
+        PyStructSequence_InitType(&AresQueryPTRResultType, &ares_query_ptr_result_desc);
     if (AresQuerySOAResultType.tp_name == 0)
         PyStructSequence_InitType(&AresQuerySOAResultType, &ares_query_soa_result_desc);
     if (AresQuerySRVResultType.tp_name == 0)
         PyStructSequence_InitType(&AresQuerySRVResultType, &ares_query_srv_result_desc);
+    if (AresQueryTXTResultType.tp_name == 0)
+        PyStructSequence_InitType(&AresQueryTXTResultType, &ares_query_txt_result_desc);
     if (AresQueryNAPTRResultType.tp_name == 0)
         PyStructSequence_InitType(&AresQueryNAPTRResultType, &ares_query_naptr_result_desc);
 

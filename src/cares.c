@@ -230,8 +230,11 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
         goto callback;
     }
 
-    /* TODO: add TTL */
-    dns_result = Py_BuildValue("s", hostent->h_name);
+    dns_result = PyStructSequence_New(&AresQueryCNAMEResultType);
+    PyStructSequence_SET_ITEM(dns_result, 0, Py_BuildValue("s", hostent->h_name));
+    /* TODO: add (real) TTL */
+    PyStructSequence_SET_ITEM(dns_result, 1, Py_None);
+    Py_INCREF(Py_None);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -356,10 +359,14 @@ query_ns_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     }
 
     for (ptr = hostent->h_aliases; *ptr != NULL; ptr++) {
-        tmp = Py_BuildValue("s", *ptr);
+        tmp = PyStructSequence_New(&AresQueryNSResultType);
         if (tmp == NULL) {
             break;
         }
+        PyStructSequence_SET_ITEM(tmp, 0, Py_BuildValue("s", *ptr));
+        /* TODO: add (real) TTL */
+        PyStructSequence_SET_ITEM(tmp, 1, Py_None);
+        Py_INCREF(Py_None);
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
@@ -409,7 +416,20 @@ query_ptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         goto callback;
     }
 
-    dns_result = Py_BuildValue("s", hostent->h_name);
+    dns_result = PyStructSequence_New(&AresQueryPTRResultType);
+    if (!dns_result) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        errorno = PyInt_FromLong((long)ARES_ENOMEM);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    PyStructSequence_SET_ITEM(dns_result, 0, Py_BuildValue("s", hostent->h_name));
+    /* TODO: add (real) TTL */
+    PyStructSequence_SET_ITEM(dns_result, 1, Py_None);
+    Py_INCREF(Py_None);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -466,12 +486,13 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         goto callback;
     }
 
-    /* TODO: add TTL */
     for (txt_ptr = txt_reply; txt_ptr != NULL; txt_ptr = txt_ptr->next) {
-        tmp = Py_BuildValue("s", (const char *)txt_ptr->txt);
+        tmp = PyStructSequence_New(&AresQueryTXTResultType);
         if (tmp == NULL) {
             break;
         }
+        PyStructSequence_SET_ITEM(tmp, 0, Py_BuildValue("s", (const char *)txt_ptr->txt));
+        PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)txt_ptr->ttl));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }

@@ -124,6 +124,21 @@ static PyStructSequence_Desc ares_query_simple_result_desc = {
     2
 };
 
+static PyTypeObject AresQueryCNAMEResultType;
+
+static PyStructSequence_Field ares_query_cname_result_fields[] = {
+    {"cname", ""},
+    {"ttl", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc ares_query_cname_result_desc = {
+    "ares_query_cname_result",
+    NULL,
+    ares_query_cname_result_fields,
+    2
+};
+
 static PyTypeObject AresQueryMXResultType;
 
 static PyStructSequence_Field ares_query_mx_result_fields[] = {
@@ -138,6 +153,36 @@ static PyStructSequence_Desc ares_query_mx_result_desc = {
     NULL,
     ares_query_mx_result_fields,
     3
+};
+
+static PyTypeObject AresQueryNSResultType;
+
+static PyStructSequence_Field ares_query_ns_result_fields[] = {
+    {"host", ""},
+    {"ttl", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc ares_query_ns_result_desc = {
+    "ares_query_ns_result",
+    NULL,
+    ares_query_ns_result_fields,
+    2
+};
+
+static PyTypeObject AresQueryPTRResultType;
+
+static PyStructSequence_Field ares_query_ptr_result_fields[] = {
+    {"name", ""},
+    {"ttl", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc ares_query_ptr_result_desc = {
+    "ares_query_ptr_result",
+    NULL,
+    ares_query_ptr_result_fields,
+    2
 };
 
 static PyTypeObject AresQuerySOAResultType;
@@ -177,6 +222,21 @@ static PyStructSequence_Desc ares_query_srv_result_desc = {
     NULL,
     ares_query_srv_result_fields,
     5
+};
+
+static PyTypeObject AresQueryTXTResultType;
+
+static PyStructSequence_Field ares_query_txt_result_fields[] = {
+    {"text", ""},
+    {"ttl", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc ares_query_txt_result_desc = {
+    "ares_query_txt_result",
+    NULL,
+    ares_query_txt_result_fields,
+    2
 };
 
 static PyTypeObject AresQueryNAPTRResultType;

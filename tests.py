@@ -127,6 +127,8 @@ class DNSTest(unittest2.TestCase):
     def test_query_txt(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
+            for r in result:
+                self.assertTrue(r.ttl >= 0)
         self.channel.query('google.com', pycares.QUERY_TYPE_TXT, cb)
         self.wait()
 
