@@ -35,24 +35,28 @@ class DNSTest(unittest2.TestCase):
             for fd in wlist:
                 self.channel.process_fd(pycares.ARES_SOCKET_BAD, fd)
 
+    @unittest2.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyaddr(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
         self.channel.gethostbyaddr('127.0.0.1', cb)
         self.wait()
 
+    @unittest2.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyaddr6(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
         self.channel.gethostbyaddr('::1', cb)
         self.wait()
 
+    @unittest2.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyname(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
         self.channel.gethostbyname('localhost', socket.AF_INET, cb)
         self.wait()
 
+    @unittest2.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyname_small_timeout(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
@@ -60,6 +64,7 @@ class DNSTest(unittest2.TestCase):
         self.channel.gethostbyname('localhost', socket.AF_INET, cb)
         self.wait()
 
+    @unittest2.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_getnameinfo(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
