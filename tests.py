@@ -153,12 +153,19 @@ class DNSTest(unittest2.TestCase):
         self.channel.query('sip2sip.info', pycares.QUERY_TYPE_NAPTR, cb)
         self.wait()
 
-#    def test_query_ptr(self):
-#        def cb(result, errorno):
-#            self.assertEqual(errorno, None)
-#        ip = '173.194.69.102'
-#        self.channel.query(pycares.reverse_address(ip), pycares.QUERY_TYPE_PTR, cb)
-#        self.wait()
+    def test_query_ptr(self):
+        def cb(result, errorno):
+            self.assertEqual(errorno, None)
+        ip = '8.8.8.8'
+        self.channel.query(pycares.reverse_address(ip), pycares.QUERY_TYPE_PTR, cb)
+        self.wait()
+
+    def test_query_ptr_ipv6(self):
+        def cb(result, errorno):
+            self.assertEqual(errorno, None)
+        ip = '2001:4860:4860::8888'
+        self.channel.query(pycares.reverse_address(ip), pycares.QUERY_TYPE_PTR, cb)
+        self.wait()
 
     def test_query_cancelled(self):
         def cb(result, errorno):
