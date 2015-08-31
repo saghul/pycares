@@ -102,9 +102,9 @@ class cares_build_ext(build_ext):
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building c-ares...')
             if win32_msvc:
-                exec_process('cmd.exe /C vcbuild.bat', cwd=self.cares_dir, env=env, shell=True)
+                exec_process('cmd.exe /C vcbuild.bat', cwd=self.cares_dir, env=env, shell=True, silent=False)
             else:
-                exec_make(['libcares.a'], cwd=self.cares_dir, env=env)
+                exec_make(['libcares.a'], cwd=self.cares_dir, env=env, silent=False)
         def clean():
             if win32_msvc:
                 exec_process('cmd.exe /C vcbuild.bat clean', cwd=self.cares_dir, shell=True)
