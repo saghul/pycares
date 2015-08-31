@@ -22,7 +22,9 @@ shift
 goto next-arg
 :args-done
 
-:vc-set-2008
+if defined WindowsSDKDir goto select-target
+if defined VCINSTALLDIR goto select-target
+
 @rem Look for Visual Studio 2008
 if not defined VS90COMNTOOLS goto vc-set-notfound
 if not exist "%VS90COMNTOOLS%\..\..\vc\vcvarsall.bat" goto vc-set-notfound
