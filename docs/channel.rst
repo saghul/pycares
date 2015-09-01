@@ -110,7 +110,72 @@
             - ``QUERY_TYPE_SRV``
             - ``QUERY_TYPE_TXT``
 
-        Callback signature: ``callback(result, errorno)``
+        Callback signature: ``callback(result, errorno)``. The result type varies depending on the
+        query type:
+
+            - A and AAAA: ``ares_query_simple_result``, fields:
+
+              - host
+              - ttl
+
+            - CNAME: ``ares_query_cname_result``, fields:
+
+              - cname
+              - ttl
+
+            - MX: ``ares_query_mx_result``, fields:
+
+              - host
+              - priority
+              - ttl
+
+            - NAPTR: ``ares_query_naptr_result``, fields:
+
+              - order
+              - preference
+              - flags
+              - service
+              - regex
+              - replacement
+              - ttl
+
+            - NS: ``ares_query_ns_result``, fields:
+
+              - host
+              - ttl
+
+            - PTR: ``ares_query_ptr_result``, fields:
+
+              - name
+              - ttl
+
+            - SOA: ``ares_query_soa_result``, fields:
+
+              - nsmane
+              - hostmaster
+              - serial
+              - refresh
+              - retry
+              - expires
+              - minttl
+              - ttl
+
+            - SRV: ``ares_query_srv_result``, fields:
+
+              - host
+              - port
+              - priority
+              - weight
+              - ttl
+
+            - TXT: ``ares_query_txt_result``, fields:
+
+              - text
+              - ttl
+
+        .. note::
+            TTL is not implemented for CNAME, NS and PTR), so it's set to None.
+
 
     .. py:method:: cancel()
 
