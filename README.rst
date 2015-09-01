@@ -40,7 +40,7 @@ Mac OSX:
     export ARCHFLAGS="-arch x86_64"
     ./build_inplace
 
-Microsoft Windows (with Visual Studio 2008):
+Microsoft Windows (with Visual Studio 2008, 2010 or the Windows SDK):
 
 ::
 
@@ -61,12 +61,12 @@ There are several ways of running the test ruite:
 
 - Run the test with the current Python interpreter:
 
-  From the toplevel directory, run: ``nosetests -v -w tests/``
+  From the toplevel directory, run: ``python tests.py``
 
 - Use Tox to run the test suite in several virtualenvs with several interpreters
 
-  From the toplevel directory, run: ``tox -e py26,py27,py32`` this will run the test suite
-  on Python 2.6, 2.7 and 3.2 (you'll need to have them installed beforehand)
+  From the toplevel directory, run: ``tox -e py27,py33,py34`` this will run the test suite
+  on Python 2.7, 3.3 and 3.4 (you'll need to have them installed beforehand)
 
 
 Author
@@ -84,7 +84,8 @@ Unless stated otherwise on-file pycares uses the MIT license, check LICENSE file
 Python versions
 ===============
 
-Python >= 2.6 is supported. Yes, that includes Python 3 :-)
+Python >= 2.7 and >= 3.3 are supported. Other older versions might work too, but they are
+not actively tested.
 
 
 Contributing
