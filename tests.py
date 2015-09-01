@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 
-import pycares
 import select
 import socket
 import sys
+import unittest
 
-if sys.version_info < (2, 7) or (0x03000000 <= sys.hexversion < 0x03010000):
-    # py26 or py30
-    import unittest2
-else:
-    import unittest as unittest2
+import pycares
 
 
-class DNSTest(unittest2.TestCase):
+class DNSTest(unittest.TestCase):
 
     def setUp(self):
         self.channel = pycares.Channel(timeout=1.0, tries=1)
@@ -35,28 +31,28 @@ class DNSTest(unittest2.TestCase):
             for fd in wlist:
                 self.channel.process_fd(pycares.ARES_SOCKET_BAD, fd)
 
-    @unittest2.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyaddr(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
         self.channel.gethostbyaddr('127.0.0.1', cb)
         self.wait()
 
-    @unittest2.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyaddr6(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
         self.channel.gethostbyaddr('::1', cb)
         self.wait()
 
-    @unittest2.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyname(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
         self.channel.gethostbyname('localhost', socket.AF_INET, cb)
         self.wait()
 
-    @unittest2.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyname_small_timeout(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
@@ -64,7 +60,7 @@ class DNSTest(unittest2.TestCase):
         self.channel.gethostbyname('localhost', socket.AF_INET, cb)
         self.wait()
 
-    @unittest2.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_getnameinfo(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
@@ -213,5 +209,5 @@ class DNSTest(unittest2.TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)
 
