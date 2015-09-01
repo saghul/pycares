@@ -4,7 +4,7 @@ from setuptools import setup, Extension
 from setup_cares import cares_build_ext
 import codecs
 
-__version__ = "0.7.0"
+__version__ = "1.0.0"
 
 setup(name             = "pycares",
       version          = __version__,

@@ -1,3 +1,18 @@
+Version 1.0.0
+=============
+ - build: fix build on Windows with Python
+ - channel: return TTL information
+ - channel:don't unnecessarily create a list for CNAME results
+ - core: use inet_pton instead of inet_addr
+ - channel: simplify PTR response handling
+ - channel: make al queries return namedtuple-like objects
+ - build: use setuptools
+ - ci: add appveyor integration
+ - build: enable verbose output when building c-ares
+ - build: fix 64-bit build on Windows
+ - build: drop support for older Python versions
+ - doc: update documentation
+
 Version 0.7.0
 =============
  - setup: Fix decoding in non-UTF-8 environments
