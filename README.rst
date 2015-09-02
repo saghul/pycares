@@ -27,7 +27,7 @@ Bundled c-ares
 ==============
 
 pycares currently bundles c-ares and as of pycares 1.0.0 this is a strong requirement. Upstream
-c-ares is not willing to apply `a patch adding TTL support <http://c-ares.haxx.se/mail/c-ares-archive-2013-07/0005.shtml>_`.
+c-ares is not willing to apply `a patch adding TTL support <http://c-ares.haxx.se/mail/c-ares-archive-2013-07/0005.shtml>`_.
 I did apply the patch to the bundled c-ares, but unfortunately it breaks the ABI, so attempting
 to use a system provided c-ares is not possible.
 
