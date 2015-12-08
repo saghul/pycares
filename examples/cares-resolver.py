@@ -22,7 +22,7 @@ class DNSResolver(object):
                 handle = self._fd_map[fd]
             if not self._timer.active:
                 self._timer.start(self._timer_cb, 1.0, 1.0)
-            handle.start(pyuv.UV_READABLE if readable else 0 | pyuv.UV_WRITABLE if writable else 0, self._poll_cb)
+            handle.start((pyuv.UV_READABLE if readable else 0) | (pyuv.UV_WRITABLE if writable else 0), self._poll_cb)
         else:
             # Socket is now closed
             handle = self._fd_map.pop(fd)
