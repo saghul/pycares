@@ -101,28 +101,50 @@ init_pycares(void)
     PyCaresModule_AddType(pycares, "AresError", (PyTypeObject *)PyExc_AresError);
 
     /* Initialize PyStructSequence types */
-    if (AresHostResultType.tp_name == 0)
+    if (AresHostResultType.tp_name == 0) {
         PyStructSequence_InitType(&AresHostResultType, &ares_host_result_desc);
-    if (AresNameinfoResultType.tp_name == 0)
+        PyCaresModule_AddType(pycares, "ares_host_result", &AresHostResultType);
+    }
+    if (AresNameinfoResultType.tp_name == 0) {
         PyStructSequence_InitType(&AresNameinfoResultType, &ares_nameinfo_result_desc);
-    if (AresQuerySimpleResultType.tp_name == 0)
+        PyCaresModule_AddType(pycares, "ares_nameinfo_result", &AresNameinfoResultType);
+    }
+    if (AresQuerySimpleResultType.tp_name == 0) {
         PyStructSequence_InitType(&AresQuerySimpleResultType, &ares_query_simple_result_desc);
-    if (AresQueryCNAMEResultType.tp_name == 0)
+        PyCaresModule_AddType(pycares, "ares_query_simple_result", &AresQuerySimpleResultType);
+    }
+    if (AresQueryCNAMEResultType.tp_name == 0) {
         PyStructSequence_InitType(&AresQueryCNAMEResultType, &ares_query_cname_result_desc);
-    if (AresQueryMXResultType.tp_name == 0)
+        PyCaresModule_AddType(pycares, "ares_query_cname_result", &AresQueryCNAMEResultType);
+    }
+    if (AresQueryMXResultType.tp_name == 0) {
         PyStructSequence_InitType(&AresQueryMXResultType, &ares_query_mx_result_desc);
-    if (AresQueryNSResultType.tp_name == 0)
+        PyCaresModule_AddType(pycares, "ares_query_mx_result", &AresQueryMXResultType);
+    }
+    if (AresQueryNSResultType.tp_name == 0) {
         PyStructSequence_InitType(&AresQueryNSResultType, &ares_query_ns_result_desc);
-    if (AresQueryPTRResultType.tp_name == 0)
+        PyCaresModule_AddType(pycares, "ares_query_ns_result", &AresQueryNSResultType);
+    }
+    if (AresQueryPTRResultType.tp_name == 0) {
         PyStructSequence_InitType(&AresQueryPTRResultType, &ares_query_ptr_result_desc);
-    if (AresQuerySOAResultType.tp_name == 0)
+        PyCaresModule_AddType(pycares, "ares_query_ptr_result", &AresQueryPTRResultType);
+    }
+    if (AresQuerySOAResultType.tp_name == 0) {
         PyStructSequence_InitType(&AresQuerySOAResultType, &ares_query_soa_result_desc);
-    if (AresQuerySRVResultType.tp_name == 0)
+        PyCaresModule_AddType(pycares, "ares_query_soa_result", &AresQuerySOAResultType);
+    }
+    if (AresQuerySRVResultType.tp_name == 0) {
         PyStructSequence_InitType(&AresQuerySRVResultType, &ares_query_srv_result_desc);
-    if (AresQueryTXTResultType.tp_name == 0)
+        PyCaresModule_AddType(pycares, "ares_query_srv_result", &AresQuerySRVResultType);
+    }
+    if (AresQueryTXTResultType.tp_name == 0) {
         PyStructSequence_InitType(&AresQueryTXTResultType, &ares_query_txt_result_desc);
-    if (AresQueryNAPTRResultType.tp_name == 0)
+        PyCaresModule_AddType(pycares, "ares_query_txt_result", &AresQueryTXTResultType);
+    }
+    if (AresQueryNAPTRResultType.tp_name == 0) {
         PyStructSequence_InitType(&AresQueryNAPTRResultType, &ares_query_naptr_result_desc);
+        PyCaresModule_AddType(pycares, "ares_query_naptr_result", &AresQueryNAPTRResultType);
+    }
 
     /* Flag values */
     PyModule_AddIntMacro(pycares, ARES_FLAG_USEVC);
