@@ -240,6 +240,10 @@ class DNSTest(unittest.TestCase):
         expected = '4.3.2.1.in-addr.arpa'
         self.assertEqual(pycares.reverse_address(s), expected)
 
+        s = '2607:f8b0:4010:801::1013'
+        expected = '3.1.0.1.0.0.0.0.0.0.0.0.0.0.0.0.1.0.8.0.0.1.0.4.0.b.8.f.7.0.6.2.ip6.arpa'
+        self.assertEqual(pycares.reverse_address(s), expected)
+
     def test_channel_timeout(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
