@@ -1,4 +1,5 @@
-# coding=utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from setuptools import setup, Extension
 from setup_cares import cares_build_ext
