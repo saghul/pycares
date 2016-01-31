@@ -39,6 +39,7 @@ class DNSTest(unittest.TestCase):
         self.channel.gethostbyaddr('127.0.0.1', cb)
         self.wait()
         self.assertEqual(self.errorno, None)
+        self.assertEqual(type(self.result), pycares.ares_host_result)
 
     @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyaddr6(self):
@@ -48,6 +49,7 @@ class DNSTest(unittest.TestCase):
         self.channel.gethostbyaddr('::1', cb)
         self.wait()
         self.assertEqual(self.errorno, None)
+        self.assertEqual(type(self.result), pycares.ares_host_result)
 
     @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyname(self):
@@ -57,6 +59,7 @@ class DNSTest(unittest.TestCase):
         self.channel.gethostbyname('localhost', socket.AF_INET, cb)
         self.wait()
         self.assertEqual(self.errorno, None)
+        self.assertEqual(type(self.result), pycares.ares_host_result)
 
     @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyname_small_timeout(self):
@@ -67,6 +70,7 @@ class DNSTest(unittest.TestCase):
         self.channel.gethostbyname('localhost', socket.AF_INET, cb)
         self.wait()
         self.assertEqual(self.errorno, None)
+        self.assertEqual(type(self.result), pycares.ares_host_result)
 
     @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_getnameinfo(self):
@@ -76,6 +80,7 @@ class DNSTest(unittest.TestCase):
         self.channel.getnameinfo(('127.0.0.1', 80), pycares.ARES_NI_LOOKUPHOST|pycares.ARES_NI_LOOKUPSERVICE, cb)
         self.wait()
         self.assertEqual(self.errorno, None)
+        self.assertEqual(type(self.result), pycares.ares_nameinfo_result)
         self.assertIn(self.result[0], ('localhost.localdomain', 'localhost'))
         self.assertEqual(self.result[1], 'http')
 
@@ -87,6 +92,7 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(self.errorno, None)
         for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_simple_result)
             self.assertNotEqual(r.host, None)
             self.assertTrue(r.ttl >= 0)
 
@@ -123,6 +129,7 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(self.errorno, None)
         for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_simple_result)
             self.assertNotEqual(r.host, None)
             self.assertTrue(r.ttl >= 0)
 
@@ -132,6 +139,7 @@ class DNSTest(unittest.TestCase):
             self.result, self.errorno = result, errorno
         self.channel.query('livechat.ripe.net', pycares.QUERY_TYPE_CNAME, cb)
         self.wait()
+        self.assertEqual(type(self.result), pycares.ares_query_cname_result)
         self.assertEqual(self.errorno, None)
 
     def test_query_mx(self):
@@ -142,6 +150,7 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(self.errorno, None)
         for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_mx_result)
             self.assertTrue(r.ttl >= 0)
 
     def test_query_ns(self):
@@ -151,6 +160,8 @@ class DNSTest(unittest.TestCase):
         self.channel.query('google.com', pycares.QUERY_TYPE_NS, cb)
         self.wait()
         self.assertEqual(self.errorno, None)
+        for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_ns_result)
 
     def test_query_txt(self):
         self.result, self.errorno = None, None
@@ -160,6 +171,7 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(self.errorno, None)
         for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_txt_result)
             self.assertTrue(r.ttl >= 0)
 
     def test_query_soa(self):
@@ -168,6 +180,7 @@ class DNSTest(unittest.TestCase):
             self.result, self.errorno = result, errorno
         self.channel.query('google.com', pycares.QUERY_TYPE_SOA, cb)
         self.wait()
+        self.assertEqual(type(self.result), pycares.ares_query_soa_result)
         self.assertEqual(self.errorno, None)
         self.assertTrue(self.result.ttl >= 0)
 
@@ -179,6 +192,7 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(self.errorno, None)
         for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_srv_result)
             self.assertTrue(r.ttl >= 0)
 
     def test_query_naptr(self):
@@ -189,6 +203,7 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(self.errorno, None)
         for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_naptr_result)
             self.assertTrue(r.ttl >= 0)
 
     def test_query_ptr(self):
@@ -198,6 +213,7 @@ class DNSTest(unittest.TestCase):
         ip = '8.8.8.8'
         self.channel.query(pycares.reverse_address(ip), pycares.QUERY_TYPE_PTR, cb)
         self.wait()
+        self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
         self.assertEqual(self.errorno, None)
 
     def test_query_ptr_ipv6(self):
@@ -207,6 +223,7 @@ class DNSTest(unittest.TestCase):
         ip = '2001:4860:4860::8888'
         self.channel.query(pycares.reverse_address(ip), pycares.QUERY_TYPE_PTR, cb)
         self.wait()
+        self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
         self.assertEqual(self.errorno, None)
 
     def test_query_cancelled(self):
@@ -216,6 +233,7 @@ class DNSTest(unittest.TestCase):
         self.channel.query('google.com', pycares.QUERY_TYPE_NS, cb)
         self.channel.cancel()
         self.wait()
+        self.assertEqual(self.result, None)
         self.assertEqual(self.errorno, pycares.errno.ARES_ECANCELLED)
 
     def test_channel_destroyed(self):
@@ -233,6 +251,7 @@ class DNSTest(unittest.TestCase):
         self.channel.servers = ['1.2.3.4']
         self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
         self.wait()
+        self.assertEqual(self.result, None)
         self.assertEqual(self.errorno, pycares.errno.ARES_ETIMEOUT)
 
     def test_reverse_address(self):
@@ -254,6 +273,7 @@ class DNSTest(unittest.TestCase):
         self.assertTrue(timeout > 0.0)
         self.channel.cancel()
         self.wait()
+        self.assertEqual(self.result, None)
         self.assertEqual(self.errorno, pycares.errno.ARES_ECANCELLED)
 
 
