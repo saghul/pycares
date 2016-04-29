@@ -6,7 +6,6 @@ import errno
 import socket
 import math
 import functools
-import pprint
 
 exported_pycares_symbols = [
 
@@ -324,7 +323,7 @@ class Channel(object):
                     result = None
                 else:
                     result = ares_host_result(hostent)
-                    print "gethostbyname ", status, result.addresses
+                    #print "gethostbyname ", status, result.addresses
                     status = None
 
                 callback(result, status)
@@ -493,7 +492,7 @@ class Channel(object):
                             status = None
 
                     else:
-                        print "%d %d" % (query_type, _lib.T_A)
+                        #print "%d %d" % (query_type, _lib.T_A)
                         raise ValueError("invalid query type specified")
 
                 callback(result, status)
@@ -546,7 +545,7 @@ class Channel(object):
                     result = None
                 else:
                     result = ares_nameinfo_result(node, service)
-                    print "getnameinfo ", status, result.node
+                    #print "getnameinfo ", status, result.node
                     status = None
 
                 callback(result, status)
