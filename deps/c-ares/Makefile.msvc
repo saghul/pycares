@@ -43,6 +43,7 @@ CARES_OBJS = \
 	src\ares_init.obj \
 	src\ares_library_init.obj \
 	src\ares_llist.obj \
+	src\ares_mkquery.obj \
 	src\ares_nowarn.obj \
 	src\ares_options.obj \
 	src\ares_parse_a_reply.obj \

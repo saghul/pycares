@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 from setup_cares import cares_build_ext
 import codecs
 
@@ -29,9 +29,10 @@ setup(name             = "pycares",
           "Programming Language :: Python :: 3.4"
       ],
       cmdclass     = {'build_ext': cares_build_ext},
-      ext_modules  = [Extension('pycares',
-                                sources = ['src/pycares.c'],
-                                define_macros=[('MODULE_VERSION', __version__)]
-                     )]
+      setup_requires=["cffi>=1.5.0"],
+      cffi_modules=["pycares/pycares_build.py:ffi"],
+      install_requires=["cffi>=1.5.0"],
+
+      packages = find_packages(),
      )
 
