@@ -94,28 +94,27 @@ struct hostent {
    char **h_addr_list;       /* list of addresses */
 };
 
-typedef int... __u32;
-typedef short... __be16;
-typedef int... __be32;
 typedef unsigned short int sa_family_t;
+typedef uint16_t in_port_t;
 
 struct sockaddr {
-...;
+    sa_family_t sa_family;
+    ...;
 };
 
 struct sockaddr_in {
-sa_family_t       sin_family; /* Address family       */
-__be16        sin_port;   /* Port number          */
-struct in_addr    sin_addr;   /* Internet address     */
-...;
+    sa_family_t       sin_family; /* Address family       */
+    in_port_t         sin_port;   /* Port number          */
+    struct in_addr    sin_addr;   /* Internet address     */
+    ...;
 };
 
 struct sockaddr_in6 {
-    unsigned short int  sin6_family;    /* AF_INET6 */
-    __be16          sin6_port;      /* Transport layer port # */
-    __be32          sin6_flowinfo;  /* IPv6 flow information */
+    sa_family_t         sin6_family;    /* AF_INET6 */
+    in_port_t           sin6_port;      /* Transport layer port # */
+    uint32_t            sin6_flowinfo;  /* IPv6 flow information */
     struct in6_addr     sin6_addr;      /* IPv6 address */
-    __u32           sin6_scope_id;  /* scope id (new in RFC2553) */
+    uint32_t            sin6_scope_id;  /* scope id (new in RFC2553) */
 };
 
 typedef int ares_socket_t;
@@ -647,8 +646,7 @@ ffi.set_source("_pycares_cffi", """
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <netdb.h> /* struct hostent */
-//# include <linux/in.h> /* conflict with netdb.h */
-# include <linux/in6.h> /* struct sockaddr_in6 */
+# include <netinet/in.h> /* struct sockaddr_in/sockaddr_in6 */
 #endif
 #define CARES_STATICLIB 1 /* static link it */
 #include <ares.h>
