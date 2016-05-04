@@ -689,7 +689,7 @@ char* reverse_address(const char *ip_address, char *name)
     return name;
 }
 
-""", libraries=(["cares",] + extra_libraries), include_dirs=[os.path.join(current_dir, "../deps/c-ares/src"),], library_dirs=[os.path.join(current_dir, "../deps/c-ares"),])
+""", libraries=(["cares",] + extra_libraries), include_dirs=[os.path.join(current_dir, "../../deps/c-ares/src"),], library_dirs=[os.path.join(current_dir, "../../deps/c-ares"),])
 
 
 

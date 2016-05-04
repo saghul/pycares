@@ -19,7 +19,7 @@ if platform.python_implementation() == 'CPython':
 # cffi module
 kwargs['setup_requires'] = ["cffi>=1.5.0"]
 kwargs['install_requires'] = ["cffi>=1.5.0"]
-kwargs['cffi_modules'] = ["pycares/pycares_build.py:ffi"]
+kwargs['cffi_modules'] = ["pycares/_cfficore/pycares_build.py:ffi"]
 kwargs['packages'] = ["pycares", "pycares._cfficore"]
 
 
