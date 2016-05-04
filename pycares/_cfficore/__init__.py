@@ -59,7 +59,7 @@ exported_pycares_symbols_map = {
     "QUERY_TYPE_TXT" : "T_TXT",
 }
 
-for k, v in exported_pycares_symbols_map.iteritems():
+for k, v in exported_pycares_symbols_map.items():
     globals()[k] = getattr(_lib, v)
 
 globals()['ARES_VERSION'] = _ffi.string(_lib.ares_version(_ffi.NULL))

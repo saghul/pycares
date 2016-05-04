@@ -63,7 +63,7 @@ struct sockaddr_in6 {
 
 typedef SOCKET ares_socket_t;
 """))
-elif sys.platform == 'linux2':
+elif sys.platform.startswith('linux'):
     ffi.cdef("""
 /* fd_set for select and pselect.  */
 typedef struct

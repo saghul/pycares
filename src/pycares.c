@@ -62,7 +62,7 @@ pycares_methods[] = {
 #ifdef PYCARES_PYTHON3
 static PyModuleDef pycares_module = {
     PyModuleDef_HEAD_INIT,
-    "pycares",              /*m_name*/
+    "_core",              /*m_name*/
     NULL,                   /*m_doc*/
     -1,                     /*m_size*/
     pycares_methods,        /*m_methods*/
@@ -82,7 +82,7 @@ init_pycares(void)
 #ifdef PYCARES_PYTHON3
     pycares = PyModule_Create(&pycares_module);
 #else
-    pycares = Py_InitModule("pycares", pycares_methods);
+    pycares = Py_InitModule("pycares._core", pycares_methods);
 #endif
 
     /* Errno module */
