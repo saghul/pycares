@@ -209,13 +209,13 @@ fail:
 
 #ifdef PYCARES_PYTHON3
 PyMODINIT_FUNC
-PyInit_pycares(void)
+PyInit__core(void)
 {
     return init_pycares();
 }
 #else
 PyMODINIT_FUNC
-initpycares(void)
+init_core(void)
 {
     init_pycares();
 }

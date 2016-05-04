@@ -4,8 +4,24 @@
 from setuptools import setup, Extension, find_packages
 from setup_cares import cares_build_ext
 import codecs
+import platform 
+import os
 
 __version__ = "1.0.0"
+kwargs = {}
+
+if platform.python_implementation() == 'CPython':
+    kwargs['ext_modules'] = [Extension('pycares._core',
+                                       sources = ['src/pycares.c'],
+                                       define_macros=[('MODULE_VERSION', __version__)]
+                                      )]
+
+# cffi module
+kwargs['setup_requires'] = ["cffi>=1.5.0"]
+kwargs['install_requires'] = ["cffi>=1.5.0"]
+kwargs['cffi_modules'] = ["pycares/pycares_build.py:ffi"]
+kwargs['packages'] = ["pycares", "pycares._cfficore"]
+
 
 setup(name             = "pycares",
       version          = __version__,
@@ -29,10 +45,6 @@ setup(name             = "pycares",
           "Programming Language :: Python :: 3.4"
       ],
       cmdclass     = {'build_ext': cares_build_ext},
-      setup_requires=["cffi>=1.5.0"],
-      cffi_modules=["pycares/pycares_build.py:ffi"],
-      install_requires=["cffi>=1.5.0"],
-
-      packages = find_packages(),
+      **kwargs
      )
 
