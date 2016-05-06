@@ -1,11 +1,25 @@
-#!/usr/bin/env python
 
 from _pycares_cffi import ffi as _ffi, lib as _lib
 import _cffi_backend
-import errno
+from . import errno
 import socket
 import math
 import functools
+import sys
+
+IS_PY2 = sys.version_info[0] < 3
+
+if IS_PY2:
+    b2s = lambda s: s
+    s2b = lambda s: s
+    _ffi_string = _ffi.string
+else:
+    def b2s(b):
+        return b.decode('utf-8')
+    def s2b(s):
+        return s.encode('utf-8')
+    _ffi_string = lambda r, maxlen=-1: b2s(_ffi.string(r, maxlen))
+
 
 exported_pycares_symbols = [
 
@@ -46,7 +60,7 @@ for symbol in exported_pycares_symbols:
     globals()[symbol] = getattr(_lib, symbol)
 
 exported_pycares_symbols_map = {
-    # Query types 
+    # Query types
     "QUERY_TYPE_A" : "T_A",
     "QUERY_TYPE_AAAA" : "T_AAAA",
     "QUERY_TYPE_CNAME" : "T_CNAME",
@@ -62,14 +76,14 @@ exported_pycares_symbols_map = {
 for k, v in exported_pycares_symbols_map.items():
     globals()[k] = getattr(_lib, v)
 
-globals()['ARES_VERSION'] = _ffi.string(_lib.ares_version(_ffi.NULL))
+globals()['ARES_VERSION'] = _ffi_string(_lib.ares_version(_ffi.NULL))
 
 PYCARES_ADDRTTL_SIZE = 256
 
-class Error(StandardError):
+class Error(Exception):
     pass
 
-class Warning(StandardError):
+class Warning(Exception):
     pass
 
 class InterfaceError(Error):
@@ -78,7 +92,7 @@ class InterfaceError(Error):
 class AresError(Error):
     pass
 
-class NotSupportedError(StandardError):
+class NotSupportedError(Exception):
     pass
 
 def check_channel(f):
@@ -94,7 +108,7 @@ class Channel(object):
                  tries = -1, ndots = -1, tcp_port = -1, udp_port = -1,
                  servers = None, domains = None, lookups = None, sock_state_cb = None,
                  socket_send_buffer_size = -1, socket_receive_buffer_size = -1, rotate = False):
-        
+
         self.__func_cache = {}
         self.__gethostbyaddr_cache = {}
         self.__gethostbyname_cache = {}
@@ -106,15 +120,15 @@ class Channel(object):
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
         optmask = 0
-        
+
         if flags != -1:
             options.flags = flags
             optmask = optmask | _lib.ARES_OPT_FLAGS
-            
+
         if timeout != -1:
             options.timeout = int(timeout * 1000)
             optmask = optmask | _lib.ARES_OPT_TIMEOUTMS
-        
+
         if tries != -1:
             options.tries = tries
             optmask = optmask |  _lib.ARES_OPT_TRIES
@@ -142,7 +156,7 @@ class Channel(object):
         if sock_state_cb:
             if not callable(sock_state_cb):
                 raise AresError("sock_state_cb is not callable")
-        
+
             @_ffi.callback("void (void *data, ares_socket_t socket_fd, int readable, int writable )")
             def _sock_state_cb(data, socket_fd, readable, writable):
                 sock_state_cb(socket_fd, readable, writable)
@@ -160,7 +174,7 @@ class Channel(object):
         b = None
         c = None
         if domains:
-            b = [_ffi.new("char[]", i) for i in domains]
+            b = [_ffi.new("char[]", s2b(i)) for i in domains]
             c = _ffi.new("char *[%d]" % (len(domains) + 1))
             for i in range(len(domains)):
                c[i] = b[i]
@@ -172,18 +186,18 @@ class Channel(object):
         if rotate == True:
             optmask = optmask |  _lib.ARES_OPT_ROTATE
 
-    
+
         r = _lib.ares_init_options(channel, options, optmask)
         if r != _lib.ARES_SUCCESS:
             raise AresError()
 
         self.channel = channel[0]
-        
+
         if servers:
             self.set_servers(servers)
 
     def __del__(self):
-        destroy(self)
+        self.destroy()
 
     def destroy(self):
         if self.channel:
@@ -193,25 +207,25 @@ class Channel(object):
     @check_channel
     def cancel(self):
         _lib.ares_cancel(self.channel)
-        
+
     @check_channel
     def set_servers(self, servers):
         c = _ffi.new("struct ares_addr_node[%d]" % len(servers))
         for i in range(len(servers)):
-            if 1 == _lib.ares_inet_pton(socket.AF_INET, servers[i], _ffi.addressof(c[i].addr.addr4)):
+            if 1 == _lib.ares_inet_pton(socket.AF_INET, s2b(servers[i]), _ffi.addressof(c[i].addr.addr4)):
                 c[i].family = socket.AF_INET
-            elif 1 == _lib.ares_inet_pton(socket.AF_INET6, servers[i], _ffi.addressof(c[i].addr.addr6)):
+            elif 1 == _lib.ares_inet_pton(socket.AF_INET6, s2b(servers[i]), _ffi.addressof(c[i].addr.addr6)):
                 c[i].family = socket.AF_INET6
             else:
                 raise ValueError("invalid IP address")
-            
+
             if i > 0:
                 c[i - 1].next = _ffi.addressof(c[i])
-        
+
         r = _lib.ares_set_servers(self.channel, c)
         if r != _lib.ARES_SUCCESS:
             raise AresError()
-        
+
     @check_channel
     def get_servers(self):
         servers = _ffi.new("struct ares_addr_node **")
@@ -228,14 +242,14 @@ class Channel(object):
 
             ip = _ffi.new("char []", _lib.INET6_ADDRSTRLEN)
             if _ffi.NULL != _lib.ares_inet_ntop(server.family, _ffi.addressof(server.addr), ip, _lib.INET6_ADDRSTRLEN):
-                server_list.append(_ffi.string(ip, _lib.INET6_ADDRSTRLEN))
+                server_list.append(_ffi_string(ip, _lib.INET6_ADDRSTRLEN))
 
             server = server.next
 
         return server_list
 
     servers = property(get_servers, set_servers)
-    
+
     @check_channel
     def getsock(self):
         rfds = []
@@ -247,19 +261,19 @@ class Channel(object):
                 rfds.append(socks[i])
             if bitmask & (1 << (i + _lib.ARES_GETSOCK_MAXNUM)):
                 wfds.append(socks[i])
-            
+
         return rfds, wfds
-            
-        
+
+
     @check_channel
     def process_fd(self, read_fd, write_fd):
         _lib.ares_process_fd(self.channel, _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", write_fd))
-    
+
     @check_channel
     def timeout(self, t = -1):
         maxtv = _ffi.NULL
         tv = _ffi.new("struct timeval*")
-        
+
         if t >= 0.0:
             maxtv = _ffi.new("struct timeval*")
             maxtv.tv_sec = int(math.floor(t))
@@ -268,16 +282,16 @@ class Channel(object):
             pass
         else:
             raise ValueError("timeout needs to be a positive number")
-        
+
         _lib.ares_timeout(self.channel, maxtv, tv)
-        
+
         return (tv.tv_sec + tv.tv_usec / 1000000.0)
-    
+
     @check_channel
     def gethostbyaddr(self, name, callback):
         if not callable(callback):
             raise TypeError("a callable is required")
-        
+
         try:
             host_cb = self.__gethostbyaddr_cache[callback]
         except KeyError:
@@ -297,10 +311,10 @@ class Channel(object):
 
         addr4 = _ffi.new("struct in_addr*")
         addr6 = _ffi.new("struct ares_in6_addr*")
-        if 1 == _lib.ares_inet_pton(socket.AF_INET, name, (addr4)):
+        if 1 == _lib.ares_inet_pton(socket.AF_INET,s2b(name), (addr4)):
             address = addr4
             family = socket.AF_INET
-        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, name, (addr6)):
+        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, s2b(name), (addr6)):
             address = addr6
             family = socket.AF_INET6
         else:
@@ -313,7 +327,7 @@ class Channel(object):
     def gethostbyname(self, name, family, callback):
         if not callable(callback):
             raise TypeError("a callable is required")
-        
+
         try:
             host_cb = self.__gethostbyname_cache[callback]
         except KeyError:
@@ -330,7 +344,7 @@ class Channel(object):
 
             self.__gethostbyname_cache[callback] = host_cb
 
-        _lib.ares_gethostbyname(self.channel, name, family, host_cb, _ffi.NULL)
+        _lib.ares_gethostbyname(self.channel, s2b(name), family, host_cb, _ffi.NULL)
 
     def query(self, name, query_type, callback):
         if not callable(callback):
@@ -429,7 +443,7 @@ class Channel(object):
                                 if host.h_aliases[i] == _ffi.NULL:
                                     break
                                 result.append(ares_query_ns_result(host.h_aliases[i]))
-                    
+
                             _lib.ares_free_hostent(host)
                             status = None
 
@@ -443,7 +457,7 @@ class Channel(object):
                             result = ares_query_ptr_result(hostent[0])
                             _lib.ares_free_hostent(hostent[0])
                             status = None
-                            
+
                     elif query_type == _lib.T_SOA:
                         soa_reply = _ffi.new("struct ares_soa_reply **")
                         parse_status = _lib.ares_parse_soa_reply(abuf, alen, soa_reply);
@@ -472,7 +486,7 @@ class Channel(object):
                                 srv_reply_ptr[0] = srv_reply_ptr[0].next
                             _lib.ares_free_data(srv_reply[0])
                             status = None
-                        
+
                     elif query_type == _lib.T_TXT:
                         txt_reply = _ffi.new("struct ares_txt_reply **")
                         parse_status = _lib.ares_parse_txt_reply(abuf, alen, txt_reply);
@@ -499,15 +513,15 @@ class Channel(object):
 
             self.__query_cache[callback] = query_cb
 
-        _lib.ares_query(self.channel, name, _lib.C_IN, query_type, query_cb, _ffi.cast("void *", query_type))
+        _lib.ares_query(self.channel, s2b(name), _lib.C_IN, query_type, query_cb, _ffi.cast("void *", query_type))
 
     @check_channel
     def set_local_ip(self, ip):
         addr4 = _ffi.new("struct in_addr*")
         addr6 = _ffi.new("struct ares_in6_addr*")
-        if 1 == _lib.ares_inet_pton(socket.AF_INET, ip, addr4):
+        if 1 == _lib.ares_inet_pton(socket.AF_INET, s2b(ip), addr4):
             _lib.ares_set_local_ip4(self.channel, socket.ntohl(addr4.s_addr))
-        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ip, addr6):
+        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, s2b(ip), addr6):
             _lib.ares_set_local_ip6(self.channel, addr6)
         else:
             raise ValueError("invalid IP address")
@@ -525,11 +539,11 @@ class Channel(object):
         sa4 = _ffi.new("struct sockaddr_in*")
         sa6 = _ffi.new("struct sockaddr_in6*")
 
-        if 1 == _lib.ares_inet_pton(socket.AF_INET, ip, _ffi.addressof(sa4.sin_addr)):
+        if 1 == _lib.ares_inet_pton(socket.AF_INET, s2b(ip), _ffi.addressof(sa4.sin_addr)):
             sa4.sin_family = socket.AF_INET
             sa4.sin_port = socket.htons(port)
             sa = sa4
-        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ip, _ffi.addressof(sa6.sin6_addr)):
+        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, s2b(ip), _ffi.addressof(sa6.sin6_addr)):
             sa6.sin6_family = socket.AF_INET6
             sa6.sin6_port = socket.htons(port)
             sa = sa6
@@ -557,26 +571,26 @@ class Channel(object):
     @check_channel
     def set_local_dev(self, dev):
         _lib.ares_set_local_dev(self.channel, dev)
-    
+
 
 class ares_host_result(object):
     def __init__(self, hostent):
-        self.name = _ffi.string(hostent.h_name)
+        self.name = _ffi_string(hostent.h_name)
         self.aliases = []
         self.addresses = []
         for i in range(100):
             if hostent.h_aliases[i] == _ffi.NULL:
                 break
-            self.aliases.append(_ffi.string(hostent.h_aliases[i]))
+            self.aliases.append(_ffi_string(hostent.h_aliases[i]))
 
 
         for i in range(100):
             if hostent.h_addr_list[i] == _ffi.NULL:
                 break
-                
+
             buf = _ffi.new("char[]", _lib.INET6_ADDRSTRLEN)
             if _ffi.NULL != _lib.ares_inet_ntop(hostent.h_addrtype, hostent.h_addr_list[i], buf, _lib.INET6_ADDRSTRLEN):
-                self.addresses.append(_ffi.string(buf, _lib.INET6_ADDRSTRLEN))
+                self.addresses.append(_ffi_string(buf, _lib.INET6_ADDRSTRLEN))
 
 class ares_query_simple_result(object):
     def __init__(self, ares_addrttl):
@@ -588,17 +602,17 @@ class ares_query_simple_result(object):
         else:
             raise TypeError()
 
-        self.host = _ffi.string(buf, _lib.INET6_ADDRSTRLEN)
+        self.host = _ffi_string(buf, _lib.INET6_ADDRSTRLEN)
         self.ttl = ares_addrttl.ttl
 
 class ares_query_cname_result(object):
     def __init__(self, host):
-        self.cname = _ffi.string(host.h_name)
+        self.cname = _ffi_string(host.h_name)
         self.ttl = None
 
 class ares_query_mx_result(object):
     def __init__(self, mx):
-        self.host = _ffi.string(mx.host)
+        self.host = _ffi_string(mx.host)
         self.priority = mx.priority
         self.ttl = mx.ttl
 
@@ -606,26 +620,26 @@ class ares_query_naptr_result(object):
     def __init__(self, naptr):
         self.order = naptr.order
         self.preference = naptr.preference
-        self.flags = _ffi.string(naptr.flags)
-        self.service = _ffi.string(naptr.service)
-        self.regex = _ffi.string(naptr.regexp)
-        self.replacement = _ffi.string(naptr.replacement)
+        self.flags = _ffi_string(naptr.flags)
+        self.service = _ffi_string(naptr.service)
+        self.regex = _ffi_string(naptr.regexp)
+        self.replacement = _ffi_string(naptr.replacement)
         self.ttl = naptr.ttl
 
 class ares_query_ns_result(object):
     def __init__(self, ns):
-        self.host = _ffi.string(ns)
+        self.host = _ffi_string(ns)
         self.ttl = None
 
 class ares_query_ptr_result(object):
     def __init__(self, hostent):
-        self.name = _ffi.string(hostent.h_name)
+        self.name = _ffi_string(hostent.h_name)
         self.ttl = None
 
 class ares_query_soa_result(object):
     def __init__(self, soa):
-        self.nsname = _ffi.string(soa.nsname)
-        self.hostmaster = _ffi.string(soa.hostmaster)
+        self.nsname = _ffi_string(soa.nsname)
+        self.hostmaster = _ffi_string(soa.hostmaster)
         self.serial = soa.serial
         self.refresh = soa.refresh
         self.retry = soa.retry
@@ -635,7 +649,7 @@ class ares_query_soa_result(object):
 
 class  ares_query_srv_result(object):
     def __init__(self, srv):
-        self.host = _ffi.string(srv.host)
+        self.host = _ffi_string(srv.host)
         self.port = srv.port
         self.priority = srv.priority
         self.weight = srv.weight
@@ -643,22 +657,22 @@ class  ares_query_srv_result(object):
 
 class ares_query_txt_result(object):
     def __init__(self, txt):
-        self.txt = _ffi.string(txt.txt)
+        self.txt = _ffi_string(txt.txt)
         self.ttl = txt.ttl
 
 class ares_nameinfo_result(object):
     def __init__(self, node, service):
-        self.node = _ffi.string(node)
-        self.service = _ffi.string(service) if service != _ffi.NULL else None
+        self.node = _ffi_string(node)
+        self.service = _ffi_string(service) if service != _ffi.NULL else None
 
-            
+
 def reverse_address(ip):
     """Get reverse representation of an IP address"""
     name = _ffi.new("char []", 128)
-    if _ffi.NULL == _lib.reverse_address(ip, name):
+    if _ffi.NULL == _lib.reverse_address(s2b(ip), name):
         raise ValueError("invalid IP address")
 
-    return _ffi.string(name, 128)
+    return _ffi_string(name, 128)
 
 if _lib.ARES_SUCCESS != _lib.ares_library_init(_lib.ARES_LIB_INIT_ALL):
     assert False
