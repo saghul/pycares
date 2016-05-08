@@ -103,19 +103,201 @@ def check_channel(f):
         return f(self, *args, **kwds)
     return wrapper
 
+_global_set = set()
+
+@_ffi.callback("void (void *data, ares_socket_t socket_fd, int readable, int writable )")
+def _sock_state_cb(data, socket_fd, readable, writable):
+    sock_state_cb = _ffi.from_handle(data)
+    sock_state_cb(socket_fd, readable, writable)
+    _global_set.discard(data)
+
+@_ffi.callback("void (void *arg, int status, int timeouts, struct hostent *hostent)")
+def _host_cb(arg, status, timeouts, hostent):
+    callback = _ffi.from_handle(arg)
+    if status != _lib.ARES_SUCCESS:
+        result = None
+    else:
+        result = ares_host_result(hostent)
+        #print "gethostbyname ", status, result.addresses
+        status = None
+
+    callback(result, status)
+    _global_set.discard(arg)
+
+@_ffi.callback("void (void *arg, int status, int timeouts, char *node, char *service)")
+def _nameinfo_cb(arg, status, timeouts, node, service):
+    callback = _ffi.from_handle(arg)
+    if status != _lib.ARES_SUCCESS:
+        result = None
+    else:
+        result = ares_nameinfo_result(node, service)
+        #print "getnameinfo ", status, result.node
+        status = None
+
+    callback(result, status)
+    _global_set.discard(arg)
+
+@_ffi.callback("void (void *arg, int status, int timeouts, unsigned char *abuf, int alen)")
+def _query_cb(arg, status, timeouts, abuf, alen):
+    result = None
+    callback, query_type = _ffi.from_handle(arg)
+    if status == _lib.ARES_SUCCESS:
+        if query_type == _lib.T_A:
+            addrttls = _ffi.new("struct ares_addrttl[]", PYCARES_ADDRTTL_SIZE)
+            naddrttls = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
+            parse_status = _lib.ares_parse_a_reply(abuf, alen, _ffi.NULL, addrttls, naddrttls)
+            if parse_status != ARES_SUCCESS:
+                result = None
+                status = parse_status
+            else:
+                result = [ares_query_simple_result(addrttls[i]) for i in range(naddrttls[0])]
+                status = None
+
+        elif query_type == _lib.T_AAAA:
+            addrttls = _ffi.new("struct ares_addr6ttl[]", PYCARES_ADDRTTL_SIZE)
+            naddrttls = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
+            parse_status = _lib.ares_parse_aaaa_reply(abuf, alen, _ffi.NULL, addrttls, naddrttls)
+            if parse_status != ARES_SUCCESS:
+                result = None
+                status = parse_status
+            else:
+                result = [ares_query_simple_result(addrttls[i]) for i in range(naddrttls[0])]
+                status = None
+
+        elif query_type == _lib.T_CNAME:
+            host = _ffi.new("struct hostent **")
+            parse_status = _lib.ares_parse_a_reply(abuf, alen, host, _ffi.NULL, _ffi.NULL)
+            if parse_status != ARES_SUCCESS:
+                result = None
+                status = parse_status
+            else:
+                result = ares_query_cname_result(host[0])
+                _lib.ares_free_hostent(host[0])
+                status = None
+
+        elif query_type == _lib.T_MX:
+            mx_reply = _ffi.new("struct ares_mx_reply **")
+            parse_status = _lib.ares_parse_mx_reply(abuf, alen, mx_reply);
+            if parse_status != ARES_SUCCESS:
+                result = None
+                status = parse_status
+            else:
+                result = []
+                mx_reply_ptr = _ffi.new("struct ares_mx_reply **")
+                mx_reply_ptr[0] = mx_reply[0]
+                while True:
+                    if mx_reply_ptr[0] == _ffi.NULL:
+                        break
+                    result.append(ares_query_mx_result(mx_reply[0]))
+                    mx_reply_ptr[0] = mx_reply_ptr[0].next
+                _lib.ares_free_data(mx_reply)
+                status = None
+
+        elif query_type == _lib.T_NAPTR:
+            naptr_reply = _ffi.new("struct ares_naptr_reply **")
+            parse_status = _lib.ares_parse_naptr_reply(abuf, alen, naptr_reply);
+            if parse_status != ARES_SUCCESS:
+                result = None
+                status = parse_status
+            else:
+                result = []
+                naptr_reply_ptr = _ffi.new("struct ares_naptr_reply **")
+                naptr_reply_ptr[0] = naptr_reply[0]
+                while True:
+                    if naptr_reply_ptr[0] == _ffi.NULL:
+                        break
+                    result.append(ares_query_naptr_result(naptr_reply[0]))
+                    naptr_reply_ptr[0] = naptr_reply_ptr[0].next
+                _lib.ares_free_data(naptr_reply)
+                status = None
+
+        elif query_type == _lib.T_NS:
+            hostent = _ffi.new("struct hostent **")
+            parse_status = _lib.ares_parse_ns_reply(abuf, alen, hostent);
+            if parse_status != ARES_SUCCESS:
+                result = None
+                status = parse_status
+            else:
+                result = []
+                host = hostent[0]
+                for i in range(100):
+                    if host.h_aliases[i] == _ffi.NULL:
+                        break
+                    result.append(ares_query_ns_result(host.h_aliases[i]))
+
+                _lib.ares_free_hostent(host)
+                status = None
+
+        elif query_type == _lib.T_PTR:
+            hostent = _ffi.new("struct hostent **")
+            parse_status = _lib.ares_parse_ptr_reply(abuf, alen, _ffi.NULL, 0, socket.AF_UNSPEC, hostent);
+            if parse_status != ARES_SUCCESS:
+                result = None
+                status = parse_status
+            else:
+                result = ares_query_ptr_result(hostent[0])
+                _lib.ares_free_hostent(hostent[0])
+                status = None
+
+        elif query_type == _lib.T_SOA:
+            soa_reply = _ffi.new("struct ares_soa_reply **")
+            parse_status = _lib.ares_parse_soa_reply(abuf, alen, soa_reply);
+            if parse_status != ARES_SUCCESS:
+                result = None
+                status = parse_status
+            else:
+                result = ares_query_soa_result(soa_reply[0])
+                _lib.ares_free_data(soa_reply[0])
+                status = None
+
+        elif query_type == _lib.T_SRV:
+            srv_reply = _ffi.new("struct ares_srv_reply **")
+            parse_status = _lib.ares_parse_srv_reply(abuf, alen, srv_reply);
+            if parse_status != ARES_SUCCESS:
+                result = None
+                status = parse_status
+            else:
+                result = []
+                srv_reply_ptr = _ffi.new("struct ares_srv_reply **")
+                srv_reply_ptr[0] = srv_reply[0]
+                while True:
+                    if srv_reply_ptr[0] == _ffi.NULL:
+                        break
+                    result.append(ares_query_srv_result(srv_reply_ptr[0]))
+                    srv_reply_ptr[0] = srv_reply_ptr[0].next
+                _lib.ares_free_data(srv_reply[0])
+                status = None
+
+        elif query_type == _lib.T_TXT:
+            txt_reply = _ffi.new("struct ares_txt_reply **")
+            parse_status = _lib.ares_parse_txt_reply(abuf, alen, txt_reply);
+            if parse_status != ARES_SUCCESS:
+                result = None
+                status = parse_status
+            else:
+                result = []
+                txt_reply_ptr = _ffi.new("struct ares_txt_reply **")
+                txt_reply_ptr[0] = txt_reply[0]
+                while True:
+                    if txt_reply_ptr[0] == _ffi.NULL:
+                        break
+                    result.append(ares_query_txt_result(txt_reply_ptr[0]))
+                    txt_reply_ptr[0] = txt_reply_ptr[0].next
+                _lib.ares_free_data(txt_reply[0])
+                status = None
+
+        else:
+            #print "%d %d" % (query_type, _lib.T_A)
+            raise ValueError("invalid query type specified")
+
+    callback(result, status)
+    _global_set.discard(arg)
+
 class Channel(object):
     def __init__(self, flags = -1, timeout = -1.0,
                  tries = -1, ndots = -1, tcp_port = -1, udp_port = -1,
                  servers = None, domains = None, lookups = None, sock_state_cb = None,
                  socket_send_buffer_size = -1, socket_receive_buffer_size = -1, rotate = False):
-
-        self.__func_cache = {}
-        self.__gethostbyaddr_cache = {}
-        self.__gethostbyname_cache = {}
-        self.__getnameinfo_cache = {}
-        self.__query_cache = {}
-        userdata = _ffi.new_handle(self)
-        self._userdata = userdata     # must keep this alive!
 
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
@@ -157,27 +339,21 @@ class Channel(object):
             if not callable(sock_state_cb):
                 raise AresError("sock_state_cb is not callable")
 
-            @_ffi.callback("void (void *data, ares_socket_t socket_fd, int readable, int writable )")
-            def _sock_state_cb(data, socket_fd, readable, writable):
-                sock_state_cb(socket_fd, readable, writable)
-
+            userdata = _ffi.new_handle(sock_state_cb)
+            _global_set.add(userdata)     # must keep this alive!
             options.sock_state_cb = _sock_state_cb
             options.sock_state_cb_data = userdata
             optmask = optmask |  _lib.ARES_OPT_SOCK_STATE_CB
-
-            self.__func_cache[sock_state_cb] = _sock_state_cb
 
         if lookups:
             options.lookups = lookups
             optmask = optmask |  _lib.ARES_OPT_LOOKUPS
 
-        b = None
-        c = None
         if domains:
-            b = [_ffi.new("char[]", s2b(i)) for i in domains]
+            strs = [_ffi.new("char[]", s2b(i)) for i in domains]
             c = _ffi.new("char *[%d]" % (len(domains) + 1))
             for i in range(len(domains)):
-               c[i] = b[i]
+               c[i] = strs[i]
 
             options.domains = c
             options.ndomains = len(domains)
@@ -292,23 +468,6 @@ class Channel(object):
         if not callable(callback):
             raise TypeError("a callable is required")
 
-        try:
-            host_cb = self.__gethostbyaddr_cache[callback]
-        except KeyError:
-            @_ffi.callback("void (void *arg, int status, int timeouts, struct hostent *hostent)")
-            def host_cb(arg, status, timeouts, hostent):
-                if status != _lib.ARES_SUCCESS:
-                    result = None
-                else:
-                    result = ares_host_result(hostent)
-                    #print "gethostbyaddr ", status, result.name
-                    status = None
-
-                callback(result, status)
-
-            self.__gethostbyaddr_cache[callback] = host_cb
-
-
         addr4 = _ffi.new("struct in_addr*")
         addr6 = _ffi.new("struct ares_in6_addr*")
         if 1 == _lib.ares_inet_pton(socket.AF_INET,s2b(name), (addr4)):
@@ -320,7 +479,9 @@ class Channel(object):
         else:
             raise ValueError("invalid IP address")
 
-        _lib.ares_gethostbyaddr(self.channel, (address), _ffi.sizeof(address[0]), family, host_cb, _ffi.NULL)
+        userdata = _ffi.new_handle(callback)
+        _global_set.add(userdata)
+        _lib.ares_gethostbyaddr(self.channel, (address), _ffi.sizeof(address[0]), family, _host_cb, userdata)
 
 
     @check_channel
@@ -328,23 +489,10 @@ class Channel(object):
         if not callable(callback):
             raise TypeError("a callable is required")
 
-        try:
-            host_cb = self.__gethostbyname_cache[callback]
-        except KeyError:
-            @_ffi.callback("void (void *arg, int status, int timeouts, struct hostent *hostent)")
-            def host_cb(arg, status, timeouts, hostent):
-                if status != _lib.ARES_SUCCESS:
-                    result = None
-                else:
-                    result = ares_host_result(hostent)
-                    #print "gethostbyname ", status, result.addresses
-                    status = None
 
-                callback(result, status)
-
-            self.__gethostbyname_cache[callback] = host_cb
-
-        _lib.ares_gethostbyname(self.channel, s2b(name), family, host_cb, _ffi.NULL)
+        userdata = _ffi.new_handle(callback)
+        _global_set.add(userdata)
+        _lib.ares_gethostbyname(self.channel, s2b(name), family, _host_cb, userdata)
 
     def query(self, name, query_type, callback):
         if not callable(callback):
@@ -353,167 +501,10 @@ class Channel(object):
         if query_type not in (_lib.T_A, _lib.T_AAAA, _lib.T_CNAME, _lib.T_MX, _lib.T_NAPTR, _lib.T_NS, _lib.T_PTR, _lib.T_SOA, _lib.T_SRV, _lib.T_TXT):
             raise ValueError("invalid query type specified")
 
-        try:
-            query_cb = self.__query_cache[callback]
-        except KeyError:
-            @_ffi.callback("void (void *arg, int status, int timeouts, unsigned char *abuf, int alen)")
-            def query_cb(arg, status, timeouts, abuf, alen):
-                result = None
-                query_type = int(_ffi.cast("int", arg))
-                if status == _lib.ARES_SUCCESS:
-                    if query_type == _lib.T_A:
-                        addrttls = _ffi.new("struct ares_addrttl[]", PYCARES_ADDRTTL_SIZE)
-                        naddrttls = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
-                        parse_status = _lib.ares_parse_a_reply(abuf, alen, _ffi.NULL, addrttls, naddrttls)
-                        if parse_status != ARES_SUCCESS:
-                            result = None
-                            status = parse_status
-                        else:
-                            result = [ares_query_simple_result(addrttls[i]) for i in range(naddrttls[0])]
-                            status = None
 
-                    elif query_type == _lib.T_AAAA:
-                        addrttls = _ffi.new("struct ares_addr6ttl[]", PYCARES_ADDRTTL_SIZE)
-                        naddrttls = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
-                        parse_status = _lib.ares_parse_aaaa_reply(abuf, alen, _ffi.NULL, addrttls, naddrttls)
-                        if parse_status != ARES_SUCCESS:
-                            result = None
-                            status = parse_status
-                        else:
-                            result = [ares_query_simple_result(addrttls[i]) for i in range(naddrttls[0])]
-                            status = None
-
-                    elif query_type == _lib.T_CNAME:
-                        host = _ffi.new("struct hostent **")
-                        parse_status = _lib.ares_parse_a_reply(abuf, alen, host, _ffi.NULL, _ffi.NULL)
-                        if parse_status != ARES_SUCCESS:
-                            result = None
-                            status = parse_status
-                        else:
-                            result = ares_query_cname_result(host[0])
-                            _lib.ares_free_hostent(host[0])
-                            status = None
-
-                    elif query_type == _lib.T_MX:
-                        mx_reply = _ffi.new("struct ares_mx_reply **")
-                        parse_status = _lib.ares_parse_mx_reply(abuf, alen, mx_reply);
-                        if parse_status != ARES_SUCCESS:
-                            result = None
-                            status = parse_status
-                        else:
-                            result = []
-                            mx_reply_ptr = _ffi.new("struct ares_mx_reply **")
-                            mx_reply_ptr[0] = mx_reply[0]
-                            while True:
-                                if mx_reply_ptr[0] == _ffi.NULL:
-                                    break
-                                result.append(ares_query_mx_result(mx_reply[0]))
-                                mx_reply_ptr[0] = mx_reply_ptr[0].next
-                            _lib.ares_free_data(mx_reply)
-                            status = None
-
-                    elif query_type == _lib.T_NAPTR:
-                        naptr_reply = _ffi.new("struct ares_naptr_reply **")
-                        parse_status = _lib.ares_parse_naptr_reply(abuf, alen, naptr_reply);
-                        if parse_status != ARES_SUCCESS:
-                            result = None
-                            status = parse_status
-                        else:
-                            result = []
-                            naptr_reply_ptr = _ffi.new("struct ares_naptr_reply **")
-                            naptr_reply_ptr[0] = naptr_reply[0]
-                            while True:
-                                if naptr_reply_ptr[0] == _ffi.NULL:
-                                    break
-                                result.append(ares_query_naptr_result(naptr_reply[0]))
-                                naptr_reply_ptr[0] = naptr_reply_ptr[0].next
-                            _lib.ares_free_data(naptr_reply)
-                            status = None
-
-                    elif query_type == _lib.T_NS:
-                        hostent = _ffi.new("struct hostent **")
-                        parse_status = _lib.ares_parse_ns_reply(abuf, alen, hostent);
-                        if parse_status != ARES_SUCCESS:
-                            result = None
-                            status = parse_status
-                        else:
-                            result = []
-                            host = hostent[0]
-                            for i in range(100):
-                                if host.h_aliases[i] == _ffi.NULL:
-                                    break
-                                result.append(ares_query_ns_result(host.h_aliases[i]))
-
-                            _lib.ares_free_hostent(host)
-                            status = None
-
-                    elif query_type == _lib.T_PTR:
-                        hostent = _ffi.new("struct hostent **")
-                        parse_status = _lib.ares_parse_ptr_reply(abuf, alen, _ffi.NULL, 0, socket.AF_UNSPEC, hostent);
-                        if parse_status != ARES_SUCCESS:
-                            result = None
-                            status = parse_status
-                        else:
-                            result = ares_query_ptr_result(hostent[0])
-                            _lib.ares_free_hostent(hostent[0])
-                            status = None
-
-                    elif query_type == _lib.T_SOA:
-                        soa_reply = _ffi.new("struct ares_soa_reply **")
-                        parse_status = _lib.ares_parse_soa_reply(abuf, alen, soa_reply);
-                        if parse_status != ARES_SUCCESS:
-                            result = None
-                            status = parse_status
-                        else:
-                            result = ares_query_soa_result(soa_reply[0])
-                            _lib.ares_free_data(soa_reply[0])
-                            status = None
-
-                    elif query_type == _lib.T_SRV:
-                        srv_reply = _ffi.new("struct ares_srv_reply **")
-                        parse_status = _lib.ares_parse_srv_reply(abuf, alen, srv_reply);
-                        if parse_status != ARES_SUCCESS:
-                            result = None
-                            status = parse_status
-                        else:
-                            result = []
-                            srv_reply_ptr = _ffi.new("struct ares_srv_reply **")
-                            srv_reply_ptr[0] = srv_reply[0]
-                            while True:
-                                if srv_reply_ptr[0] == _ffi.NULL:
-                                    break
-                                result.append(ares_query_srv_result(srv_reply_ptr[0]))
-                                srv_reply_ptr[0] = srv_reply_ptr[0].next
-                            _lib.ares_free_data(srv_reply[0])
-                            status = None
-
-                    elif query_type == _lib.T_TXT:
-                        txt_reply = _ffi.new("struct ares_txt_reply **")
-                        parse_status = _lib.ares_parse_txt_reply(abuf, alen, txt_reply);
-                        if parse_status != ARES_SUCCESS:
-                            result = None
-                            status = parse_status
-                        else:
-                            result = []
-                            txt_reply_ptr = _ffi.new("struct ares_txt_reply **")
-                            txt_reply_ptr[0] = txt_reply[0]
-                            while True:
-                                if txt_reply_ptr[0] == _ffi.NULL:
-                                    break
-                                result.append(ares_query_txt_result(txt_reply_ptr[0]))
-                                txt_reply_ptr[0] = txt_reply_ptr[0].next
-                            _lib.ares_free_data(txt_reply[0])
-                            status = None
-
-                    else:
-                        #print "%d %d" % (query_type, _lib.T_A)
-                        raise ValueError("invalid query type specified")
-
-                callback(result, status)
-
-            self.__query_cache[callback] = query_cb
-
-        _lib.ares_query(self.channel, s2b(name), _lib.C_IN, query_type, query_cb, _ffi.cast("void *", query_type))
+        userdata = _ffi.new_handle((callback, query_type))
+        _global_set.add(userdata)
+        _lib.ares_query(self.channel, s2b(name), _lib.C_IN, query_type, _query_cb, userdata)
 
     @check_channel
     def set_local_ip(self, ip):
@@ -550,23 +541,9 @@ class Channel(object):
         else:
             raise ValueError("invalid IP address")
 
-        try:
-            nameinfo_cb = self.__getnameinfo_cache[callback]
-        except KeyError:
-            @_ffi.callback("void (void *arg, int status, int timeouts, char *node, char *service)")
-            def nameinfo_cb(arg, status, timeouts, node, service):
-                if status != _lib.ARES_SUCCESS:
-                    result = None
-                else:
-                    result = ares_nameinfo_result(node, service)
-                    #print "getnameinfo ", status, result.node
-                    status = None
-
-                callback(result, status)
-
-            self.__getnameinfo_cache[callback] = nameinfo_cb
-
-        _lib.ares_getnameinfo(self.channel, _ffi.cast("struct sockaddr*", sa), _ffi.sizeof(sa[0]), flags, nameinfo_cb, _ffi.NULL)
+        userdata = _ffi.new_handle(callback)
+        _global_set.add(userdata)
+        _lib.ares_getnameinfo(self.channel, _ffi.cast("struct sockaddr*", sa), _ffi.sizeof(sa[0]), flags, _nameinfo_cb, userdata)
 
     @check_channel
     def set_local_dev(self, dev):
