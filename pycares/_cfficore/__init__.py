@@ -1,6 +1,6 @@
 
 from _pycares_cffi import ffi as _ffi, lib as _lib
-import _cffi_backend
+import _cffi_backend # hint for bundler tools
 from . import errno
 import socket
 import math
