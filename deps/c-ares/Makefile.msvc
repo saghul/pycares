@@ -18,7 +18,9 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+!ifndef AR
 AR=lib.exe
+!endif
 CFLAGS = -MD -Isrc -Isrc\config_win32 -DHAVE_CONFIG_H
 
 CARES_OBJS = \
@@ -74,10 +76,10 @@ CARES_OBJS = \
 all: cares.lib
 
 .c.obj:
-	$(CC) $(CFLAGS) -Fo$@ -c $<
+	"$(CC)" $(CFLAGS) -Fo$@ -c $<
 
 cares.lib: $(CARES_OBJS)
-	$(AR) /nodefaultlib /out:$@ $(CARES_OBJS)
+	"$(AR)" /nodefaultlib /out:$@ $(CARES_OBJS)
 
 .PHONY: clean distclean
 

@@ -67,6 +67,10 @@ class cares_build_ext(build_ext):
         self.cares_clean_compile = 0
 
     def build_extensions(self):
+        if not self.compiler.initialized: 
+            # find compiler path for msvc
+            self.compiler.initialize()
+
         if self.compiler.compiler_type == 'mingw32':
             # Dirty hack to avoid linking with more than one C runtime when using MinGW
             self.compiler.dll_libraries = [lib for lib in self.compiler.dll_libraries if not lib.startswith('msvcr')]
@@ -102,6 +106,9 @@ class cares_build_ext(build_ext):
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building c-ares...')
             if win32_msvc:
+                # pass the found compiler to Makefile.msvc
+                env['CC'] = self.compiler.cc
+                env['AR'] = self.compiler.lib
                 exec_process('cmd.exe /C vcbuild.bat', cwd=self.cares_dir, env=env, shell=True, silent=False)
             else:
                 exec_make(['libcares.a'], cwd=self.cares_dir, env=env, silent=False)
