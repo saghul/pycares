@@ -9,5 +9,5 @@ python:
 install:
   - python setup.py install
 script:
-  - ./tests.py
+  - ./tests/tests.py
 

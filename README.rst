@@ -70,7 +70,7 @@ There are several ways of running the test ruite:
 
 - Run the test with the current Python interpreter:
 
-  From the toplevel directory, run: ``python tests.py``
+  From the toplevel directory, run: ``python tests/tests.py``
 
 - Use Tox to run the test suite in several virtualenvs with several interpreters
 
