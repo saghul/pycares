@@ -64,7 +64,7 @@ struct sockaddr_in6 {
 
 typedef SOCKET ares_socket_t;
 """))
-elif sys.platform.startswith('linux'):
+else:
     ffi.cdef("""
 /* fd_set for select and pselect.  */
 typedef struct
@@ -78,14 +78,13 @@ struct in_addr
     in_addr_t s_addr;
   };
 
-typedef long int __time_t;
-typedef unsigned int __useconds_t;
-typedef long int __suseconds_t;
-struct timeval
-  {
-    __time_t tv_sec;
-    __suseconds_t tv_usec;
-  };
+typedef long... time_t;
+typedef long... suseconds_t;
+
+struct timeval {
+    time_t      tv_sec;     /* seconds */
+    suseconds_t tv_usec;    /* microseconds */
+};
 
 struct hostent {
    char  *h_name;            /* official name of host */
@@ -95,7 +94,7 @@ struct hostent {
    char **h_addr_list;       /* list of addresses */
 };
 
-typedef unsigned short int sa_family_t;
+typedef int... sa_family_t;
 typedef uint16_t in_port_t;
 
 struct sockaddr {
@@ -635,9 +634,7 @@ ffi.set_source("_pycares_cffi", """
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 # include <WinSock2.h>
-# include <nameser.h>
 #else
-# include <arpa/nameser.h> /* C_IN T_AAAA */
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <netdb.h> /* struct hostent */
@@ -645,6 +642,7 @@ ffi.set_source("_pycares_cffi", """
 #endif
 #define CARES_STATICLIB 1 /* static link it */
 #include <ares.h>
+# include <nameser.h>
 
 char* reverse_address(const char *ip_address, char *name)
 {
