@@ -45,7 +45,7 @@ Errno_methods[] = {
 #ifdef PYCARES_PYTHON3
 static PyModuleDef pycares_errorno_module = {
     PyModuleDef_HEAD_INIT,
-    "pycares.errno",        /*m_name*/
+    "errno",                /*m_name*/
     NULL,                   /*m_doc*/
     -1,                     /*m_size*/
     Errno_methods,          /*m_methods*/
@@ -61,7 +61,7 @@ init_errno(void)
 #ifdef PYCARES_PYTHON3
     module = PyModule_Create(&pycares_errorno_module);
 #else
-    module = Py_InitModule("pycares.errno", Errno_methods);
+    module = Py_InitModule("pycares._core.errno", Errno_methods);
 #endif
     if (module == NULL) {
         return NULL;

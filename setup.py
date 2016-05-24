@@ -1,14 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import codecs
+import re
+
 from setuptools import setup, Extension
 from setup_cares import cares_build_ext
-import codecs
 
-__version__ = "1.0.0"
+
+def get_version():
+    return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""", open('pycares/_version.py').read()).group('version')
+
 
 setup(name             = "pycares",
-      version          = __version__,
+      version          = get_version(),
       author           = "Saúl Ibarra Corretgé",
       author_email     = "saghul@gmail.com",
       url              = "http://github.com/saghul/pycares",
@@ -29,9 +34,6 @@ setup(name             = "pycares",
           "Programming Language :: Python :: 3.4"
       ],
       cmdclass     = {'build_ext': cares_build_ext},
-      ext_modules  = [Extension('pycares',
-                                sources = ['src/pycares.c'],
-                                define_macros=[('MODULE_VERSION', __version__)]
-                     )]
-     )
-
+      packages     = ['pycares'],
+      ext_modules  = [Extension('pycares._core', sources = ['src/pycares.c'])],
+)
