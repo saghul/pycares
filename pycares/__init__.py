@@ -1,3 +1,7 @@
 
 from ._version import __version__
-from ._core import *
+
+try:
+    from ._core import *
+except ImportError:
+    from ._cfficore import *
