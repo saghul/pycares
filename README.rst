@@ -67,8 +67,8 @@ There are several ways of running the test ruite:
 
 - Use Tox to run the test suite in several virtualenvs with several interpreters
 
-  From the toplevel directory, run: ``tox -e py27,py33,py34`` this will run the test suite
-  on Python 2.7, 3.3 and 3.4 (you'll need to have them installed beforehand)
+  From the toplevel directory, run: ``tox -e py27,py33,py34,py35`` this will run the test suite
+  on Python 2.7, 3.3, 3.4 and 3.5 (you'll need to have them installed beforehand)
 
 
 Author
@@ -87,7 +87,7 @@ Python versions
 ===============
 
 Python >= 2.7 and >= 3.3 are supported. Other older versions might work too, but they are
-not actively tested.
+not actively tested. Both CPython and PyPy (tested with version 5) are supported.
 
 
 Contributing
