@@ -49,18 +49,11 @@ Mac OSX:
     export ARCHFLAGS="-arch x86_64"
     ./build_inplace
 
-Microsoft Windows (with Visual Studio 2008, 2010 or the Windows SDK):
+Microsoft Windows (with Visual Studio 2008, 2010, 2015 or the Windows SDK):
 
 ::
 
     ./build_inplace
-
-Microsoft Windows (with MinGW, not recommended):
-
-::
-
-    (MinGW and MSYS need to be installed)
-    ./build_inplace --compiler=mingw32
 
 
 Running the test suite
