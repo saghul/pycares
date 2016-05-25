@@ -80,7 +80,6 @@ class cares_build_ext(build_ext):
         if self.compiler.compiler_type == 'mingw32':
             self.compiler.add_library_dir(self.cares_dir)
             self.compiler.add_library('cares')
-        #self.extensions[0].extra_objects = [self.cares_lib]
         self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src'))
         if sys.platform.startswith('linux'):
             self.compiler.add_library('rt')
@@ -100,7 +99,6 @@ class cares_build_ext(build_ext):
             cares_sources += ['deps/c-ares/src/windows_port.c',
                               'deps/c-ares/src/ares_platform.c']
             self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_win32'))
-            #-D_WIN32_WINNT=0x0600 
 
         else:
             self.compiler.define_macro('_LARGEFILE_SOURCE', 1)
@@ -108,6 +106,12 @@ class cares_build_ext(build_ext):
 
             if sys.platform.startswith('linux'):
                 self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_linux'))
+            elif sys.platform.startswith('freebsd'):
+                self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_freebsd'))
+            elif sys.platform.startswith('cygwin'):
+                self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_cygwin'))
+            elif sys.platform.startswith('darwin'):
+                self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_darwin'))
 
         self.extensions[0].sources += cares_sources
 
