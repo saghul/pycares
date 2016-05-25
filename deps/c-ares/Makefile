@@ -48,6 +48,7 @@ CARES_OBJS += src/ares_getsock.o
 CARES_OBJS += src/ares_init.o
 CARES_OBJS += src/ares_library_init.o
 CARES_OBJS += src/ares_llist.o
+CARES_OBJS += src/ares_mkquery.o
 CARES_OBJS += src/ares_nowarn.o
 CARES_OBJS += src/ares_options.o
 CARES_OBJS += src/ares_parse_a_reply.o

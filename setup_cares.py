@@ -8,48 +8,54 @@ from distutils import log
 from distutils.command.build_ext import build_ext
 from distutils.errors import DistutilsError
 
-
-def exec_process(cmdline, silent=True, catch_enoent=True, input=None, **kwargs):
-    """Execute a subprocess and returns the returncode, stdout buffer and stderr buffer.
-    Optionally prints stdout and stderr while running."""
-    try:
-        sub = subprocess.Popen(args=cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
-        stdout, stderr = sub.communicate(input=input)
-
-        if type(stdout) != type(""):
-            # decode on Python 3
-            # do nothing on Python 2 (it just doesn't care about encoding anyway)
-            stdout = stdout.decode(sys.getdefaultencoding(), "replace")
-            stderr = stderr.decode(sys.getdefaultencoding(), "replace")
-
-        returncode = sub.returncode
-        if not silent:
-            sys.stdout.write(stdout)
-            sys.stderr.write(stderr)
-    except OSError as e:
-        if e.errno == errno.ENOENT and catch_enoent:
-            raise DistutilsError('"%s" is not present on this system' % cmdline[0])
-        else:
-            raise
-    if returncode != 0:
-        raise DistutilsError('Got return value %d while executing "%s", stderr output was:\n%s' % (returncode, " ".join(cmdline), stderr.rstrip("\n")))
-    return stdout
-
-
-def exec_make(cmdline, *args, **kwargs):
-    assert isinstance(cmdline, list)
-    makes = ["make"]
-    if "bsd" in sys.platform:
-        makes.insert(0, "gmake")
-    for make in makes:
-        if "bsd" in sys.platform and make == "make":
-            log.warn("Running plain make on BSD-derived system. It will likely fail. Consider installing GNU make from the ports collection.")
-        try:
-            return exec_process([make] + cmdline, *args, catch_enoent=False, **kwargs)
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
-    raise DistutilsError('"make" is not present on this system')
+cares_sources = [
+    'deps/c-ares/src/ares__close_sockets.c',
+    'deps/c-ares/src/ares__get_hostent.c',
+    'deps/c-ares/src/ares__read_line.c',
+    'deps/c-ares/src/ares__timeval.c',
+    'deps/c-ares/src/ares_cancel.c',
+    'deps/c-ares/src/ares_create_query.c',
+    'deps/c-ares/src/ares_data.c',
+    'deps/c-ares/src/ares_destroy.c',
+    'deps/c-ares/src/ares_expand_name.c',
+    'deps/c-ares/src/ares_expand_string.c',
+    'deps/c-ares/src/ares_fds.c',
+    'deps/c-ares/src/ares_free_hostent.c',
+    'deps/c-ares/src/ares_free_string.c',
+    'deps/c-ares/src/ares_gethostbyaddr.c',
+    'deps/c-ares/src/ares_gethostbyname.c',
+    'deps/c-ares/src/ares_getnameinfo.c',
+    'deps/c-ares/src/ares_getopt.c',
+    'deps/c-ares/src/ares_getsock.c',
+    'deps/c-ares/src/ares_init.c',
+    'deps/c-ares/src/ares_library_init.c',
+    'deps/c-ares/src/ares_llist.c',
+    'deps/c-ares/src/ares_mkquery.c',
+    'deps/c-ares/src/ares_nowarn.c',
+    'deps/c-ares/src/ares_options.c',
+    'deps/c-ares/src/ares_parse_a_reply.c',
+    'deps/c-ares/src/ares_parse_aaaa_reply.c',
+    'deps/c-ares/src/ares_parse_mx_reply.c',
+    'deps/c-ares/src/ares_parse_naptr_reply.c',
+    'deps/c-ares/src/ares_parse_ns_reply.c',
+    'deps/c-ares/src/ares_parse_ptr_reply.c',
+    'deps/c-ares/src/ares_parse_soa_reply.c',
+    'deps/c-ares/src/ares_parse_srv_reply.c',
+    'deps/c-ares/src/ares_parse_txt_reply.c',
+    'deps/c-ares/src/ares_process.c',
+    'deps/c-ares/src/ares_query.c',
+    'deps/c-ares/src/ares_search.c',
+    'deps/c-ares/src/ares_send.c',
+    'deps/c-ares/src/ares_strcasecmp.c',
+    'deps/c-ares/src/ares_strdup.c',
+    'deps/c-ares/src/ares_strerror.c',
+    'deps/c-ares/src/ares_timeout.c',
+    'deps/c-ares/src/ares_version.c',
+    'deps/c-ares/src/ares_writev.c',
+    'deps/c-ares/src/bitncmp.c',
+    'deps/c-ares/src/inet_net_pton.c',
+    'deps/c-ares/src/inet_ntop.c',
+]
 
 
 class cares_build_ext(build_ext):
@@ -64,23 +70,16 @@ class cares_build_ext(build_ext):
 
     def initialize_options(self):
         build_ext.initialize_options(self)
-        self.cares_clean_compile = 0
 
     def build_extensions(self):
         if self.compiler.compiler_type == 'mingw32':
             # Dirty hack to avoid linking with more than one C runtime when using MinGW
             self.compiler.dll_libraries = [lib for lib in self.compiler.dll_libraries if not lib.startswith('msvcr')]
-        self.force = self.cares_clean_compile
-        if self.compiler.compiler_type == 'msvc':
-            self.cares_lib = os.path.join(self.cares_dir, 'cares.lib')
-        else:
-            self.cares_lib = os.path.join(self.cares_dir, 'libcares.a')
         self.build_cares()
         # Set compiler options
         if self.compiler.compiler_type == 'mingw32':
             self.compiler.add_library_dir(self.cares_dir)
             self.compiler.add_library('cares')
-        self.extensions[0].extra_objects = [self.cares_lib]
         self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src'))
         if sys.platform.startswith('linux'):
             self.compiler.add_library('rt')
@@ -94,27 +93,25 @@ class cares_build_ext(build_ext):
         build_ext.build_extensions(self)
 
     def build_cares(self):
-        #self.debug_mode =  bool(self.debug) or hasattr(sys, 'gettotalrefcount')
-        win32_msvc = self.compiler.compiler_type == 'msvc'
-        def build():
-            cflags = '-fPIC'
-            env = os.environ.copy()
-            env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
-            log.info('Building c-ares...')
-            if win32_msvc:
-                exec_process('cmd.exe /C vcbuild.bat', cwd=self.cares_dir, env=env, shell=True, silent=False)
-            else:
-                exec_make(['libcares.a'], cwd=self.cares_dir, env=env, silent=False)
-        def clean():
-            if win32_msvc:
-                exec_process('cmd.exe /C vcbuild.bat clean', cwd=self.cares_dir, shell=True)
-            else:
-                exec_make(['clean'], cwd=self.cares_dir)
-        if self.cares_clean_compile:
-            clean()
-        if not os.path.exists(self.cares_lib):
-            log.info('c-ares needs to be compiled.')
-            build()
+        self.compiler.define_macro('HAVE_CONFIG_H', 1)
+        if sys.platform == 'win32':
+            global cares_sources
+            cares_sources += ['deps/c-ares/src/windows_port.c',
+                              'deps/c-ares/src/ares_platform.c']
+            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_win32'))
+
         else:
-            log.info('No need to build c-ares.')
+            self.compiler.define_macro('_LARGEFILE_SOURCE', 1)
+            self.compiler.define_macro('_FILE_OFFSET_BITS', 64)
+
+            if sys.platform.startswith('linux'):
+                self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_linux'))
+            elif sys.platform.startswith('freebsd'):
+                self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_freebsd'))
+            elif sys.platform.startswith('cygwin'):
+                self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_cygwin'))
+            elif sys.platform.startswith('darwin'):
+                self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_darwin'))
+
+        self.extensions[0].sources += cares_sources
 

@@ -81,8 +81,8 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(self.errorno, None)
         self.assertEqual(type(self.result), pycares.ares_nameinfo_result)
-        self.assertIn(self.result[0], ('localhost.localdomain', 'localhost'))
-        self.assertEqual(self.result[1], 'http')
+        self.assertIn(self.result.node, ('localhost.localdomain', 'localhost'))
+        self.assertEqual(self.result.service, 'http')
 
     def test_query_a(self):
         self.result, self.errorno = None, None
