@@ -21,6 +21,10 @@
 #  include <assert.h>
 #endif
 
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
+
 #if defined(__INTEL_COMPILER) && defined(__unix__)
 
 #ifdef HAVE_NETINET_IN_H

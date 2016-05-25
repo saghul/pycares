@@ -20,6 +20,7 @@ Version 2.0.0
  - cffi: fixup FreeBSD support
  - doc: MinGW support got axed
  - doc: update supported Python versions
+ - core: update bundled c-ares to 9642b57 
 
 Version 1.0.0
 =============
