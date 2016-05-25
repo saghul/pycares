@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 import cffi
 import sys
@@ -15,7 +14,6 @@ if sys.platform == 'win32':
     extra_libraries.extend(["ws2_32", "advapi32", "iphlpapi", "psapi"])
     ffi.cdef(re.sub(r"\b(_In_|_Inout_|_Out_|_Outptr_|FAR)(opt_)?\b", " ",
 """
-typedef UINT_PTR        SOCKET;
 typedef unsigned short...        u_short;
 typedef unsigned long...        u_long;
 
@@ -62,7 +60,6 @@ struct sockaddr_in6 {
     u_long  sin6_scope_id;
 };
 
-typedef SOCKET ares_socket_t;
 """))
 else:
     ffi.cdef("""
@@ -115,9 +112,9 @@ struct sockaddr_in6 {
     uint32_t            sin6_flowinfo;  /* IPv6 flow information */
     struct in6_addr     sin6_addr;      /* IPv6 address */
     uint32_t            sin6_scope_id;  /* scope id (new in RFC2553) */
+    ...;
 };
 
-typedef int ares_socket_t;
 """)
 
 ffi.cdef("""
@@ -139,6 +136,7 @@ ffi.cdef("""
 
 
 /* ares_build.h */
+typedef int... ares_socket_t;
 typedef int... ares_socklen_t;
 #define ARES_SUCCESS            0
 
@@ -682,7 +680,7 @@ char* reverse_address(const char *ip_address, char *name)
     return name;
 }
 
-""", libraries=([] + extra_libraries), include_dirs=[os.path.join(current_dir, "../../deps/c-ares/src"),], library_dirs=[os.path.join(current_dir, "../../deps/c-ares"),])
+""", libraries=(extra_libraries), include_dirs=[os.path.join(current_dir, "../../deps/c-ares/src"),], library_dirs=[os.path.join(current_dir, "../../deps/c-ares"),])
 
 
 if __name__ == "__main__":
