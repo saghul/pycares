@@ -1,3 +1,26 @@
+Version 2.0.0
+=============
+ - doc: fix rst syntax in README
+ - sample: fix correctly setting events mask
+ - setup.py: mark as executable and add shebang
+ - tests.py: assertions moved out of cb so C code cannot discard
+ - tests.py: test reverse_address on IPv6 also
+ - tests.py: ensure all query results have proper and bound type
+ - pycares.c: register result struct-sequences in pycares namespace
+ - ci: run tests with PyPy as well
+ - ci: run tests on CPython 3.5 on Travis
+ - test: moved test file to tests/tests.py
+ - test: add Python 3.5 to tox.ini
+ - ci: use PyPy 5 in Travis CI
+ - build: refactor building bundled c-ares
+ - ci: add Python 3.5 to AppVeyor
+ - core: reorganize package
+ - core: add CFFI core implementation
+ - cffi: fix OSX support
+ - cffi: fixup FreeBSD support
+ - doc: MinGW support got axed
+ - doc: update supported Python versions
+
 Version 1.0.0
 =============
  - build: fix build on Windows with Python
