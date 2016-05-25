@@ -5,6 +5,7 @@ recursive-include examples *
 recursive-include src *
 recursive-include tests *
 recursive-include deps *
+recursive-include pycares *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 recursive-exclude * *.[ao]
