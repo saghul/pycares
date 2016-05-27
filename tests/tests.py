@@ -276,6 +276,10 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(self.result, None)
         self.assertEqual(self.errorno, pycares.errno.ARES_ECANCELLED)
 
+    def test_import_errno(self):
+        from pycares.errno import ARES_SUCCESS
+        self.assertTrue(True)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

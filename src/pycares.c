@@ -62,7 +62,7 @@ pycares_methods[] = {
 #ifdef PYCARES_PYTHON3
 static PyModuleDef pycares_module = {
     PyModuleDef_HEAD_INIT,
-    "_core",                /*m_name*/
+    "pycares._core",        /*m_name*/
     NULL,                   /*m_doc*/
     -1,                     /*m_size*/
     pycares_methods,        /*m_methods*/
