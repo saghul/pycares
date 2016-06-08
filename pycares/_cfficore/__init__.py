@@ -279,23 +279,31 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                 status = None
 
         elif query_type == _lib.T_TXT:
-            txt_reply = _ffi.new("struct ares_txt_reply **")
-            parse_status = _lib.ares_parse_txt_reply(abuf, alen, txt_reply);
+            txt_reply = _ffi.new("struct ares_txt_ext **")
+            parse_status = _lib.ares_parse_txt_reply_ext(abuf, alen, txt_reply);
             if parse_status != ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
                 result = []
-                txt_reply_ptr = _ffi.new("struct ares_txt_reply **")
+                txt_reply_ptr = _ffi.new("struct ares_txt_ext **")
                 txt_reply_ptr[0] = txt_reply[0]
+                tmp_obj = None
                 while True:
                     if txt_reply_ptr[0] == _ffi.NULL:
+                        if tmp_obj is not None: 
+                            result.append(tmp_obj)
                         break
-                    result.append(ares_query_txt_result(txt_reply_ptr[0]))
+                    if txt_reply_ptr[0].record_start == 1:
+                        if tmp_obj is not None: 
+                            result.append(tmp_obj)
+                        tmp_obj = ares_query_txt_result(txt_reply_ptr[0])
+                    else:
+                        new_chunk = ares_query_txt_result(txt_reply_ptr[0])
+                        tmp_obj.text += new_chunk.text
                     txt_reply_ptr[0] = txt_reply_ptr[0].next
                 _lib.ares_free_data(txt_reply[0])
                 status = None
-
         else:
             raise ValueError("invalid query type specified")
 
@@ -651,7 +659,7 @@ class  ares_query_srv_result(object):
 
 class ares_query_txt_result(object):
     def __init__(self, txt):
-        self.txt = _ffi_string(txt.txt)
+        self.text = _ffi_string(txt.txt)
         self.ttl = txt.ttl
 
 

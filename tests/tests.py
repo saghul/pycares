@@ -11,7 +11,7 @@ import pycares
 class DNSTest(unittest.TestCase):
 
     def setUp(self):
-        self.channel = pycares.Channel(timeout=1.0, tries=1)
+        self.channel = pycares.Channel(timeout=5.0, tries=1)
 
     def tearDown(self):
         self.channel = None
@@ -173,6 +173,29 @@ class DNSTest(unittest.TestCase):
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_txt_result)
             self.assertTrue(r.ttl >= 0)
+
+    def test_query_txt_chunked(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.query('jobscoutdaily.com', pycares.QUERY_TYPE_TXT, cb)
+        self.wait()
+        self.assertEqual(self.errorno, None)
+        # If the chunks are aggregated, only one TXT record should be visible. Three would show if they are not properly merged.
+        # jobscoutdaily.com.    21600   IN  TXT "v=spf1 " "include:emailcampaigns.net include:spf.dynect.net  include:ccsend.com include:_spf.elasticemail.com ip4:67.200.116.86 ip4:67.200.116.90 ip4:67.200.116.97 ip4:67.200.116.111 ip4:74.199.198.2 " " ~all"
+        self.assertEqual(len(self.result), 1)
+        self.assertEqual(self.result[0].text, "v=spf1 include:emailcampaigns.net include:spf.dynect.net  include:ccsend.com include:_spf.elasticemail.com ip4:67.200.116.86 ip4:67.200.116.90 ip4:67.200.116.97 ip4:67.200.116.111 ip4:74.199.198.2  ~all")
+
+    def test_query_txt_multiple_chunked(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.query('s-pulse.co.jp', pycares.QUERY_TYPE_TXT, cb)
+        self.wait()
+        self.assertEqual(self.errorno, None)
+        # s-pulse.co.jp.      3600    IN  TXT "MS=ms18955624"
+        # s-pulse.co.jp.      3600    IN  TXT "v=spf1 " "include:spf-bma.mpme.jp ip4:202.248.11.9 ip4:202.248.11.10 " "ip4:218.223.68.132 ip4:218.223.68.77 ip4:210.254.139.121 " "ip4:211.128.73.121 ip4:210.254.139.122 ip4:211.128.73.122 " "ip4:210.254.139.123 ip4:211.128.73.123 ip4:210.254.139.124 " "ip4:211.128.73.124 ip4:210.254.139.13 ip4:211.128.73.13 " "ip4:52.68.199.198 include:spf.betrend.com " "include:spf.protection.outlook.com " "~all"
+        self.assertEqual(len(self.result), 2)
 
     def test_query_soa(self):
         self.result, self.errorno = None, None
