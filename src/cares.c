@@ -7,6 +7,7 @@
     #include <netdb.h>
 #endif
 #include "nameser.h"
+#include "bytesobject.h"
 
 #define PYCARES_ADDRTTL_SIZE 256
 
@@ -454,8 +455,9 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     int parse_status;
-    struct ares_txt_reply *txt_reply, *txt_ptr;
-    PyObject *dns_result, *errorno, *tmp, *result, *callback;
+    struct ares_txt_ext *txt_reply, *txt_ptr;
+    PyObject *dns_result, *errorno, *tmp_obj, *result, *callback;
+    PyObject *assembled_txt;
 
     txt_reply = NULL;
     callback = (PyObject *)arg;
@@ -468,7 +470,7 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         goto callback;
     }
 
-    parse_status = ares_parse_txt_reply(answer_buf, answer_len, &txt_reply);
+    parse_status = ares_parse_txt_reply_ext(answer_buf, answer_len, &txt_reply);
     if (parse_status != ARES_SUCCESS) {
         errorno = PyInt_FromLong((long)parse_status);
         dns_result = Py_None;
@@ -486,16 +488,43 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         goto callback;
     }
 
-    for (txt_ptr = txt_reply; txt_ptr != NULL; txt_ptr = txt_ptr->next) {
-        tmp = PyStructSequence_New(&AresQueryTXTResultType);
-        if (tmp == NULL) {
+    tmp_obj = NULL;
+    assembled_txt = NULL;
+    txt_ptr = txt_reply;
+    while (1) {
+        if (txt_ptr == NULL || txt_ptr->record_start == 1) {
+            if (tmp_obj != NULL) {
+                /* Add the assembled record to the result when seeing a new record (except for the first time) and after the last chunk has been seen */
+                PyStructSequence_SET_ITEM(tmp_obj, 0, Py_BuildValue("s", PyBytes_AS_STRING(assembled_txt)));
+                PyList_Append(dns_result, tmp_obj);
+                Py_DECREF(tmp_obj);
+                Py_DECREF(assembled_txt);
+            }
+            if (txt_ptr == NULL) {
+                /* Exit while loop when last chunk has been seen */
+                break;
+            }
+        }
+        if (txt_ptr->record_start == 1) {
+            /* In case of a new record, prepare its object */
+            tmp_obj = PyStructSequence_New(&AresQueryTXTResultType);
+            if (tmp_obj == NULL) {
+                break;
+            }
+            /* ttl of the first chunk is representative for the entire record */
+            PyStructSequence_SET_ITEM(tmp_obj, 1, PyInt_FromLong((long)txt_ptr->ttl));
+            assembled_txt = PyBytes_FromString("");
+        }
+        /* Concatenate each chunk's text onto the assembled record */
+        PyBytes_ConcatAndDel(&assembled_txt, PyBytes_FromString((char*)txt_ptr->txt));
+        if (assembled_txt == NULL) {
+            Py_DECREF(tmp_obj);
             break;
         }
-        PyStructSequence_SET_ITEM(tmp, 0, Py_BuildValue("s", (const char *)txt_ptr->txt));
-        PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)txt_ptr->ttl));
-        PyList_Append(dns_result, tmp);
-        Py_DECREF(tmp);
+        /* Move on to the next chunk */
+        txt_ptr = txt_ptr->next;
     }
+
     errorno = Py_None;
     Py_INCREF(Py_None);
 
