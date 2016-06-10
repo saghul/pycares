@@ -1,3 +1,7 @@
+Version 2.1.0
+=============
+ - core: fix parsing chunked TXT records
+
 Version 2.0.1
 =============
  - core: fix importing from errno submodule
@@ -24,7 +28,7 @@ Version 2.0.0
  - cffi: fixup FreeBSD support
  - doc: MinGW support got axed
  - doc: update supported Python versions
- - core: update bundled c-ares to 9642b57 
+ - core: update bundled c-ares to 9642b57
 
 Version 1.0.0
 =============
