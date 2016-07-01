@@ -387,7 +387,7 @@ class Channel(object):
         self.channel = channel[0]
 
         if servers:
-            self.set_servers(servers)
+            self._set_servers(servers)
 
     def __del__(self):
         self.destroy()
