@@ -277,6 +277,24 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(self.result, None)
         self.assertEqual(self.errorno, pycares.errno.ARES_ETIMEOUT)
 
+    def test_channel_nameservers(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel = pycares.Channel(timeout=5.0, tries=1, servers=['8.8.8.8'])
+        self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
+        self.wait()
+        self.assertEqual(self.errorno, None)
+
+    def test_channel_nameservers2(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.servers = ['8.8.8.8']
+        self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
+        self.wait()
+        self.assertEqual(self.errorno, None)
+
     def test_reverse_address(self):
         s = '1.2.3.4'
         expected = '4.3.2.1.in-addr.arpa'
