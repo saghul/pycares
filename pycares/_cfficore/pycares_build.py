@@ -21,11 +21,13 @@ typedef struct fd_set {
     ...;
 } fd_set;
 
-typedef uint32_t in_addr_t;
-struct in_addr
-  {
-    in_addr_t s_addr;
-  };
+struct in_addr {
+    uint8_t s_addr[4];
+};
+
+struct in6_addr {
+    uint8_t s6_addr[16];
+};
 
 typedef struct hostent {
     char FAR      *h_name;
@@ -69,11 +71,13 @@ typedef struct
 ...;
 } fd_set;
 
-typedef uint32_t in_addr_t;
-struct in_addr
-  {
-    in_addr_t s_addr;
-  };
+struct in_addr {
+    uint8_t s_addr[4];
+};
+
+struct in6_addr {
+    uint8_t s6_addr[16];
+};
 
 typedef long... time_t;
 typedef long... suseconds_t;
