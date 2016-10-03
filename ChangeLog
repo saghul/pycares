@@ -1,3 +1,11 @@
+Version 2.1.1
+=============
+ - cffi: fix setting nameserver in Channel.__init__
+ - doc: update Sphinx configuration so the docs can be built
+ - core: backport fix for CVE-2016-5180
+ - cffi: fix structure definition
+ - ci: use PyPy 5.4.1 when testing on Travis
+
 Version 2.1.0
 =============
  - core: fix parsing chunked TXT records
