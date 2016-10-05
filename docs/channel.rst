@@ -205,17 +205,11 @@
         If the ``max_timeout`` parameter is specified, it is stored on the channel and the appropriate value is then
         returned.
 
-    .. py:method:: set_local_ip4(local_ip)
+    .. py:method:: set_local_ip(local_ip)
 
         :param str local_ip: IP address.
 
-        Set the local IPv4 address from which the queries will be sent.
-
-    .. py:method:: set_local_ip6(local_ip)
-
-        :param str local_ip: IP address.
-
-        Set the local IPv6 address from which the queries will be sent.
+        Set the local IPv4 or IPv6 address from which the queries will be sent.
 
     .. py:method:: set_local_dev(local_dev)
 
