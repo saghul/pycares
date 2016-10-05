@@ -315,7 +315,8 @@ class Channel(object):
     def __init__(self, flags = -1, timeout = -1.0,
                  tries = -1, ndots = -1, tcp_port = -1, udp_port = -1,
                  servers = None, domains = None, lookups = None, sock_state_cb = None,
-                 socket_send_buffer_size = -1, socket_receive_buffer_size = -1, rotate = False):
+                 socket_send_buffer_size = -1, socket_receive_buffer_size = -1, rotate = False,
+                 local_ip = None, local_dev = None):
 
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
@@ -388,6 +389,12 @@ class Channel(object):
 
         if servers:
             self._set_servers(servers)
+
+        if local_ip:
+            self.set_local_ip(local_ip)
+
+        if local_dev:
+            self.set_local_dev(local_dev)
 
     def __del__(self):
         self.destroy()
