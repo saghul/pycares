@@ -1128,18 +1128,11 @@ Channel_func_destroy(Channel *self)
 }
 
 
-static PyObject *
-Channel_func_set_local_ip(Channel *self, PyObject *args)
+static int
+set_local_ip(Channel *self, char *ip)
 {
-    char *ip;
     struct in_addr addr4;
     struct in6_addr addr6;
-
-    CHECK_CHANNEL(self);
-
-    if (!PyArg_ParseTuple(args, "s:set_local_ip", &ip)) {
-        return NULL;
-    }
 
     if (ares_inet_pton(AF_INET, ip, &addr4) == 1) {
         ares_set_local_ip4(self->channel, ntohl(addr4.s_addr));
@@ -1147,12 +1140,35 @@ Channel_func_set_local_ip(Channel *self, PyObject *args)
         ares_set_local_ip6(self->channel, addr6.s6_addr);
     } else {
         PyErr_SetString(PyExc_ValueError, "invalid IP address");
+        return -1;
+    }
+
+    return 0;
+}
+
+static PyObject *
+Channel_func_set_local_ip(Channel *self, PyObject *args)
+{
+    char *ip;
+
+    CHECK_CHANNEL(self);
+
+    if (!PyArg_ParseTuple(args, "s:set_local_ip", &ip)) {
         return NULL;
     }
+
+    set_local_ip(self, ip);
 
     Py_RETURN_NONE;
 }
 
+static int
+set_local_dev(Channel *self, char *dev)
+{
+    ares_set_local_dev(self->channel, dev);
+
+    return 0;
+}
 
 static PyObject *
 Channel_func_set_local_dev(Channel *self, PyObject *args)
@@ -1164,7 +1180,8 @@ Channel_func_set_local_dev(Channel *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "s:set_local_dev", &dev)) {
         return NULL;
     }
-    ares_set_local_dev(self->channel, dev);
+
+    set_local_dev(self, dev);
 
     Py_RETURN_NONE;
 }
@@ -1496,10 +1513,12 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     double timeout;
     struct ares_options options;
     PyObject *servers, *domains, *sock_state_cb, *rotate;
+    char *local_ip, *local_dev;
 
     static char *kwlist[] = {"flags", "timeout", "tries", "ndots", "tcp_port", "udp_port",
                              "servers", "domains", "lookups", "sock_state_cb",
-                             "socket_send_buffer_size", "socket_receive_buffer_size", "rotate", NULL};
+                             "socket_send_buffer_size", "socket_receive_buffer_size", "rotate",
+                             "local_ip", "local_dev", NULL};
 
     optmask = 0;
     flags = tries = ndots = tcp_port = udp_port = socket_send_buffer_size = socket_receive_buffer_size = -1;
@@ -1508,15 +1527,17 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     c_domains = NULL;
     servers = domains = sock_state_cb = NULL;
     rotate = Py_False;
+    local_ip = local_dev = NULL;
+    int ret = 0;
 
     if (self->channel) {
         PyErr_SetString(PyExc_AresError, "Object already initialized");
         return -1;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|idiiiiOOsOiiO!:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|idiiiiOOsOiiO!ss:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers,
                                                                                        &domains, &lookups, &sock_state_cb, &socket_send_buffer_size, &socket_receive_buffer_size,
-                                                                                       &PyBool_Type, &rotate)) {
+                                                                                       &PyBool_Type, &rotate, &local_ip, &local_dev)) {
         return -1;
     }
 
@@ -1599,7 +1620,21 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     free_domains(c_domains);
 
     if (servers) {
-        return set_nameservers(self, servers);
+        ret = set_nameservers(self, servers);
+	if (ret)
+	  return ret;
+    }
+
+    if (local_ip) {
+        ret = set_local_ip(self, local_ip);
+	if (ret)
+	  return ret;
+    }
+
+    if (local_dev) {
+        ret = set_local_dev(self, local_dev);
+	if (ret)
+	  return ret;
     }
 
     return 0;
