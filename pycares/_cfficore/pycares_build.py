@@ -23,7 +23,6 @@ typedef struct fd_set {
 
 struct in_addr {
     uint8_t s_addr[4];
-    ...;
 };
 
 struct in6_addr {
@@ -74,7 +73,6 @@ typedef struct
 
 struct in_addr {
     uint8_t s_addr[4];
-    ...;
 };
 
 struct in6_addr {
