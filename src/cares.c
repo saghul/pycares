@@ -1506,6 +1506,7 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     struct ares_options options;
     PyObject *servers, *domains, *sock_state_cb, *rotate;
     char *local_ip, *local_dev;
+    int ret;
 
     static char *kwlist[] = {"flags", "timeout", "tries", "ndots", "tcp_port", "udp_port",
                              "servers", "domains", "lookups", "sock_state_cb",
@@ -1520,7 +1521,7 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
     servers = domains = sock_state_cb = NULL;
     rotate = Py_False;
     local_ip = local_dev = NULL;
-    int ret = 0;
+    ret = 0;
 
     if (self->channel) {
         PyErr_SetString(PyExc_AresError, "Object already initialized");
