@@ -535,7 +535,7 @@ class Channel(object):
         addr4 = _ffi.new("struct in_addr*")
         addr6 = _ffi.new("struct ares_in6_addr*")
         if 1 == _lib.ares_inet_pton(socket.AF_INET, s2b(ip), addr4):
-            _lib.ares_set_local_ip4(self.channel, socket.ntohl(addr4.s_addr))
+            _lib.ares_set_local_ip4(self.channel, (unsigned int)socket.ntohl(addr4.s_addr))
         elif 1 == _lib.ares_inet_pton(socket.AF_INET6, s2b(ip), addr6):
             _lib.ares_set_local_ip6(self.channel, addr6)
         else:
