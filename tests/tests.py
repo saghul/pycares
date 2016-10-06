@@ -299,7 +299,7 @@ class DNSTest(unittest.TestCase):
         self.result, self.errorno = None, None
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
-        self.channel = pycares.Channel(timeout=5.0, tries=1, servers=['8.8.8.8'], local_ip=['127.0.0.1'])
+        self.channel = pycares.Channel(timeout=5.0, tries=1, servers=['8.8.8.8'], local_ip='127.0.0.1')
         self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
         self.wait()
         self.assertEqual(self.result, None)
@@ -317,14 +317,11 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(self.errorno, pycares.errno.ARES_ECONNREFUSED)
 
     def test_channel_local_dev(self):
-        self.result, self.errorno = None, None
-        def cb(result, errorno):
-            self.result, self.errorno = result, errorno
-        self.channel = pycares.Channel(timeout=5.0, tries=1, servers=['8.8.8.8'], local_dev='does-not-exist')
-        self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
-        self.wait()
-        self.assertEqual(self.result, None)
-        self.assertEqual(self.errorno, pycares.errno.ARES_ETIMEOUT)
+        '''
+        Comments in c-ares say this only works for root, and ares ignores
+        errors. So we won't test it.
+        '''
+        pass
 
     def test_reverse_address(self):
         s = '1.2.3.4'
