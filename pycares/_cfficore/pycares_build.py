@@ -72,7 +72,7 @@ typedef struct
 } fd_set;
 
 struct in_addr {
-    uint8_t s_addr[4];
+    uint32_t s_addr;
 };
 
 struct in6_addr {
