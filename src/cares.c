@@ -1149,7 +1149,9 @@ Channel_func_set_local_ip(Channel *self, PyObject *args)
         return NULL;
     }
 
-    set_local_ip(self, ip);
+    if (set_local_ip(self, ip)) {
+      return NULL;
+    }
 
     Py_RETURN_NONE;
 }

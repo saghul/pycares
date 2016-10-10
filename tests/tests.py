@@ -315,6 +315,7 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(self.result, None)
         self.assertEqual(self.errorno, pycares.errno.ARES_ECONNREFUSED)
+        self.assertRaises(ValueError, self.channel.set_local_ip, 'an invalid ip')
 
     def test_channel_local_dev(self):
         '''
