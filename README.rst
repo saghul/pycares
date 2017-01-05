@@ -39,7 +39,7 @@ Linux:
 
 ::
 
-    ./build_inplace
+    python setup.py install
 
 Mac OSX:
 
@@ -47,7 +47,7 @@ Mac OSX:
 
     (XCode needs to be installed)
     export ARCHFLAGS="-arch x86_64"
-    ./build_inplace
+    python setup.py install
 
 Microsoft Windows (with Visual Studio 2008, 2010, 2015 or the Windows SDK):
 
