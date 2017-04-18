@@ -631,9 +631,10 @@ class ares_query_ns_result(object):
 
 
 class ares_query_ptr_result(object):
-    def __init__(self, hostent):
+    def __init__(self, hostent, ttl):
         self.name = _ffi_string(hostent.h_name)
-        self.ttl = None
+        assert(isinstance(ttl, int))
+        self.ttl = ttl
 
 
 class ares_query_soa_result(object):
