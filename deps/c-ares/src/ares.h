@@ -602,7 +602,8 @@ CARES_EXTERN int ares_parse_ptr_reply(const unsigned char *abuf,
                                       const void *addr,
                                       int addrlen,
                                       int family,
-                                      struct hostent **host);
+                                      struct hostent **host,
+                                      int *hostttl);
 
 CARES_EXTERN int ares_parse_ns_reply(const unsigned char *abuf,
                                      int alen,
