@@ -398,6 +398,8 @@ query_ptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     struct hostent *hostent = NULL;
     PyObject *dns_result, *errorno, *result, *callback;
 
+    int hostttls;
+
     callback = (PyObject *)arg;
     ASSERT(callback);
 
@@ -409,7 +411,7 @@ query_ptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     }
 
     /* addr is only used to populate the hostent struct, it's not used to validate the response */
-    parse_status = ares_parse_ptr_reply(answer_buf, answer_len, NULL, 0, AF_UNSPEC, &hostent);
+    parse_status = ares_parse_ptr_reply(answer_buf, answer_len, NULL, 0, AF_UNSPEC, &hostent, &hostttls);
     if (parse_status != ARES_SUCCESS) {
         errorno = PyInt_FromLong((long)parse_status);
         dns_result = Py_None;
@@ -428,8 +430,7 @@ query_ptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     }
 
     PyStructSequence_SET_ITEM(dns_result, 0, Py_BuildValue("s", hostent->h_name));
-    /* TODO: add (real) TTL */
-    PyStructSequence_SET_ITEM(dns_result, 1, Py_None);
+    PyStructSequence_SET_ITEM(dns_result, 1, Py_BuildValue("d", hostttls));
     Py_INCREF(Py_None);
     errorno = Py_None;
     Py_INCREF(Py_None);
