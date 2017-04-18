@@ -137,7 +137,7 @@ class DNSTest(unittest.TestCase):
         self.result, self.errorno = None, None
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
-        self.channel.query('livechat.ripe.net', pycares.QUERY_TYPE_CNAME, cb)
+        self.channel.query('www.amazon.com', pycares.QUERY_TYPE_CNAME, cb)
         self.wait()
         self.assertEqual(type(self.result), pycares.ares_query_cname_result)
         self.assertEqual(self.errorno, None)
