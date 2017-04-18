@@ -240,12 +240,13 @@ def _query_cb(arg, status, timeouts, abuf, alen):
 
         elif query_type == _lib.T_PTR:
             hostent = _ffi.new("struct hostent **")
-            parse_status = _lib.ares_parse_ptr_reply(abuf, alen, _ffi.NULL, 0, socket.AF_UNSPEC, hostent);
+            hostttl = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
+            parse_status = _lib.ares_parse_ptr_reply(abuf, alen, _ffi.NULL, 0, socket.AF_UNSPEC, hostent, hostttl);
             if parse_status != ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
-                result = ares_query_ptr_result(hostent[0])
+                result = ares_query_ptr_result(hostent[0], hostttl[0])
                 _lib.ares_free_hostent(hostent[0])
                 status = None
 
@@ -633,7 +634,6 @@ class ares_query_ns_result(object):
 class ares_query_ptr_result(object):
     def __init__(self, hostent, ttl):
         self.name = _ffi_string(hostent.h_name)
-        assert(isinstance(ttl, int))
         self.ttl = ttl
 
 
