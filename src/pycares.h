@@ -175,6 +175,7 @@ static PyTypeObject AresQueryPTRResultType;
 static PyStructSequence_Field ares_query_ptr_result_fields[] = {
     {"name", ""},
     {"ttl", ""},
+    {"aliases", ""},
     {NULL}
 };
 
