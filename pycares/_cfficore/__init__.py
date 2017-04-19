@@ -246,7 +246,13 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                 result = None
                 status = parse_status
             else:
-                result = ares_query_ptr_result(hostent[0], hostttl[0])
+                aliases = []
+                i = 0
+                terminator = _ffi.cast('char*', _ffi.NULL)
+                while hostent[0].h_aliases[i] != terminator:
+                    aliases.append(_ffi.string(hostent[0].h_aliases[i]))
+                    i += 1
+                result = ares_query_ptr_result(hostent[0], hostttl[0], aliases)
                 _lib.ares_free_hostent(hostent[0])
                 status = None
 
@@ -632,9 +638,10 @@ class ares_query_ns_result(object):
 
 
 class ares_query_ptr_result(object):
-    def __init__(self, hostent, ttl):
+    def __init__(self, hostent, ttl, aliases):
         self.name = _ffi_string(hostent.h_name)
         self.ttl = ttl
+        self.aliases = aliases
 
 
 class ares_query_soa_result(object):

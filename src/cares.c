@@ -396,7 +396,8 @@ query_ptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     PyGILState_STATE gstate = PyGILState_Ensure();
     int parse_status;
     struct hostent *hostent = NULL;
-    PyObject *dns_result, *errorno, *result, *callback;
+    PyObject *dns_result, *errorno, *result, *callback, *aliases;
+    char **alias;
 
     int hostttls;
 
@@ -429,8 +430,14 @@ query_ptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         goto callback;
     }
 
+    aliases = PyList_New(0);
+    for(alias = hostent->h_aliases; *alias != NULL; ++alias)
+    {
+        PyList_Append(aliases, Py_BuildValue("s", *alias));
+    }
     PyStructSequence_SET_ITEM(dns_result, 0, Py_BuildValue("s", hostent->h_name));
     PyStructSequence_SET_ITEM(dns_result, 1, Py_BuildValue("d", hostttls));
+    PyStructSequence_SET_ITEM(dns_result, 2, aliases);
     Py_INCREF(Py_None);
     errorno = Py_None;
     Py_INCREF(Py_None);
