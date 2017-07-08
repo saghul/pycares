@@ -56,6 +56,10 @@ environment:
       PYTHON_VERSION: "3.6.x"
       PYTHON_ARCH: "64"
 
+branches:
+  only:
+    - master
+
 install:
   - ECHO "Filesystem root:"
   - ps: "ls \"C:/\""
