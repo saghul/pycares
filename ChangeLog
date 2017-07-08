@@ -1,3 +1,16 @@
+Version 2.2.0
+=============
+ - test: fix CNAME test
+ - core: parse TTL in PTR replies
+ - core: parse PTR aliases
+ - doc: fix installation instructions in README
+ - doc: fix Channel.set_local_ip documentation
+ - core: accept local_ip and local_dev as kwargs
+ - ci, misc: add support for CPython 3.6
+ - ci: only run CI on master
+ - ci: disable some Travis notifications
+ - build: add scripts to build manylinux wheels
+
 Version 2.1.1
 =============
  - cffi: fix setting nameserver in Channel.__init__
