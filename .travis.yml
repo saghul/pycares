@@ -28,4 +28,7 @@ install:
   - python setup.py install
 script:
   - ./tests/tests.py
-
+notifications:
+  email:
+    on_success: never
+    on_failure: change
