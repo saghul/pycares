@@ -141,7 +141,7 @@ int aresx_sltosi(long slnum)
 }
 
 /*
-** signed ssize_t to signed int
+** signed ares_ssize_t to signed int
 */
 
 int aresx_sztosi(ssize_t sznum)
@@ -160,7 +160,7 @@ int aresx_sztosi(ssize_t sznum)
 }
 
 /*
-** signed ssize_t to unsigned int
+** signed ares_ssize_t to unsigned int
 */
 
 unsigned int aresx_sztoui(ssize_t sznum)
