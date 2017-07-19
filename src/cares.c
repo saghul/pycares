@@ -503,10 +503,9 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         if (txt_ptr == NULL || txt_ptr->record_start == 1) {
             if (tmp_obj != NULL) {
                 /* Add the assembled record to the result when seeing a new record (except for the first time) and after the last chunk has been seen */
-                PyStructSequence_SET_ITEM(tmp_obj, 0, Py_BuildValue("s", PyBytes_AS_STRING(assembled_txt)));
+                PyStructSequence_SET_ITEM(tmp_obj, 0, assembled_txt);
                 PyList_Append(dns_result, tmp_obj);
                 Py_DECREF(tmp_obj);
-                Py_DECREF(assembled_txt);
             }
             if (txt_ptr == NULL) {
                 /* Exit while loop when last chunk has been seen */
