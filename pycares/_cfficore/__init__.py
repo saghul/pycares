@@ -674,7 +674,7 @@ class  ares_query_srv_result(object):
 
 class ares_query_txt_result(object):
     def __init__(self, txt):
-        self.text = _ffi_string(txt.txt)
+        self.text = _ffi.string(txt.txt)
         self.ttl = txt.ttl
 
 
