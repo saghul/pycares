@@ -238,7 +238,9 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
         self.assertEqual(self.errorno, None)
-        self.assertGreater(self.result.ttl, 0)
+        self.assertIsInstance(self.result.ttl, int)
+        self.assertGreaterEqual(self.result.ttl, 0)
+        self.assertLessEqual(self.result.ttl, 2**31-1)
         self.assertEqual(type(self.result.aliases), list)
 
     def test_query_ptr_ipv6(self):
@@ -250,7 +252,9 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
         self.assertEqual(self.errorno, None)
-        self.assertGreater(self.result.ttl, 0)
+        self.assertIsInstance(self.result.ttl, int)
+        self.assertGreaterEqual(self.result.ttl, 0)
+        self.assertLessEqual(self.result.ttl, 2**31-1)
         self.assertEqual(type(self.result.aliases), list)
 
 

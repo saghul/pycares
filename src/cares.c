@@ -436,7 +436,7 @@ query_ptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         PyList_Append(aliases, Py_BuildValue("s", *alias));
     }
     PyStructSequence_SET_ITEM(dns_result, 0, Py_BuildValue("s", hostent->h_name));
-    PyStructSequence_SET_ITEM(dns_result, 1, Py_BuildValue("d", hostttls));
+    PyStructSequence_SET_ITEM(dns_result, 1, Py_BuildValue("i", hostttls));
     PyStructSequence_SET_ITEM(dns_result, 2, aliases);
     Py_INCREF(Py_None);
     errorno = Py_None;
