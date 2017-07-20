@@ -1,3 +1,12 @@
+Version 2.3.0
+=============
+ - core: fix CPython implementation TTL parsing issue
+ - core: add ability to make queries using the command line
+ - core: fix parsing TXT records with invalid UTF-8 chars
+ - deps: removed unneeded c-ares files
+ - core: update bundled c-ares to 1.13.0
+ - ci: fix PyPy in Travis
+
 Version 2.2.0
 =============
  - test: fix CNAME test
