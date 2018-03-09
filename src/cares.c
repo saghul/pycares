@@ -11,6 +11,25 @@
 
 #define PYCARES_ADDRTTL_SIZE 256
 
+#define CHECK_ARG_INT(x, ret) \
+    if (x) {\
+        if (x == Py_None) { \
+            x = NULL; \
+        } else if (!PyInt_CheckExact(x)) { \
+            PyErr_SetString(PyExc_TypeError, #x " is not int"); \
+            return ret; \
+        } \
+    }
+
+#define CHECK_ARG_FLOAT(x, ret) \
+    if (x) {\
+        if (x == Py_None) { \
+            x = NULL; \
+        } else if (!PyFloat_Check(x)) { \
+            PyErr_SetString(PyExc_TypeError, #x " is not float"); \
+            return ret; \
+        } \
+    }
 
 static PyObject* PyExc_AresError;
 
@@ -1219,22 +1238,27 @@ double_from_timeval(struct timeval *tv)
 static PyObject *
 Channel_func_timeout(Channel *self, PyObject *args)
 {
-    double timeout = -1;
+    PyObject *timeout = NULL;
+    double val = -1.0;
     struct timeval tv, maxtv, *tvp, *maxtvp;
 
     CHECK_CHANNEL(self);
 
-    if (!PyArg_ParseTuple(args, "|d:timeout", &timeout)) {
+    if (!PyArg_ParseTuple(args, "|O:timeout", &timeout)) {
         return NULL;
     }
 
-    if (timeout != -1 && timeout < 0.0) {
+    CHECK_ARG_FLOAT(timeout, NULL);
+    if (timeout) {
+        val = PyFloat_AsDouble(timeout);
+    }
+    if (val != -1.0 && val < 0.0) {
         PyErr_SetString(PyExc_ValueError, "timeout needs to be a positive number");
         return NULL;
     }
 
-    if (timeout != -1) {
-        timeval_from_double(timeout, &maxtv);
+    if (val != -1.0) {
+        timeval_from_double(val, &maxtv);
         maxtvp = &maxtv;
     } else {
         maxtvp = NULL;
@@ -1506,10 +1530,11 @@ cleanup:
 static int
 Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
 {
-    int r, flags, tries, ndots, tcp_port, udp_port, optmask, ndomains, socket_send_buffer_size, socket_receive_buffer_size;
+    int r, optmask, ndomains;
+    PyObject *flags, *tries, *ndots, *tcp_port, *udp_port, *socket_send_buffer_size, *socket_receive_buffer_size;
     char *lookups;
     char **c_domains;
-    double timeout;
+    PyObject *timeout;
     struct ares_options options;
     PyObject *servers, *domains, *sock_state_cb, *rotate;
     char *local_ip, *local_dev;
@@ -1520,8 +1545,8 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
                              "local_ip", "local_dev", NULL};
 
     optmask = 0;
-    flags = tries = ndots = tcp_port = udp_port = socket_send_buffer_size = socket_receive_buffer_size = -1;
-    timeout = -1.0;
+    flags = tries = ndots = tcp_port = udp_port = socket_send_buffer_size = socket_receive_buffer_size = NULL;
+    timeout = NULL;
     lookups = NULL;
     c_domains = NULL;
     servers = domains = sock_state_cb = NULL;
@@ -1533,7 +1558,7 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|idiiiiOOsOiiO!ss:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|OOOOOOOOsOOOO!ss:__init__", kwlist, &flags, &timeout, &tries, &ndots, &tcp_port, &udp_port, &servers,
                                                                                        &domains, &lookups, &sock_state_cb, &socket_send_buffer_size, &socket_receive_buffer_size,
                                                                                        &PyBool_Type, &rotate, &local_ip, &local_dev)) {
         return -1;
@@ -1544,6 +1569,15 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
+    CHECK_ARG_INT(flags, -1);
+    CHECK_ARG_INT(tries, -1);
+    CHECK_ARG_INT(ndots, -1);
+    CHECK_ARG_INT(tcp_port, -1);
+    CHECK_ARG_INT(udp_port, -1);
+    CHECK_ARG_INT(socket_send_buffer_size, -1);
+    CHECK_ARG_INT(socket_receive_buffer_size, -1);
+    CHECK_ARG_FLOAT(timeout, -1);
+
     r = ares_library_init(ARES_LIB_INIT_ALL);
     if (r != ARES_SUCCESS) {
         RAISE_ARES_EXCEPTION(r);
@@ -1553,36 +1587,36 @@ Channel_tp_init(Channel *self, PyObject *args, PyObject *kwargs)
 
     memset(&options, 0, sizeof(struct ares_options));
 
-    if (flags != -1) {
-        options.flags = flags;
+    if (flags && PyInt_AsLong(flags) != -1) {
+        options.flags = PyInt_AsLong(flags);
         optmask |= ARES_OPT_FLAGS;
     }
-    if (timeout != -1) {
-        options.timeout = (int)(timeout * 1000);
+    if (timeout && PyFloat_AsDouble(timeout) != -1.0) {
+        options.timeout = (int)(PyFloat_AsDouble(timeout) * 1000);
         optmask |= ARES_OPT_TIMEOUTMS;
     }
-    if (tries != -1) {
-        options.tries = tries;
+    if (tries && PyInt_AsLong(tries) != -1) {
+        options.tries = PyInt_AsLong(tries);
         optmask |= ARES_OPT_TRIES;
     }
-    if (ndots != -1) {
-        options.ndots = ndots;
+    if (ndots && PyInt_AsLong(ndots) != -1) {
+        options.ndots = PyInt_AsLong(ndots);
         optmask |= ARES_OPT_NDOTS;
     }
-    if (tcp_port != -1) {
-        options.tcp_port = tcp_port;
+    if (tcp_port && PyInt_AsLong(tcp_port) != -1) {
+        options.tcp_port = PyInt_AsLong(tcp_port);
         optmask |= ARES_OPT_TCP_PORT;
     }
-    if (udp_port != -1) {
-        options.udp_port = udp_port;
+    if (udp_port && PyInt_AsLong(udp_port) != -1) {
+        options.udp_port = PyInt_AsLong(udp_port);
         optmask |= ARES_OPT_UDP_PORT;
     }
-    if (socket_send_buffer_size != -1) {
-        options.socket_send_buffer_size = socket_send_buffer_size;
+    if (socket_send_buffer_size && PyInt_AsLong(socket_send_buffer_size) != -1) {
+        options.socket_send_buffer_size = PyInt_AsLong(socket_send_buffer_size);
         optmask |= ARES_OPT_SOCK_SNDBUF;
     }
-    if (socket_receive_buffer_size != -1) {
-        options.socket_receive_buffer_size = socket_receive_buffer_size;
+    if (socket_receive_buffer_size && PyInt_AsLong(socket_receive_buffer_size) != -1) {
+        options.socket_receive_buffer_size = PyInt_AsLong(socket_receive_buffer_size);
         optmask |= ARES_OPT_SOCK_RCVBUF;
     }
     if (sock_state_cb) {

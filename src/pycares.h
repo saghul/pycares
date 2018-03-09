@@ -13,6 +13,8 @@
 #if PY_MAJOR_VERSION >= 3
     #define PYCARES_PYTHON3
     #define PyInt_FromLong PyLong_FromLong
+    #define PyInt_CheckExact PyLong_CheckExact
+    #define PyInt_AsLong PyLong_AsLong
 #endif
 
 /* c-ares */
