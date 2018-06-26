@@ -183,7 +183,7 @@ static PyStructSequence_Desc ares_query_ptr_result_desc = {
     "ares_query_ptr_result",
     NULL,
     ares_query_ptr_result_fields,
-    2
+    3
 };
 
 static PyTypeObject AresQuerySOAResultType;
