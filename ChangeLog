@@ -1,3 +1,7 @@
+Version NEXT
+=============
+ - ci, misc: add support for CPython 3.7
+
 Version 2.3.0
 =============
  - core: fix CPython implementation TTL parsing issue

@@ -8,7 +8,7 @@ set -e -x
 cd /pycares
 rm -rf wheeltmp
 
-VERSIONS="cp27-cp27mu cp33-cp33m cp34-cp34m cp35-cp35m cp36-cp36m"
+VERSIONS="cp27-cp27mu cp33-cp33m cp34-cp34m cp35-cp35m cp36-cp36m cp37-cp37m"
 
 # Build
 for version in $VERSIONS; do
