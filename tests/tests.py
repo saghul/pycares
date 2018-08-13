@@ -201,7 +201,7 @@ class DNSTest(unittest.TestCase):
         self.result, self.errorno = None, None
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
-        self.channel.query('like.com.sa', pycares.QUERY_TYPE_TXT, cb)
+        self.channel.query('google.com', pycares.QUERY_TYPE_TXT, cb)
         self.wait()
         self.assertEqual(self.errorno, None)
         for r in self.result:
