@@ -81,7 +81,7 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # Upgrade to the latest version of pip
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "python -m pip install --upgrade pip"
 
   # Install wheel
   - "%CMD_IN_ENV% pip install wheel"
