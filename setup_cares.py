@@ -90,7 +90,8 @@ class cares_build_ext(build_ext):
             self.compiler.add_library('lkstat')
         elif sys.platform == 'win32':
             self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_win32'))
-            self.extensions[0].extra_link_args = ['/NODEFAULTLIB:libcmt']
+            if "mingw" not in self.compiler.compiler_type:
+                self.extensions[0].extra_link_args = ['/NODEFAULTLIB:libcmt']
             self.compiler.add_library('advapi32')
             self.compiler.add_library('iphlpapi')
             self.compiler.add_library('psapi')
