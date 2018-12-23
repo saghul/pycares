@@ -129,7 +129,7 @@ extern "C" {
 
 #ifdef CARES_STATICLIB
 #  define CARES_EXTERN
-#elif defined(WIN32) || defined(_WIN32) || defined(__SYMBIAN32__)
+#elif (defined(WIN32) || defined(_WIN32) || defined(__SYMBIAN32__)) && !defined(__GNUC__)
 #  if defined(CARES_BUILDING_LIBRARY)
 #    define CARES_EXTERN  __declspec(dllexport)
 #  else
