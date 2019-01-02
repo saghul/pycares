@@ -1,16 +1,17 @@
 language: python
 sudo: false
-python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  # Travis doesn’t support CPython 3.7 properly for now, see
-  # https://github.com/travis-ci/travis-ci/issues/9815
-  #- "3.7"
-  - "pypy"
-  - "pypy3"
+matrix:
+  include:
+    - python: 2.7
+    - python: 3.3
+    - python: 3.4
+    - python: 3.5
+    - python: 3.6
+    - python: 3.7
+      dist: xenial
+      sudo: true
+    - python: pypy
+    - python: pypy3
 branches:
   only:
     - master
