@@ -41,6 +41,12 @@ Linux:
 
     python setup.py install
 
+FreeBSD:
+
+::
+
+    cd /usr/ports/dns/py-pycares && make install
+
 Mac OSX:
 
 ::
