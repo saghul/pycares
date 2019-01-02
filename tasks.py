@@ -1,14 +1,17 @@
 
-import invoke
+import re
+from invoke import task
 
-# Based on https://github.com/pyca/cryptography/blob/master/tasks.py
+def get_version():
+    return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""", open('pycares/_version.py').read()).group('version')
 
+@task
+def release(c):
+    version = get_version()
 
-@invoke.task
-def release(version):
-    invoke.run("git tag -a pycares-{0} -m \"pycares {0} release\"".format(version))
-    invoke.run("git push --tags")
+    c.run("git tag -a pycares-{0} -m \"pycares {0} release\"".format(version))
+    c.run("git push --tags")
 
-    invoke.run("python setup.py sdist")
-    invoke.run("twine upload -r pypi dist/pycares-{0}*".format(version))
+    c.run("python setup.py sdist")
+    c.run("twine upload -r pypi dist/pycares-{0}*".format(version))
 
