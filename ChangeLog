@@ -1,6 +1,15 @@
-Version NEXT
+Version 2.4.0
 =============
- - ci, misc: add support for CPython 3.7
+ - misc: fix building wheels for unavailable Python versions
+ - test: skip getaddrinfo6 test on Travis
+ - doc: add FreeBSD building instructions
+ - build: fix MinGW build
+ - ci, misc: add support for CPython 3.7
+ - ci: run on latest PyPy versions on TravisCI
+ - examples: extra examples
+ - ci: fix AppVeyor build
+ - test: fix TXT test
+ - core: fix repr for PTR results
 
 Version 2.3.0
 =============
