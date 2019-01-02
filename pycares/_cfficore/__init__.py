@@ -11,18 +11,14 @@ import functools
 import sys
 
 
-IS_PY2 = sys.version_info[0] < 3
-
-if IS_PY2:
-    b2s = lambda s: s
-    s2b = lambda s: s
-    _ffi_string = _ffi.string
-else:
-    def b2s(b):
-        return b.decode('utf-8')
-    def s2b(s):
-        return s.encode('utf-8')
-    _ffi_string = lambda r, maxlen=-1: b2s(_ffi.string(r, maxlen))
+# Python 2/3 compatibility functions
+# TODO: refactor to only retun bytes
+def b2s(b):
+    return b.decode('utf-8')
+def s2b(s):
+    return s.encode('utf-8')
+def _ffi_string(r, maxlen=-1):
+    return b2s(_ffi.string(r, maxlen))
 
 
 exported_pycares_symbols = [
