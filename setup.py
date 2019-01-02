@@ -2,25 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import codecs
-import os
-import platform
 import re
 
-from setuptools import setup, Extension
+from setuptools import setup
 from setup_cares import cares_build_ext
-
-
-kwargs = {}
-packages = ['pycares']
-if (platform.python_implementation() == 'PyPy' or os.environ.get('PYCARES_CFFI', '0') != '0'):
-    # cffi module
-    kwargs['setup_requires'] = ['cffi>=1.5.0']
-    kwargs['install_requires'] = ['cffi>=1.5.0']
-    kwargs['cffi_modules'] = ['pycares/_cfficore/pycares_build.py:ffi']
-    packages.append('pycares._cfficore')
-else:
-    kwargs['ext_modules'] = [Extension('pycares._core', sources = ['src/pycares.c'])]
-kwargs['packages'] = packages
 
 
 def get_version():
@@ -53,6 +38,9 @@ setup(name             = 'pycares',
           'Programming Language :: Python :: Implementation :: CPython',
           'Programming Language :: Python :: Implementation :: PyPy',
       ],
-      cmdclass     = {'build_ext': cares_build_ext},
-      **kwargs
+      cmdclass         = {'build_ext': cares_build_ext},
+      setup_requires   = ['cffi>=1.5.0'],
+      install_requires = ['cffi>=1.5.0'],
+      cffi_modules     = ['pycares/_cfficore/pycares_build.py:ffi'],
+      packages         = ['pycares', 'pycares._cfficore']
 )
