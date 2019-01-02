@@ -30,7 +30,7 @@ def get_version():
 setup(name             = 'pycares',
       version          = get_version(),
       author           = 'Saúl Ibarra Corretgé',
-      author_email     = 'saghul@gmail.com',
+      author_email     = 's@saghul.net',
       url              = 'http://github.com/saghul/pycares',
       description      = 'Python interface for c-ares',
       long_description = codecs.open('README.rst', encoding='utf-8').read(),
