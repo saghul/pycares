@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+# coding=utf-8
+
+# Author: Saúl Ibarra Corretgé <saghul@gmail.com>
+# License: MIT
+
+
+import argparse
+import multiprocessing
+import requests
+
+from concurrent.futures import ThreadPoolExecutor
+
+BASE_URL = 'https://ci.appveyor.com/api'
+
+
+def download_file(url):
+    local_filename = url.split('/')[-1]
+    r = requests.get(url, stream=True)
+    with open(local_filename, 'wb') as f:
+        for chunk in r.iter_content(chunk_size=1024):
+            if chunk:    # filter out keep-alive new chunks
+                f.write(chunk)
+
+
+def get_file_urls(options):
+    session = requests.Session()
+    session.headers.update({'authorization': 'bearer %s' % options.api_token})
+
+    data = session.get(BASE_URL + '/projects/' + options.user + '/' + options.project)
+    data = data.json()
+
+    for job in (job['jobId'] for job in data['build']['jobs']):
+        job_url = BASE_URL + '/buildjobs/' + job + '/artifacts'
+        data = session.get(job_url)
+        data = data.json()
+        for item in data:
+            file_url = job_url + '/' + item['fileName']
+            yield file_url
+
+
+def main(options):
+    with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as e:
+        for url in get_file_urls(options):
+            e.submit(download_file, url)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='AppVeyor artifact downloader')
+    parser.add_argument('--api-token', required=True)
+    parser.add_argument('--user', required=True)
+    parser.add_argument('--project', required=True)
+    args = parser.parse_args()
+    main(args)
