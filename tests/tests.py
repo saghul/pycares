@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import select
 import socket
 import sys
@@ -42,6 +43,7 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(type(self.result), pycares.ares_host_result)
 
     @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    @unittest.skipIf(os.environ.get('TRAVIS') is not None, 'skipped on Travis')
     def test_gethostbyaddr6(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
