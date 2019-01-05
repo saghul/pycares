@@ -639,9 +639,6 @@ const char *ares_inet_ntop(int af, const void *src, char *dst,
 
 int ares_inet_pton(int af, const char *src, void *dst);
 
-/* declare */
-char* reverse_address(const char *ip_address, char *name);
-
 """)
 
 ffi.set_source("_pycares_cffi", """
@@ -657,44 +654,6 @@ ffi.set_source("_pycares_cffi", """
 #define CARES_STATICLIB 1 /* static link it */
 #include <ares.h>
 # include <nameser.h>
-
-char* reverse_address(const char *ip_address, char *name)
-{
-    /*char name[128]; */
-    unsigned long laddr, a1, a2, a3, a4;
-    unsigned char *bytes;
-    struct in_addr addr4;
-    struct in6_addr addr6;
-
-    if (ares_inet_pton(AF_INET, ip_address, &addr4) == 1) {
-       laddr = ntohl(addr4.s_addr);
-       a1 = (laddr >> 24UL) & 0xFFUL;
-       a2 = (laddr >> 16UL) & 0xFFUL;
-       a3 = (laddr >>  8UL) & 0xFFUL;
-       a4 = laddr & 0xFFUL;
-       sprintf(name, "%lu.%lu.%lu.%lu.in-addr.arpa", a4, a3, a2, a1);
-    } else if (ares_inet_pton(AF_INET6, ip_address, &addr6) == 1) {
-       bytes = (unsigned char *)&addr6;
-       /* There are too many arguments to do this in one line using
-        * minimally C89-compliant compilers */
-       sprintf(name,
-                "%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.",
-                bytes[15]&0xf, bytes[15] >> 4, bytes[14]&0xf, bytes[14] >> 4,
-                bytes[13]&0xf, bytes[13] >> 4, bytes[12]&0xf, bytes[12] >> 4,
-                bytes[11]&0xf, bytes[11] >> 4, bytes[10]&0xf, bytes[10] >> 4,
-                bytes[9]&0xf, bytes[9] >> 4, bytes[8]&0xf, bytes[8] >> 4);
-       sprintf(name+strlen(name),
-                "%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.ip6.arpa",
-                bytes[7]&0xf, bytes[7] >> 4, bytes[6]&0xf, bytes[6] >> 4,
-                bytes[5]&0xf, bytes[5] >> 4, bytes[4]&0xf, bytes[4] >> 4,
-                bytes[3]&0xf, bytes[3] >> 4, bytes[2]&0xf, bytes[2] >> 4,
-                bytes[1]&0xf, bytes[1] >> 4, bytes[0]&0xf, bytes[0] >> 4);
-    } else {
-        return NULL;
-    }
-
-    return name;
-}
 
 """, libraries=(extra_libraries), include_dirs=[os.path.join(current_dir, "../../deps/c-ares/src"),], library_dirs=[os.path.join(current_dir, "../../deps/c-ares"),])
 

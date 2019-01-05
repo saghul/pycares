@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import ipaddress
 import os
 import select
 import socket
@@ -260,7 +261,7 @@ class DNSTest(unittest.TestCase):
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
         ip = '8.8.8.8'
-        self.channel.query(pycares.reverse_address(ip), pycares.QUERY_TYPE_PTR, cb)
+        self.channel.query(ipaddress.ip_address(ip).reverse_pointer, pycares.QUERY_TYPE_PTR, cb)
         self.wait()
         self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
         self.assertEqual(self.errorno, None)
@@ -274,7 +275,7 @@ class DNSTest(unittest.TestCase):
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
         ip = '2001:4860:4860::8888'
-        self.channel.query(pycares.reverse_address(ip), pycares.QUERY_TYPE_PTR, cb)
+        self.channel.query(ipaddress.ip_address(ip).reverse_pointer, pycares.QUERY_TYPE_PTR, cb)
         self.wait()
         self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
         self.assertEqual(self.errorno, None)
@@ -358,15 +359,6 @@ class DNSTest(unittest.TestCase):
         errors. So we won't test it.
         '''
         pass
-
-    def test_reverse_address(self):
-        s = '1.2.3.4'
-        expected = '4.3.2.1.in-addr.arpa'
-        self.assertEqual(pycares.reverse_address(s), expected)
-
-        s = '2607:f8b0:4010:801::1013'
-        expected = '3.1.0.1.0.0.0.0.0.0.0.0.0.0.0.0.1.0.8.0.0.1.0.4.0.b.8.f.7.0.6.2.ip6.arpa'
-        self.assertEqual(pycares.reverse_address(s), expected)
 
     def test_channel_timeout(self):
         self.result, self.errorno = None, None

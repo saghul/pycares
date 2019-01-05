@@ -680,14 +680,6 @@ class ares_nameinfo_result(object):
         self.service = _ffi_string(service) if service != _ffi.NULL else None
 
 
-def reverse_address(ip):
-    """Get reverse representation of an IP address"""
-    name = _ffi.new("char []", 128)
-    if _ffi.NULL == _lib.reverse_address(s2b(ip), name):
-        raise ValueError("invalid IP address")
-    return _ffi_string(name, 128)
-
-
 if _lib.ARES_SUCCESS != _lib.ares_library_init(_lib.ARES_LIB_INIT_ALL):
     assert False
 
