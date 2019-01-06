@@ -349,7 +349,7 @@ class Channel(object):
 
         if sock_state_cb:
             if not callable(sock_state_cb):
-                raise AresError("sock_state_cb is not callable")
+                raise TypeError("sock_state_cb is not callable")
 
             userdata = _ffi.new_handle(sock_state_cb)
             _global_set.add(userdata)     # must keep this alive!
@@ -536,7 +536,7 @@ class Channel(object):
     @check_channel
     def getnameinfo(self, ip_port, flags, callback):
         if not callable(callback):
-            raise AresError("a callable is required")
+            raise TypeError("a callable is required")
 
         ip, port = ip_port
 
