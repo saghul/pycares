@@ -669,7 +669,7 @@ class ares_nameinfo_result(object):
         self.service = _ffi_string(service) if service != _ffi.NULL else None
 
 
-__all__ = exported_pycares_symbols + list(exported_pycares_symbols_map.keys()) + ['Channel', 'errno', '__version__']
+__all__ = exported_pycares_symbols + list(exported_pycares_symbols_map.keys()) + ['AresError', 'Channel', 'errno', '__version__']
 
 del exported_pycares_symbols, exported_pycares_symbols_map
 
