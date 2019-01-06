@@ -40,5 +40,7 @@ for symbol in exported_pycares_symbols:
 def strerror(code):
     return _ffi.string(_lib.ares_strerror(code))
 
+
 __all__ = exported_pycares_symbols + ['errorcode', 'strerror']
 
+del exported_pycares_symbols

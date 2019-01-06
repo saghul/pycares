@@ -687,5 +687,8 @@ if _lib.ARES_SUCCESS != _lib.ares_library_init(_lib.ARES_LIB_INIT_ALL):
 
 #_lib.ares_library_cleanup()
 
+
 __all__ = exported_pycares_symbols + list(exported_pycares_symbols_map.keys()) + ['Channel', 'errno', '__version__']
+
+del exported_pycares_symbols, exported_pycares_symbols_map
 
