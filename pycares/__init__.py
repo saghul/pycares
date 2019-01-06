@@ -85,23 +85,7 @@ globals()['ARES_VERSION'] = _ffi_string(_lib.ares_version(_ffi.NULL))
 PYCARES_ADDRTTL_SIZE = 256
 
 
-class Error(Exception):
-    pass
-
-
-class Warning(Exception):
-    pass
-
-
-class InterfaceError(Error):
-    pass
-
-
-class AresError(Error):
-    pass
-
-
-class NotSupportedError(Exception):
+class AresError(Exception):
     pass
 
 
