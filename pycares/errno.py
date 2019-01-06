@@ -34,8 +34,8 @@ exported_pycares_symbols = [
 globals()["errorcode"] = {}
 
 for symbol in exported_pycares_symbols:
-    globals()[symbol] = getattr(_lib, symbol)
-    globals()["errorcode"][symbol] = getattr(_lib, symbol)
+    globals()[symbol] = globals()["errorcode"][symbol] = getattr(_lib, symbol)
+
 
 def strerror(code):
     return _ffi.string(_lib.ares_strerror(code))
