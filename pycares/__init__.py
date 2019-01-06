@@ -162,7 +162,6 @@ def _query_cb(arg, status, timeouts, abuf, alen):
             else:
                 result = [ares_query_simple_result(addrttls[i]) for i in range(naddrttls[0])]
                 status = None
-
         elif query_type == _lib.T_AAAA:
             addrttls = _ffi.new("struct ares_addr6ttl[]", PYCARES_ADDRTTL_SIZE)
             naddrttls = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
@@ -173,7 +172,6 @@ def _query_cb(arg, status, timeouts, abuf, alen):
             else:
                 result = [ares_query_simple_result(addrttls[i]) for i in range(naddrttls[0])]
                 status = None
-
         elif query_type == _lib.T_CNAME:
             host = _ffi.new("struct hostent **")
             parse_status = _lib.ares_parse_a_reply(abuf, alen, host, _ffi.NULL, _ffi.NULL)
@@ -184,7 +182,6 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                 result = ares_query_cname_result(host[0])
                 _lib.ares_free_hostent(host[0])
                 status = None
-
         elif query_type == _lib.T_MX:
             mx_reply = _ffi.new("struct ares_mx_reply **")
             parse_status = _lib.ares_parse_mx_reply(abuf, alen, mx_reply);
@@ -202,7 +199,6 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                     mx_reply_ptr[0] = mx_reply_ptr[0].next
                 _lib.ares_free_data(mx_reply)
                 status = None
-
         elif query_type == _lib.T_NAPTR:
             naptr_reply = _ffi.new("struct ares_naptr_reply **")
             parse_status = _lib.ares_parse_naptr_reply(abuf, alen, naptr_reply);
@@ -220,7 +216,6 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                     naptr_reply_ptr[0] = naptr_reply_ptr[0].next
                 _lib.ares_free_data(naptr_reply)
                 status = None
-
         elif query_type == _lib.T_NS:
             hostent = _ffi.new("struct hostent **")
             parse_status = _lib.ares_parse_ns_reply(abuf, alen, hostent);
@@ -237,7 +232,6 @@ def _query_cb(arg, status, timeouts, abuf, alen):
 
                 _lib.ares_free_hostent(host)
                 status = None
-
         elif query_type == _lib.T_PTR:
             hostent = _ffi.new("struct hostent **")
             hostttl = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
@@ -255,7 +249,6 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                 result = ares_query_ptr_result(hostent[0], hostttl[0], aliases)
                 _lib.ares_free_hostent(hostent[0])
                 status = None
-
         elif query_type == _lib.T_SOA:
             soa_reply = _ffi.new("struct ares_soa_reply **")
             parse_status = _lib.ares_parse_soa_reply(abuf, alen, soa_reply);
@@ -266,7 +259,6 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                 result = ares_query_soa_result(soa_reply[0])
                 _lib.ares_free_data(soa_reply[0])
                 status = None
-
         elif query_type == _lib.T_SRV:
             srv_reply = _ffi.new("struct ares_srv_reply **")
             parse_status = _lib.ares_parse_srv_reply(abuf, alen, srv_reply);
@@ -284,7 +276,6 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                     srv_reply_ptr[0] = srv_reply_ptr[0].next
                 _lib.ares_free_data(srv_reply[0])
                 status = None
-
         elif query_type == _lib.T_TXT:
             txt_reply = _ffi.new("struct ares_txt_ext **")
             parse_status = _lib.ares_parse_txt_reply_ext(abuf, alen, txt_reply);
@@ -319,11 +310,22 @@ def _query_cb(arg, status, timeouts, abuf, alen):
 
 
 class Channel(object):
-    def __init__(self, flags = -1, timeout = -1.0,
-                 tries = -1, ndots = -1, tcp_port = -1, udp_port = -1,
-                 servers = None, domains = None, lookups = None, sock_state_cb = None,
-                 socket_send_buffer_size = -1, socket_receive_buffer_size = -1, rotate = False,
-                 local_ip = None, local_dev = None):
+    def __init__(self,
+                 flags = -1,
+                 timeout = -1.0,
+                 tries = -1,
+                 ndots = -1,
+                 tcp_port = -1,
+                 udp_port = -1,
+                 servers = None,
+                 domains = None,
+                 lookups = None,
+                 sock_state_cb = None,
+                 socket_send_buffer_size = -1,
+                 socket_receive_buffer_size = -1,
+                 rotate = False,
+                 local_ip = None,
+                 local_dev = None):
 
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
@@ -519,7 +521,6 @@ class Channel(object):
     def gethostbyname(self, name, family, callback):
         if not callable(callback):
             raise TypeError("a callable is required")
-
 
         userdata = _ffi.new_handle(callback)
         _global_set.add(userdata)
