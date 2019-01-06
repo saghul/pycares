@@ -2,6 +2,9 @@
 from _pycares_cffi import ffi as _ffi, lib as _lib
 import _cffi_backend  # hint for bundler tools
 
+if _lib.ARES_SUCCESS != _lib.ares_library_init(_lib.ARES_LIB_INIT_ALL):
+    raise RuntimeError('Could not initialize c-ares')
+
 from . import errno
 
 from ._version import __version__
@@ -679,12 +682,6 @@ class ares_nameinfo_result(object):
     def __init__(self, node, service):
         self.node = _ffi_string(node)
         self.service = _ffi_string(service) if service != _ffi.NULL else None
-
-
-if _lib.ARES_SUCCESS != _lib.ares_library_init(_lib.ARES_LIB_INIT_ALL):
-    assert False
-
-#_lib.ares_library_cleanup()
 
 
 __all__ = exported_pycares_symbols + list(exported_pycares_symbols_map.keys()) + ['Channel', 'errno', '__version__']
