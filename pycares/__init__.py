@@ -4,7 +4,6 @@ import _cffi_backend  # hint for bundler tools
 
 from . import errno
 
-from .errno import ARES_SUCCESS
 from ._version import __version__
 
 import socket
@@ -154,7 +153,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
             addrttls = _ffi.new("struct ares_addrttl[]", PYCARES_ADDRTTL_SIZE)
             naddrttls = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
             parse_status = _lib.ares_parse_a_reply(abuf, alen, _ffi.NULL, addrttls, naddrttls)
-            if parse_status != ARES_SUCCESS:
+            if parse_status != _lib.ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
@@ -165,7 +164,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
             addrttls = _ffi.new("struct ares_addr6ttl[]", PYCARES_ADDRTTL_SIZE)
             naddrttls = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
             parse_status = _lib.ares_parse_aaaa_reply(abuf, alen, _ffi.NULL, addrttls, naddrttls)
-            if parse_status != ARES_SUCCESS:
+            if parse_status != _lib.ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
@@ -175,7 +174,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
         elif query_type == _lib.T_CNAME:
             host = _ffi.new("struct hostent **")
             parse_status = _lib.ares_parse_a_reply(abuf, alen, host, _ffi.NULL, _ffi.NULL)
-            if parse_status != ARES_SUCCESS:
+            if parse_status != _lib.ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
@@ -186,7 +185,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
         elif query_type == _lib.T_MX:
             mx_reply = _ffi.new("struct ares_mx_reply **")
             parse_status = _lib.ares_parse_mx_reply(abuf, alen, mx_reply);
-            if parse_status != ARES_SUCCESS:
+            if parse_status != _lib.ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
@@ -204,7 +203,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
         elif query_type == _lib.T_NAPTR:
             naptr_reply = _ffi.new("struct ares_naptr_reply **")
             parse_status = _lib.ares_parse_naptr_reply(abuf, alen, naptr_reply);
-            if parse_status != ARES_SUCCESS:
+            if parse_status != _lib.ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
@@ -222,7 +221,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
         elif query_type == _lib.T_NS:
             hostent = _ffi.new("struct hostent **")
             parse_status = _lib.ares_parse_ns_reply(abuf, alen, hostent);
-            if parse_status != ARES_SUCCESS:
+            if parse_status != _lib.ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
@@ -240,7 +239,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
             hostent = _ffi.new("struct hostent **")
             hostttl = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
             parse_status = _lib.ares_parse_ptr_reply(abuf, alen, _ffi.NULL, 0, socket.AF_UNSPEC, hostent, hostttl);
-            if parse_status != ARES_SUCCESS:
+            if parse_status != _lib.ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
@@ -257,7 +256,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
         elif query_type == _lib.T_SOA:
             soa_reply = _ffi.new("struct ares_soa_reply **")
             parse_status = _lib.ares_parse_soa_reply(abuf, alen, soa_reply);
-            if parse_status != ARES_SUCCESS:
+            if parse_status != _lib.ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
@@ -268,7 +267,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
         elif query_type == _lib.T_SRV:
             srv_reply = _ffi.new("struct ares_srv_reply **")
             parse_status = _lib.ares_parse_srv_reply(abuf, alen, srv_reply);
-            if parse_status != ARES_SUCCESS:
+            if parse_status != _lib.ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
@@ -286,7 +285,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
         elif query_type == _lib.T_TXT:
             txt_reply = _ffi.new("struct ares_txt_ext **")
             parse_status = _lib.ares_parse_txt_reply_ext(abuf, alen, txt_reply);
-            if parse_status != ARES_SUCCESS:
+            if parse_status != _lib.ARES_SUCCESS:
                 result = None
                 status = parse_status
             else:
@@ -436,7 +435,7 @@ class Channel(object):
         servers = _ffi.new("struct ares_addr_node **")
 
         r = _lib.ares_get_servers(self.channel, servers)
-        if r != ARES_SUCCESS:
+        if r != _lib.ARES_SUCCESS:
             raise AresError(errno.strerror(r))
 
         server_list = []
