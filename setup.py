@@ -37,6 +37,6 @@ setup(name             = 'pycares',
       cmdclass         = {'build_ext': cares_build_ext},
       setup_requires   = ['cffi>=1.5.0'],
       install_requires = ['cffi>=1.5.0'],
-      cffi_modules     = ['pycares/_cfficore/pycares_build.py:ffi'],
-      packages         = ['pycares', 'pycares._cfficore']
+      cffi_modules     = ['pycares/build_cares.py:ffi'],
+      packages         = ['pycares']
 )
