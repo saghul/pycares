@@ -293,7 +293,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
     _global_set.discard(arg)
 
 
-class Channel(object):
+class Channel:
     def __init__(self,
                  flags = -1,
                  timeout = -1.0,
@@ -566,7 +566,7 @@ class Channel(object):
         _lib.ares_set_local_dev(self.channel, dev)
 
 
-class ares_host_result(object):
+class ares_host_result:
     def __init__(self, hostent):
         self.name = _ffi_string(hostent.h_name)
         self.aliases = []
@@ -585,7 +585,7 @@ class ares_host_result(object):
                 self.addresses.append(_ffi_string(buf, _lib.INET6_ADDRSTRLEN))
 
 
-class ares_query_simple_result(object):
+class ares_query_simple_result:
     def __init__(self, ares_addrttl):
         buf = _ffi.new("char[]", _lib.INET6_ADDRSTRLEN)
         if _ffi.typeof(ares_addrttl) is _ffi.typeof("struct ares_addrttl"):
@@ -599,20 +599,20 @@ class ares_query_simple_result(object):
         self.ttl = ares_addrttl.ttl
 
 
-class ares_query_cname_result(object):
+class ares_query_cname_result:
     def __init__(self, host):
         self.cname = _ffi_string(host.h_name)
         self.ttl = None
 
 
-class ares_query_mx_result(object):
+class ares_query_mx_result:
     def __init__(self, mx):
         self.host = _ffi_string(mx.host)
         self.priority = mx.priority
         self.ttl = mx.ttl
 
 
-class ares_query_naptr_result(object):
+class ares_query_naptr_result:
     def __init__(self, naptr):
         self.order = naptr.order
         self.preference = naptr.preference
@@ -623,20 +623,20 @@ class ares_query_naptr_result(object):
         self.ttl = naptr.ttl
 
 
-class ares_query_ns_result(object):
+class ares_query_ns_result:
     def __init__(self, ns):
         self.host = _ffi_string(ns)
         self.ttl = None
 
 
-class ares_query_ptr_result(object):
+class ares_query_ptr_result:
     def __init__(self, hostent, ttl, aliases):
         self.name = _ffi_string(hostent.h_name)
         self.ttl = ttl
         self.aliases = aliases
 
 
-class ares_query_soa_result(object):
+class ares_query_soa_result:
     def __init__(self, soa):
         self.nsname = _ffi_string(soa.nsname)
         self.hostmaster = _ffi_string(soa.hostmaster)
@@ -648,7 +648,7 @@ class ares_query_soa_result(object):
         self.ttl = soa.ttl
 
 
-class  ares_query_srv_result(object):
+class  ares_query_srv_result:
     def __init__(self, srv):
         self.host = _ffi_string(srv.host)
         self.port = srv.port
@@ -657,13 +657,13 @@ class  ares_query_srv_result(object):
         self.ttl = srv.ttl
 
 
-class ares_query_txt_result(object):
+class ares_query_txt_result:
     def __init__(self, txt):
         self.text = _ffi.string(txt.txt)
         self.ttl = txt.ttl
 
 
-class ares_nameinfo_result(object):
+class ares_nameinfo_result:
     def __init__(self, node, service):
         self.node = _ffi_string(node)
         self.service = _ffi_string(service) if service != _ffi.NULL else None
