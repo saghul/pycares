@@ -209,11 +209,10 @@ def _query_cb(arg, status, timeouts, abuf, alen):
             else:
                 result = []
                 host = hostent[0]
-                for i in range(100):
-                    if host.h_aliases[i] == _ffi.NULL:
-                        break
+                i = 0
+                while host.h_aliases[i] != _ffi.NULL:
                     result.append(ares_query_ns_result(host.h_aliases[i]))
-
+                    i += 1
                 _lib.ares_free_hostent(host)
                 status = None
         elif query_type == _lib.T_PTR:
@@ -225,13 +224,13 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                 status = parse_status
             else:
                 aliases = []
+                host = hostent[0]
                 i = 0
-                terminator = _ffi.cast('char*', _ffi.NULL)
-                while hostent[0].h_aliases[i] != terminator:
-                    aliases.append(_ffi.string(hostent[0].h_aliases[i]))
+                while host.h_aliases[i] != _ffi.NULL:
+                    aliases.append(_ffi.string(host.h_aliases[i]))
                     i += 1
-                result = ares_query_ptr_result(hostent[0], hostttl[0], aliases)
-                _lib.ares_free_hostent(hostent[0])
+                result = ares_query_ptr_result(host, hostttl[0], aliases)
+                _lib.ares_free_hostent(host)
                 status = None
         elif query_type == _lib.T_SOA:
             soa_reply = _ffi.new("struct ares_soa_reply **")
@@ -572,18 +571,17 @@ class ares_host_result:
         self.name = _ffi_string(hostent.h_name)
         self.aliases = []
         self.addresses = []
-        for i in range(100):
-            if hostent.h_aliases[i] == _ffi.NULL:
-                break
+        i = 0
+        while hostent.h_aliases[i] != _ffi.NULL:
             self.aliases.append(_ffi_string(hostent.h_aliases[i]))
+            i += 1
 
-        for i in range(100):
-            if hostent.h_addr_list[i] == _ffi.NULL:
-                break
-
+        i = 0
+        while hostent.h_addr_list[i] != _ffi.NULL:
             buf = _ffi.new("char[]", _lib.INET6_ADDRSTRLEN)
             if _ffi.NULL != _lib.ares_inet_ntop(hostent.h_addrtype, hostent.h_addr_list[i], buf, _lib.INET6_ADDRSTRLEN):
                 self.addresses.append(_ffi_string(buf, _lib.INET6_ADDRSTRLEN))
+            i += 1
 
 
 class ares_query_simple_result:
