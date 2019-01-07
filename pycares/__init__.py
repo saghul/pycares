@@ -17,12 +17,8 @@ import sys
 
 # Python 2/3 compatibility functions
 # TODO: refactor to only retun bytes
-def b2s(b):
-    return b.decode('utf-8')
 def s2b(s):
     return s.encode('utf-8')
-def _ffi_string(r, maxlen=-1):
-    return b2s(_ffi.string(r, maxlen))
 
 
 exported_pycares_symbols = [
@@ -79,7 +75,7 @@ for k, v in exported_pycares_symbols_map.items():
     globals()[k] = getattr(_lib, v)
 
 
-globals()['ARES_VERSION'] = _ffi_string(_lib.ares_version(_ffi.NULL))
+globals()['ARES_VERSION'] = _ffi.string(_lib.ares_version(_ffi.NULL)).decode()
 
 
 PYCARES_ADDRTTL_SIZE = 256
@@ -440,7 +436,7 @@ class Channel:
             ip = _ffi.new("char []", _lib.INET6_ADDRSTRLEN)
             s = server[0]
             if _ffi.NULL != _lib.ares_inet_ntop(s.family, _ffi.addressof(s.addr), ip, _lib.INET6_ADDRSTRLEN):
-                server_list.append(_ffi_string(ip, _lib.INET6_ADDRSTRLEN))
+                server_list.append(_ffi.string(ip, _lib.INET6_ADDRSTRLEN).decode())
 
             server = s.next
 
@@ -573,19 +569,19 @@ class Channel:
 
 class ares_host_result:
     def __init__(self, hostent):
-        self.name = _ffi_string(hostent.h_name)
+        self.name = _ffi.string(hostent.h_name)
         self.aliases = []
         self.addresses = []
         i = 0
         while hostent.h_aliases[i] != _ffi.NULL:
-            self.aliases.append(_ffi_string(hostent.h_aliases[i]))
+            self.aliases.append(_ffi.string(hostent.h_aliases[i]))
             i += 1
 
         i = 0
         while hostent.h_addr_list[i] != _ffi.NULL:
             buf = _ffi.new("char[]", _lib.INET6_ADDRSTRLEN)
             if _ffi.NULL != _lib.ares_inet_ntop(hostent.h_addrtype, hostent.h_addr_list[i], buf, _lib.INET6_ADDRSTRLEN):
-                self.addresses.append(_ffi_string(buf, _lib.INET6_ADDRSTRLEN))
+                self.addresses.append(_ffi.string(buf, _lib.INET6_ADDRSTRLEN))
             i += 1
 
 
@@ -599,19 +595,19 @@ class ares_query_simple_result:
         else:
             raise TypeError()
 
-        self.host = _ffi_string(buf, _lib.INET6_ADDRSTRLEN)
+        self.host = _ffi.string(buf, _lib.INET6_ADDRSTRLEN)
         self.ttl = ares_addrttl.ttl
 
 
 class ares_query_cname_result:
     def __init__(self, host):
-        self.cname = _ffi_string(host.h_name)
+        self.cname = _ffi.string(host.h_name)
         self.ttl = None
 
 
 class ares_query_mx_result:
     def __init__(self, mx):
-        self.host = _ffi_string(mx.host)
+        self.host = _ffi.string(mx.host)
         self.priority = mx.priority
         self.ttl = mx.ttl
 
@@ -620,30 +616,30 @@ class ares_query_naptr_result:
     def __init__(self, naptr):
         self.order = naptr.order
         self.preference = naptr.preference
-        self.flags = _ffi_string(naptr.flags)
-        self.service = _ffi_string(naptr.service)
-        self.regex = _ffi_string(naptr.regexp)
-        self.replacement = _ffi_string(naptr.replacement)
+        self.flags = _ffi.string(naptr.flags)
+        self.service = _ffi.string(naptr.service)
+        self.regex = _ffi.string(naptr.regexp)
+        self.replacement = _ffi.string(naptr.replacement)
         self.ttl = naptr.ttl
 
 
 class ares_query_ns_result:
     def __init__(self, ns):
-        self.host = _ffi_string(ns)
+        self.host = _ffi.string(ns)
         self.ttl = None
 
 
 class ares_query_ptr_result:
     def __init__(self, hostent, ttl, aliases):
-        self.name = _ffi_string(hostent.h_name)
+        self.name = _ffi.string(hostent.h_name)
         self.ttl = ttl
         self.aliases = aliases
 
 
 class ares_query_soa_result:
     def __init__(self, soa):
-        self.nsname = _ffi_string(soa.nsname)
-        self.hostmaster = _ffi_string(soa.hostmaster)
+        self.nsname = _ffi.string(soa.nsname)
+        self.hostmaster = _ffi.string(soa.hostmaster)
         self.serial = soa.serial
         self.refresh = soa.refresh
         self.retry = soa.retry
@@ -654,7 +650,7 @@ class ares_query_soa_result:
 
 class  ares_query_srv_result:
     def __init__(self, srv):
-        self.host = _ffi_string(srv.host)
+        self.host = _ffi.string(srv.host)
         self.port = srv.port
         self.priority = srv.priority
         self.weight = srv.weight
@@ -669,8 +665,8 @@ class ares_query_txt_result:
 
 class ares_nameinfo_result:
     def __init__(self, node, service):
-        self.node = _ffi_string(node)
-        self.service = _ffi_string(service) if service != _ffi.NULL else None
+        self.node = _ffi.string(node)
+        self.service = _ffi.string(service) if service != _ffi.NULL else None
 
 
 __all__ = exported_pycares_symbols + list(exported_pycares_symbols_map.keys()) + ['AresError', 'Channel', 'errno', '__version__']
