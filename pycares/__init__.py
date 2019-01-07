@@ -104,12 +104,15 @@ _global_set = set()
 @_ffi.callback("void (void *data, ares_socket_t socket_fd, int readable, int writable )")
 def _sock_state_cb(data, socket_fd, readable, writable):
     sock_state_cb = _ffi.from_handle(data)
-    sock_state_cb(socket_fd, readable, writable)
     _global_set.discard(data)
+
+    sock_state_cb(socket_fd, readable, writable)
 
 @_ffi.callback("void (void *arg, int status, int timeouts, struct hostent *hostent)")
 def _host_cb(arg, status, timeouts, hostent):
     callback = _ffi.from_handle(arg)
+    _global_set.discard(arg)
+
     if status != _lib.ARES_SUCCESS:
         result = None
     else:
@@ -117,11 +120,12 @@ def _host_cb(arg, status, timeouts, hostent):
         status = None
 
     callback(result, status)
-    _global_set.discard(arg)
 
 @_ffi.callback("void (void *arg, int status, int timeouts, char *node, char *service)")
 def _nameinfo_cb(arg, status, timeouts, node, service):
     callback = _ffi.from_handle(arg)
+    _global_set.discard(arg)
+
     if status != _lib.ARES_SUCCESS:
         result = None
     else:
@@ -129,12 +133,14 @@ def _nameinfo_cb(arg, status, timeouts, node, service):
         status = None
 
     callback(result, status)
-    _global_set.discard(arg)
 
 @_ffi.callback("void (void *arg, int status, int timeouts, unsigned char *abuf, int alen)")
 def _query_cb(arg, status, timeouts, abuf, alen):
-    result = None
     callback, query_type = _ffi.from_handle(arg)
+    _global_set.discard(arg)
+
+    result = None
+
     if status == _lib.ARES_SUCCESS:
         if query_type == _lib.T_A:
             addrttls = _ffi.new("struct ares_addrttl[]", PYCARES_ADDRTTL_SIZE)
@@ -289,7 +295,6 @@ def _query_cb(arg, status, timeouts, abuf, alen):
             raise ValueError("invalid query type specified")
 
     callback(result, status)
-    _global_set.discard(arg)
 
 
 class Channel:
