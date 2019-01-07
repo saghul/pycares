@@ -404,10 +404,10 @@ class Channel:
     @check_channel
     def _set_servers(self, servers):
         c = _ffi.new("struct ares_addr_node[%d]" % len(servers))
-        for i in range(len(servers)):
-            if 1 == _lib.ares_inet_pton(socket.AF_INET, s2b(servers[i]), _ffi.addressof(c[i].addr.addr4)):
+        for i, server in enumerate(servers):
+            if 1 == _lib.ares_inet_pton(socket.AF_INET, s2b(server), _ffi.addressof(c[i].addr.addr4)):
                 c[i].family = socket.AF_INET
-            elif 1 == _lib.ares_inet_pton(socket.AF_INET6, s2b(servers[i]), _ffi.addressof(c[i].addr.addr6)):
+            elif 1 == _lib.ares_inet_pton(socket.AF_INET6, s2b(server), _ffi.addressof(c[i].addr.addr6)):
                 c[i].family = socket.AF_INET6
             else:
                 raise ValueError("invalid IP address")
