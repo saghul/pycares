@@ -331,6 +331,12 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(self.errorno, None)
 
+    def test_channel_nameservers3(self):
+        servers = ['8.8.8.8', '8.8.4.4']
+        self.channel.servers = servers
+        servers2 = self.channel.servers
+        self.assertEqual(servers, servers2)
+
     def test_channel_local_ip(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):

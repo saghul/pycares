@@ -434,10 +434,11 @@ class Channel:
                 break
 
             ip = _ffi.new("char []", _lib.INET6_ADDRSTRLEN)
-            if _ffi.NULL != _lib.ares_inet_ntop(server.family, _ffi.addressof(server.addr), ip, _lib.INET6_ADDRSTRLEN):
+            s = server[0]
+            if _ffi.NULL != _lib.ares_inet_ntop(s.family, _ffi.addressof(s.addr), ip, _lib.INET6_ADDRSTRLEN):
                 server_list.append(_ffi_string(ip, _lib.INET6_ADDRSTRLEN))
 
-            server = server.next
+            server = s.next
 
         return server_list
 
