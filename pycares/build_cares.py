@@ -246,11 +246,8 @@ typedef int... ares_socklen_t;
 #define ARES_AI_MASK ...
 #define ARES_GETSOCK_MAXNUM ... /* ares_getsock() can return info about this
                                   many sockets */
-/*
-#define ARES_GETSOCK_READABLE(bits,num) (bits & (1<< (num)))
-#define ARES_GETSOCK_WRITABLE(bits,num) (bits & (1 << ((num) + \
-                                         ARES_GETSOCK_MAXNUM)))
-*/
+int ARES_GETSOCK_READABLE(int, int);
+int ARES_GETSOCK_WRITABLE(int, int);
 
 /* c-ares library initialization flag values */
 #define ARES_LIB_INIT_NONE   ...
