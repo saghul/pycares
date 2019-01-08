@@ -84,8 +84,8 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertEqual(self.errorno, None)
         self.assertEqual(type(self.result), pycares.ares_nameinfo_result)
-        self.assertIn(self.result.node, (b'localhost.localdomain', b'localhost'))
-        self.assertEqual(self.result.service, b'http')
+        self.assertIn(self.result.node, ('localhost.localdomain', 'localhost'))
+        self.assertEqual(self.result.service, 'http')
 
     def test_query_a(self):
         self.result, self.errorno = None, None
@@ -187,7 +187,7 @@ class DNSTest(unittest.TestCase):
         # If the chunks are aggregated, only one TXT record should be visible. Three would show if they are not properly merged.
         # jobscoutdaily.com.    21600   IN  TXT "v=spf1 " "include:emailcampaigns.net include:spf.dynect.net  include:ccsend.com include:_spf.elasticemail.com ip4:67.200.116.86 ip4:67.200.116.90 ip4:67.200.116.97 ip4:67.200.116.111 ip4:74.199.198.2 " " ~all"
         self.assertEqual(len(self.result), 1)
-        self.assertEqual(self.result[0].text, b'v=spf1 include:emailcampaigns.net include:spf.dynect.net  include:ccsend.com include:_spf.elasticemail.com ip4:67.200.116.86 ip4:67.200.116.90 ip4:67.200.116.97 ip4:67.200.116.111 ip4:74.199.198.2  ~all')
+        self.assertEqual(self.result[0].text, 'v=spf1 include:emailcampaigns.net include:spf.dynect.net  include:ccsend.com include:_spf.elasticemail.com ip4:67.200.116.86 ip4:67.200.116.90 ip4:67.200.116.97 ip4:67.200.116.111 ip4:74.199.198.2  ~all')
 
     def test_query_txt_multiple_chunked(self):
         self.result, self.errorno = None, None
@@ -209,7 +209,7 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(self.errorno, None)
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_txt_result)
-            self.assertIsInstance(r.text, bytes)
+            self.assertIsInstance(r.text, str)  # it's ASCII
             self.assertTrue(r.ttl >= 0)
 
     def test_query_txt_bytes2(self):

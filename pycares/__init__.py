@@ -6,7 +6,7 @@ if _lib.ARES_SUCCESS != _lib.ares_library_init(_lib.ARES_LIB_INIT_ALL):
     raise RuntimeError('Could not initialize c-ares')
 
 from . import errno
-from .utils import ensure_bytes
+from .utils import ensure_bytes, maybe_str
 from ._version import __version__
 
 import socket
@@ -69,7 +69,7 @@ for k, v in exported_pycares_symbols_map.items():
     globals()[k] = getattr(_lib, v)
 
 
-globals()['ARES_VERSION'] = _ffi.string(_lib.ares_version(_ffi.NULL)).decode()
+globals()['ARES_VERSION'] = maybe_str(_ffi.string(_lib.ares_version(_ffi.NULL)))
 
 
 PYCARES_ADDRTTL_SIZE = 256
@@ -223,7 +223,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                 host = hostent[0]
                 i = 0
                 while host.h_aliases[i] != _ffi.NULL:
-                    aliases.append(_ffi.string(host.h_aliases[i]))
+                    aliases.append(maybe_str(_ffi.string(host.h_aliases[i])))
                     i += 1
                 result = ares_query_ptr_result(host, hostttl[0], aliases)
                 _lib.ares_free_hostent(host)
@@ -430,7 +430,7 @@ class Channel:
             ip = _ffi.new("char []", _lib.INET6_ADDRSTRLEN)
             s = server[0]
             if _ffi.NULL != _lib.ares_inet_ntop(s.family, _ffi.addressof(s.addr), ip, _lib.INET6_ADDRSTRLEN):
-                server_list.append(_ffi.string(ip, _lib.INET6_ADDRSTRLEN).decode())
+                server_list.append(maybe_str(_ffi.string(ip, _lib.INET6_ADDRSTRLEN)))
 
             server = s.next
 
@@ -563,19 +563,19 @@ class Channel:
 
 class ares_host_result:
     def __init__(self, hostent):
-        self.name = _ffi.string(hostent.h_name)
+        self.name = maybe_str(_ffi.string(hostent.h_name))
         self.aliases = []
         self.addresses = []
         i = 0
         while hostent.h_aliases[i] != _ffi.NULL:
-            self.aliases.append(_ffi.string(hostent.h_aliases[i]))
+            self.aliases.append(maybe_str(_ffi.string(hostent.h_aliases[i])))
             i += 1
 
         i = 0
         while hostent.h_addr_list[i] != _ffi.NULL:
             buf = _ffi.new("char[]", _lib.INET6_ADDRSTRLEN)
             if _ffi.NULL != _lib.ares_inet_ntop(hostent.h_addrtype, hostent.h_addr_list[i], buf, _lib.INET6_ADDRSTRLEN):
-                self.addresses.append(_ffi.string(buf, _lib.INET6_ADDRSTRLEN))
+                self.addresses.append(maybe_str(_ffi.string(buf, _lib.INET6_ADDRSTRLEN)))
             i += 1
 
 
@@ -589,19 +589,19 @@ class ares_query_simple_result:
         else:
             raise TypeError()
 
-        self.host = _ffi.string(buf, _lib.INET6_ADDRSTRLEN)
+        self.host = maybe_str(_ffi.string(buf, _lib.INET6_ADDRSTRLEN))
         self.ttl = ares_addrttl.ttl
 
 
 class ares_query_cname_result:
     def __init__(self, host):
-        self.cname = _ffi.string(host.h_name)
+        self.cname = maybe_str(_ffi.string(host.h_name))
         self.ttl = None
 
 
 class ares_query_mx_result:
     def __init__(self, mx):
-        self.host = _ffi.string(mx.host)
+        self.host = maybe_str(_ffi.string(mx.host))
         self.priority = mx.priority
         self.ttl = mx.ttl
 
@@ -610,30 +610,30 @@ class ares_query_naptr_result:
     def __init__(self, naptr):
         self.order = naptr.order
         self.preference = naptr.preference
-        self.flags = _ffi.string(naptr.flags)
-        self.service = _ffi.string(naptr.service)
-        self.regex = _ffi.string(naptr.regexp)
-        self.replacement = _ffi.string(naptr.replacement)
+        self.flags = maybe_str(_ffi.string(naptr.flags))
+        self.service = maybe_str(_ffi.string(naptr.service))
+        self.regex = maybe_str(_ffi.string(naptr.regexp))
+        self.replacement = maybe_str(_ffi.string(naptr.replacement))
         self.ttl = naptr.ttl
 
 
 class ares_query_ns_result:
     def __init__(self, ns):
-        self.host = _ffi.string(ns)
+        self.host = maybe_str(_ffi.string(ns))
         self.ttl = None
 
 
 class ares_query_ptr_result:
     def __init__(self, hostent, ttl, aliases):
-        self.name = _ffi.string(hostent.h_name)
+        self.name = maybe_str(_ffi.string(hostent.h_name))
         self.ttl = ttl
         self.aliases = aliases
 
 
 class ares_query_soa_result:
     def __init__(self, soa):
-        self.nsname = _ffi.string(soa.nsname)
-        self.hostmaster = _ffi.string(soa.hostmaster)
+        self.nsname = maybe_str(_ffi.string(soa.nsname))
+        self.hostmaster = maybe_str(_ffi.string(soa.hostmaster))
         self.serial = soa.serial
         self.refresh = soa.refresh
         self.retry = soa.retry
@@ -644,7 +644,7 @@ class ares_query_soa_result:
 
 class  ares_query_srv_result:
     def __init__(self, srv):
-        self.host = _ffi.string(srv.host)
+        self.host = maybe_str(_ffi.string(srv.host))
         self.port = srv.port
         self.priority = srv.priority
         self.weight = srv.weight
@@ -653,14 +653,14 @@ class  ares_query_srv_result:
 
 class ares_query_txt_result:
     def __init__(self, txt):
-        self.text = _ffi.string(txt.txt)
+        self.text = maybe_str(_ffi.string(txt.txt))
         self.ttl = txt.ttl
 
 
 class ares_nameinfo_result:
     def __init__(self, node, service):
-        self.node = _ffi.string(node)
-        self.service = _ffi.string(service) if service != _ffi.NULL else None
+        self.node = maybe_str(_ffi.string(node))
+        self.service = maybe_str(_ffi.string(service)) if service != _ffi.NULL else None
 
 
 __all__ = exported_pycares_symbols + list(exported_pycares_symbols_map.keys()) + ['AresError', 'Channel', 'errno', '__version__']
