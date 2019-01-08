@@ -383,6 +383,47 @@ class DNSTest(unittest.TestCase):
         from pycares.errno import ARES_SUCCESS
         self.assertTrue(True)
 
+    def test_result_not_ascii(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.query('xn--cardeosapeluqueros-r0b.com', pycares.QUERY_TYPE_MX, cb)
+        self.wait()
+        self.assertEqual(self.errorno, None)
+        for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_mx_result)
+            self.assertIsInstance(r.host, bytes)  # it's not ASCII
+            self.assertTrue(r.ttl >= 0)
+
+    def test_result_not_ascii2(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.query('ayesas.com', pycares.QUERY_TYPE_SOA, cb)
+        self.wait()
+        self.assertEqual(type(self.result), pycares.ares_query_soa_result)
+        self.assertEqual(self.errorno, None)
+        self.assertIsInstance(self.result.hostmaster, bytes)  # it's not ASCII
+        self.assertTrue(self.result.ttl >= 0)
+
+    def test_idna_encoding(self):
+        host = 'españa.icom.museum'
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        # first try with the host as is
+        self.assertRaises(UnicodeEncodeError, self.channel.gethostbyname, host, socket.AF_INET, cb)
+        # now try encoding it as utf-8
+        self.channel.gethostbyname(host.encode(), socket.AF_INET, cb)
+        self.wait()
+        self.assertEqual(self.errorno, pycares.errno.ARES_ENOTFOUND)
+        self.assertEqual(self.result, None)
+        # now comes the good one: use IDNA encoding
+        self.channel.gethostbyname(host.encode('idna'), socket.AF_INET, cb)
+        self.wait()
+        self.assertEqual(self.errorno, None)
+        self.assertEqual(type(self.result), pycares.ares_host_result)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
