@@ -198,8 +198,6 @@ typedef int  (*ares_sock_create_callback)(ares_socket_t socket_fd,
                                           int type,
                                           void *data);
 
-struct apattern;
-
 struct ares_channeldata;
 typedef struct ares_channeldata *ares_channel;
 
@@ -219,9 +217,7 @@ struct ares_options {
   char *lookups;
   ares_sock_state_cb sock_state_cb;
   void *sock_state_cb_data;
-  struct apattern *sortlist;
-  int nsort;
-  int ednspsz;
+  ...;
 };
 
 struct ares_in6_addr {
