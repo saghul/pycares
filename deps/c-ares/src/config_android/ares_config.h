@@ -41,7 +41,7 @@
 #define GETNAMEINFO_TYPE_ARG2 socklen_t
 
 /* Define to the type of args 4 and 6 for getnameinfo. */
-#define GETNAMEINFO_TYPE_ARG46 size_t
+#define GETNAMEINFO_TYPE_ARG46 socklen_t
 
 /* Define to the type of arg 7 for getnameinfo. */
 #define GETNAMEINFO_TYPE_ARG7 int
@@ -59,10 +59,10 @@
 #define HAVE_ARPA_INET_H 1
 
 /* Define to 1 if you have the <arpa/nameser_compat.h> header file. */
-#define HAVE_ARPA_NAMESER_COMPAT_H 1
+//#define HAVE_ARPA_NAMESER_COMPAT_H 1
 
 /* Define to 1 if you have the <arpa/nameser.h> header file. */
-#define HAVE_ARPA_NAMESER_H 1
+//#define HAVE_ARPA_NAMESER_H 1
 
 /* Define to 1 if you have the <assert.h> header file. */
 #define HAVE_ASSERT_H 1
@@ -137,7 +137,7 @@
 #define HAVE_IF_INDEXTONAME 1
 
 /* Define to 1 if you have a IPv6 capable working inet_net_pton function. */
-#define HAVE_INET_NET_PTON 1
+/* #undef HAVE_INET_NET_PTON */
 
 /* Define to 1 if you have a IPv6 capable working inet_ntop function. */
 #define HAVE_INET_NTOP 1
@@ -183,7 +183,7 @@
 #define HAVE_LONGLONG 1
 
 /* Define to 1 if you have the malloc.h header file. */
-/* #undef HAVE_MALLOC_H */
+#define HAVE_MALLOC_H 1
 
 /* Define to 1 if you have the memory.h header file. */
 #define HAVE_MEMORY_H 1
@@ -276,7 +276,7 @@
 /* #undef HAVE_STRNICMP */
 
 /* Define to 1 if you have the <stropts.h> header file. */
-/* #undef HAVE_STROPTS_H */
+#define HAVE_STROPTS_H 1
 
 /* Define to 1 if you have struct addrinfo. */
 #define HAVE_STRUCT_ADDRINFO 1
@@ -354,7 +354,7 @@
 /* #undef NEED_THREAD_SAFE */
 
 /* cpu-machine-OS */
-#define OS "x86_64-unknown-freebsd10.3"
+#define OS "i686-pc-linux-gnu"
 
 /* Name of package */
 #define PACKAGE "c-ares"

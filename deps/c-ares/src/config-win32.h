@@ -211,11 +211,6 @@
 /* Define to the return type of signal handlers (int or void). */
 #define RETSIGTYPE void
 
-#ifndef _SSIZE_T_DEFINED
-# define ssize_t ptrdiff_t
-# define _SSIZE_T_DEFINED
-#endif
-
 #ifdef __cplusplus
 /* Compiling headers in C++ mode means bool is available */
 #define HAVE_BOOL_T
@@ -250,7 +245,7 @@
 #  define _CRT_NONSTDC_NO_DEPRECATE 1
 #endif
 
-/* Set the Target to Vista. However, any symbols required above Win2000 
+/* Set the Target to Vista. However, any symbols required above Win2000
  * should be loaded via LoadLibrary() */
 #if defined(_MSC_VER) && (_MSC_VER >= 1500)
 #  define VS2008_MIN_TARGET 0x0600

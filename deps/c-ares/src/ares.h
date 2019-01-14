@@ -19,6 +19,8 @@
 #define ARES__H
 
 #include "ares_version.h"  /* c-ares version defines   */
+#include "ares_build.h"    /* c-ares build definitions */
+#include "ares_rules.h"    /* c-ares rules enforcement */
 
 /*
  * Define WIN32 when build target is Win32 API
@@ -28,59 +30,6 @@
    !defined(WIN32) && !defined(__SYMBIAN32__)
 #  define WIN32
 #endif
-
-/*************************** libuv patch ***************/
-
-/*
- * We want to avoid autoconf altogether since there are a finite number of
- * operating systems and simply build c-ares. Therefore we do not want the
- * configurations provided by ares_build.h since we are always statically
- * linking c-ares into libuv. Having a system dependent ares_build.h forces
- * all users of ares.h to include the correct ares_build.h.  We do not care
- * about the linking checks provided by ares_rules.h. This would complicate
- * the libuv build process.
- */
-
-
-#if defined(WIN32)
-/* Configure process defines this to 1 when it finds out that system  */
-/* header file ws2tcpip.h must be included by the external interface. */
-/* #undef CARES_PULL_WS2TCPIP_H */
-# include <winsock2.h>
-# include <ws2tcpip.h>
-# include <windows.h>
-
-#else /* Not Windows */
-
-# include <sys/time.h>
-# include <sys/types.h>
-# include <sys/socket.h>
-#endif
-
-#if 0
-/* The size of `long', as computed by sizeof. */
-#define CARES_SIZEOF_LONG 4
-#endif
-
-/* Integral data type used for ares_socklen_t. */
-#define CARES_TYPEOF_ARES_SOCKLEN_T socklen_t
-
-#if 0
-/* The size of `ares_socklen_t', as computed by sizeof. */
-#define CARES_SIZEOF_ARES_SOCKLEN_T 4
-#endif
-
-/* Data type definition of ares_ssize_t. */
-typedef ssize_t ares_ssize_t;
-
-/* Data type definition of ares_socklen_t. */
-typedef int ares_socklen_t;
-
-#if 0 /* libuv disabled */
-#include "ares_rules.h"    /* c-ares rules enforcement */
-#endif
-
-/*********************** end libuv patch ***************/
 
 #include <sys/types.h>
 
@@ -117,6 +66,10 @@ typedef int ares_socklen_t;
 #else
 #  include <sys/socket.h>
 #  include <netinet/in.h>
+#endif
+
+#if defined(ANDROID) || defined(__ANDROID__)
+#include <jni.h>
 #endif
 
 #ifdef  __cplusplus
@@ -211,6 +164,7 @@ extern "C" {
 #define ARES_OPT_ROTATE         (1 << 14)
 #define ARES_OPT_EDNSPSZ        (1 << 15)
 #define ARES_OPT_NOROTATE       (1 << 16)
+#define ARES_OPT_RESOLVCONF     (1 << 17)
 
 /* Nameinfo flag values */
 #define ARES_NI_NOFQDN                  (1 << 0)
@@ -317,6 +271,7 @@ struct ares_options {
   struct apattern *sortlist;
   int nsort;
   int ednspsz;
+  char *resolvconf_path;
 };
 
 struct hostent;
@@ -357,6 +312,12 @@ CARES_EXTERN int ares_library_init_mem(int flags,
                                        void *(*amalloc)(size_t size),
                                        void (*afree)(void *ptr),
                                        void *(*arealloc)(void *ptr, size_t size));
+
+#if defined(ANDROID) || defined(__ANDROID__)
+CARES_EXTERN void ares_library_init_jvm(JavaVM *jvm);
+CARES_EXTERN int ares_library_init_android(jobject connectivity_manager);
+CARES_EXTERN int ares_library_android_initialized(void);
+#endif
 
 CARES_EXTERN int ares_library_initialized(void);
 

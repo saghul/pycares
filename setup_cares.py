@@ -10,6 +10,7 @@ cares_sources = [
     'deps/c-ares/src/ares__get_hostent.c',
     'deps/c-ares/src/ares__read_line.c',
     'deps/c-ares/src/ares__timeval.c',
+    'deps/c-ares/src/ares_android.c',
     'deps/c-ares/src/ares_cancel.c',
     'deps/c-ares/src/ares_create_query.c',
     'deps/c-ares/src/ares_data.c',
@@ -46,6 +47,7 @@ cares_sources = [
     'deps/c-ares/src/ares_strcasecmp.c',
     'deps/c-ares/src/ares_strdup.c',
     'deps/c-ares/src/ares_strerror.c',
+    'deps/c-ares/src/ares_strsplit.c',
     'deps/c-ares/src/ares_timeout.c',
     'deps/c-ares/src/ares_version.c',
     'deps/c-ares/src/ares_writev.c',
@@ -63,12 +65,17 @@ class cares_build_ext(build_ext):
     cares_dir = os.path.join('deps', 'c-ares')
 
     def build_extensions(self):
-        self.compiler.define_macro('HAVE_CONFIG_H', 1)
         self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src'))
         if sys.platform != 'win32':
+            self.compiler.define_macro('HAVE_CONFIG_H', 1)
             self.compiler.define_macro('_LARGEFILE_SOURCE', 1)
             self.compiler.define_macro('_FILE_OFFSET_BITS', 64)
         if sys.platform.startswith('linux'):
+            # Check if it's actually Android
+            if os.environ.get('ANDROID_ROOT') and os.environ.get('ANDROID_DATA'):
+                self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_android'))
+            else:
+                self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_linux'))
             self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_linux'))
             self.compiler.add_library('dl')
             self.compiler.add_library('rt')
@@ -89,12 +96,12 @@ class cares_build_ext(build_ext):
             self.compiler.add_library('nsl')
             self.compiler.add_library('lkstat')
         elif sys.platform == 'win32':
-            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_win32'))
-            if "mingw" not in self.compiler.compiler_type:
+            if 'mingw' not in self.compiler.compiler_type:
                 self.extensions[0].extra_link_args = ['/NODEFAULTLIB:libcmt']
             self.compiler.add_library('advapi32')
             self.compiler.add_library('iphlpapi')
             self.compiler.add_library('psapi')
             self.compiler.add_library('ws2_32')
+            self.compiler.define_macro('CARES_PULL_WS2TCPIP_H', 1)
         self.extensions[0].sources += cares_sources
         build_ext.build_extensions(self)

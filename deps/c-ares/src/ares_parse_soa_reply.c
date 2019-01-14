@@ -50,6 +50,7 @@ ares_parse_soa_reply(const unsigned char *abuf, int alen,
   struct ares_soa_reply *soa = NULL;
   int qdcount, ancount;
   int status;
+  int ttl;
 
   if (alen < HFIXEDSZ)
     return ARES_EBADRESP;
@@ -78,6 +79,12 @@ ares_parse_soa_reply(const unsigned char *abuf, int alen,
     goto failed_stat;
   aptr += len;
 
+  /* skip rr_type, rr_class, rr_ttl, rr_rdlen */
+  if (aptr + RRFIXEDSZ > abuf + alen)
+    goto failed;
+  ttl = DNS_RR_TTL(aptr);
+  aptr += RRFIXEDSZ;
+
   /* allocate result struct */
   soa = ares_malloc_data(ARES_DATATYPE_SOA_REPLY);
   if (!soa)
@@ -85,12 +92,6 @@ ares_parse_soa_reply(const unsigned char *abuf, int alen,
       status = ARES_ENOMEM;
       goto failed_stat;
     }
-
-  /* skip rr_type, rr_class, rr_ttl, rr_rdlen */
-  if (aptr + RRFIXEDSZ > abuf + alen)
-    goto failed;
-  soa->ttl = DNS_RR_TTL(aptr);
-  aptr += RRFIXEDSZ;
 
   /* nsname */
   status = ares__expand_name_for_response(aptr, abuf, alen, &soa->nsname, &len);
@@ -112,6 +113,7 @@ ares_parse_soa_reply(const unsigned char *abuf, int alen,
   soa->retry = DNS__32BIT(aptr + 2 * 4);
   soa->expire = DNS__32BIT(aptr + 3 * 4);
   soa->minttl = DNS__32BIT(aptr + 4 * 4);
+  soa->ttl = ttl;
 
   ares_free(qname);
   ares_free(rr_name);
