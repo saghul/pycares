@@ -289,18 +289,18 @@ def _query_cb(arg, status, timeouts, abuf, alen):
 
 class Channel:
     def __init__(self,
-                 flags = -1,
-                 timeout = -1.0,
-                 tries = -1,
-                 ndots = -1,
-                 tcp_port = -1,
-                 udp_port = -1,
+                 flags = None,
+                 timeout = None,
+                 tries = None,
+                 ndots = None,
+                 tcp_port = None,
+                 udp_port = None,
                  servers = None,
                  domains = None,
                  lookups = None,
                  sock_state_cb = None,
-                 socket_send_buffer_size = -1,
-                 socket_receive_buffer_size = -1,
+                 socket_send_buffer_size = None,
+                 socket_receive_buffer_size = None,
                  rotate = False,
                  local_ip = None,
                  local_dev = None):
@@ -309,35 +309,35 @@ class Channel:
         options = _ffi.new("struct ares_options *")
         optmask = 0
 
-        if flags != -1:
+        if flags is not None:
             options.flags = flags
             optmask = optmask | _lib.ARES_OPT_FLAGS
 
-        if timeout != -1:
+        if timeout is not None:
             options.timeout = int(timeout * 1000)
             optmask = optmask | _lib.ARES_OPT_TIMEOUTMS
 
-        if tries != -1:
+        if tries is not None:
             options.tries = tries
             optmask = optmask |  _lib.ARES_OPT_TRIES
 
-        if ndots != -1:
+        if ndots is not None:
             options.ndots = ndots
             optmask = optmask |  _lib.ARES_OPT_NDOTS
 
-        if tcp_port != -1:
+        if tcp_port is not None:
             options.tcp_port = tcp_port
             optmask = optmask |  _lib.ARES_OPT_TCP_PORT
 
-        if udp_port != -1:
+        if udp_port is not None:
             options.udp_port = udp_port
             optmask = optmask |  _lib.ARES_OPT_UDP_PORT
 
-        if socket_send_buffer_size != -1:
+        if socket_send_buffer_size is not None:
             options.socket_send_buffer_size = socket_send_buffer_size
             optmask = optmask |  _lib.ARES_OPT_SOCK_SNDBUF
 
-        if socket_receive_buffer_size != -1:
+        if socket_receive_buffer_size is not None:
             options.socket_receive_buffer_size = socket_receive_buffer_size
             optmask = optmask |  _lib.ARES_OPT_SOCK_RCVBUF
 
@@ -458,20 +458,22 @@ class Channel:
         _lib.ares_process_fd(self.channel, _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", write_fd))
 
     @check_channel
-    def timeout(self, t = -1):
+    def timeout(self, t = None):
         maxtv = _ffi.NULL
         tv = _ffi.new("struct timeval*")
 
-        if t >= 0.0:
-            maxtv = _ffi.new("struct timeval*")
-            maxtv.tv_sec = int(math.floor(t))
-            maxtv.tv_usec = int(math.fmod(t, 1.0) * 1000000)
-        elif t == -1:
-            pass
-        else:
-            raise ValueError("timeout needs to be a positive number")
+        if t is not None:
+            if t >= 0.0:
+                maxtv = _ffi.new("struct timeval*")
+                maxtv.tv_sec = int(math.floor(t))
+                maxtv.tv_usec = int(math.fmod(t, 1.0) * 1000000)
+            else:
+                raise ValueError("timeout needs to be a positive number or None")
 
         _lib.ares_timeout(self.channel, maxtv, tv)
+
+        if tv == _ffi.NULL:
+            return 0.0
 
         return (tv.tv_sec + tv.tv_usec / 1000000.0)
 
