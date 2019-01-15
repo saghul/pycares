@@ -303,7 +303,8 @@ class Channel:
                  socket_receive_buffer_size = None,
                  rotate = False,
                  local_ip = None,
-                 local_dev = None):
+                 local_dev = None,
+                 resolvconf_path = None):
 
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
@@ -365,8 +366,12 @@ class Channel:
             options.ndomains = len(domains)
             optmask = optmask |  _lib.ARES_OPT_DOMAINS
 
-        if rotate == True:
+        if rotate:
             optmask = optmask |  _lib.ARES_OPT_ROTATE
+
+        if resolvconf_path is not None:
+            optmask = optmask |  _lib.ARES_OPT_RESOLVCONF
+            options.resolvconf_path = _ffi.new('char[]', ensure_bytes(resolvconf_path))
 
         r = _lib.ares_init_options(channel, options, optmask)
         if r != _lib.ARES_SUCCESS:

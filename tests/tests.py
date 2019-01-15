@@ -9,6 +9,8 @@ import unittest
 
 import pycares
 
+FIXTURES_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'fixtures'))
+
 
 class DNSTest(unittest.TestCase):
 
@@ -428,6 +430,17 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.ares_host_result)
+
+    @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    def test_custom_resolvconf(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel = pycares.Channel(tries=1, timeout=2.0, resolvconf_path=os.path.join(FIXTURES_PATH, 'badresolv.conf'))
+        self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
+        self.wait()
+        self.assertEqual(self.result, None)
+        self.assertEqual(self.errorno, pycares.errno.ARES_ETIMEOUT)
 
 
 if __name__ == '__main__':
