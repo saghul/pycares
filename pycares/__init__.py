@@ -569,6 +569,8 @@ class Channel:
 
 
 class ares_host_result:
+    __slots__ = ('name', 'aliases', 'addresses')
+
     def __init__(self, hostent):
         self.name = maybe_str(_ffi.string(hostent.h_name))
         self.aliases = []
@@ -587,6 +589,8 @@ class ares_host_result:
 
 
 class ares_query_simple_result:
+    __slots__ = ('host', 'ttl')
+
     def __init__(self, ares_addrttl):
         buf = _ffi.new("char[]", _lib.INET6_ADDRSTRLEN)
         if _ffi.typeof(ares_addrttl) is _ffi.typeof("struct ares_addrttl"):
@@ -601,12 +605,16 @@ class ares_query_simple_result:
 
 
 class ares_query_cname_result:
+    __slots__ = ('cname', 'ttl')
+
     def __init__(self, host):
         self.cname = maybe_str(_ffi.string(host.h_name))
         self.ttl = None
 
 
 class ares_query_mx_result:
+    __slots__ = ('host', 'priority', 'ttl')
+
     def __init__(self, mx):
         self.host = maybe_str(_ffi.string(mx.host))
         self.priority = mx.priority
@@ -614,6 +622,8 @@ class ares_query_mx_result:
 
 
 class ares_query_naptr_result:
+    __slots__ = ('order', 'preference', 'flags', 'service', 'regex', 'replacement', 'ttl')
+
     def __init__(self, naptr):
         self.order = naptr.order
         self.preference = naptr.preference
@@ -625,12 +635,16 @@ class ares_query_naptr_result:
 
 
 class ares_query_ns_result:
+    __slots__ = ('host', 'ttl')
+
     def __init__(self, ns):
         self.host = maybe_str(_ffi.string(ns))
         self.ttl = None
 
 
 class ares_query_ptr_result:
+    __slots__ = ('name', 'ttl', 'aliases')
+
     def __init__(self, hostent, ttl, aliases):
         self.name = maybe_str(_ffi.string(hostent.h_name))
         self.ttl = ttl
@@ -638,6 +652,8 @@ class ares_query_ptr_result:
 
 
 class ares_query_soa_result:
+    __slots__ = ('nsname', 'hostmaster', 'serial', 'refresh', 'retry', 'expires', 'minttl', 'ttl')
+
     def __init__(self, soa):
         self.nsname = maybe_str(_ffi.string(soa.nsname))
         self.hostmaster = maybe_str(_ffi.string(soa.hostmaster))
@@ -650,6 +666,8 @@ class ares_query_soa_result:
 
 
 class  ares_query_srv_result:
+    __slots__ = ('host', 'port', 'priority', 'weight', 'ttl')
+
     def __init__(self, srv):
         self.host = maybe_str(_ffi.string(srv.host))
         self.port = srv.port
@@ -659,12 +677,16 @@ class  ares_query_srv_result:
 
 
 class ares_query_txt_result:
+    __slots__ = ('text', 'ttl')
+
     def __init__(self, txt):
         self.text = maybe_str(_ffi.string(txt.txt))
         self.ttl = txt.ttl
 
 
 class ares_nameinfo_result:
+    __slots__ = ('node', 'service')
+
     def __init__(self, node, service):
         self.node = maybe_str(_ffi.string(node))
         self.service = maybe_str(_ffi.string(service)) if service != _ffi.NULL else None
