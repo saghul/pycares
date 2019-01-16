@@ -609,7 +609,7 @@ class ares_query_cname_result:
 
     def __init__(self, host):
         self.cname = maybe_str(_ffi.string(host.h_name))
-        self.ttl = None
+        self.ttl = -1
 
 
 class ares_query_mx_result:
@@ -639,7 +639,7 @@ class ares_query_ns_result:
 
     def __init__(self, ns):
         self.host = maybe_str(_ffi.string(ns))
-        self.ttl = None
+        self.ttl = -1
 
 
 class ares_query_ptr_result:
