@@ -564,7 +564,15 @@ class Channel:
         _lib.ares_set_local_dev(self.channel, dev)
 
 
-class ares_host_result:
+class AresResult:
+    __slots__ = ()
+
+    def __repr__(self):
+        attrs = ['%s=%s' % (a, getattr(self, a)) for a in self.__slots__]
+        return '<%s> %s' % (self.__class__.__name__, ', '.join(attrs))
+
+
+class ares_host_result(AresResult):
     __slots__ = ('name', 'aliases', 'addresses')
 
     def __init__(self, hostent):
@@ -584,7 +592,7 @@ class ares_host_result:
             i += 1
 
 
-class ares_query_simple_result:
+class ares_query_simple_result(AresResult):
     __slots__ = ('host', 'ttl')
 
     def __init__(self, ares_addrttl):
@@ -600,7 +608,7 @@ class ares_query_simple_result:
         self.ttl = ares_addrttl.ttl
 
 
-class ares_query_cname_result:
+class ares_query_cname_result(AresResult):
     __slots__ = ('cname', 'ttl')
 
     def __init__(self, host):
@@ -608,7 +616,7 @@ class ares_query_cname_result:
         self.ttl = -1
 
 
-class ares_query_mx_result:
+class ares_query_mx_result(AresResult):
     __slots__ = ('host', 'priority', 'ttl')
 
     def __init__(self, mx):
@@ -617,7 +625,7 @@ class ares_query_mx_result:
         self.ttl = mx.ttl
 
 
-class ares_query_naptr_result:
+class ares_query_naptr_result(AresResult):
     __slots__ = ('order', 'preference', 'flags', 'service', 'regex', 'replacement', 'ttl')
 
     def __init__(self, naptr):
@@ -630,7 +638,7 @@ class ares_query_naptr_result:
         self.ttl = naptr.ttl
 
 
-class ares_query_ns_result:
+class ares_query_ns_result(AresResult):
     __slots__ = ('host', 'ttl')
 
     def __init__(self, ns):
@@ -638,7 +646,7 @@ class ares_query_ns_result:
         self.ttl = -1
 
 
-class ares_query_ptr_result:
+class ares_query_ptr_result(AresResult):
     __slots__ = ('name', 'ttl', 'aliases')
 
     def __init__(self, hostent, ttl, aliases):
@@ -647,7 +655,7 @@ class ares_query_ptr_result:
         self.aliases = aliases
 
 
-class ares_query_soa_result:
+class ares_query_soa_result(AresResult):
     __slots__ = ('nsname', 'hostmaster', 'serial', 'refresh', 'retry', 'expires', 'minttl', 'ttl')
 
     def __init__(self, soa):
@@ -661,7 +669,7 @@ class ares_query_soa_result:
         self.ttl = soa.ttl
 
 
-class  ares_query_srv_result:
+class  ares_query_srv_result(AresResult):
     __slots__ = ('host', 'port', 'priority', 'weight', 'ttl')
 
     def __init__(self, srv):
@@ -672,7 +680,7 @@ class  ares_query_srv_result:
         self.ttl = srv.ttl
 
 
-class ares_query_txt_result:
+class ares_query_txt_result(AresResult):
     __slots__ = ('text', 'ttl')
 
     def __init__(self, txt):
@@ -680,7 +688,7 @@ class ares_query_txt_result:
         self.ttl = txt.ttl
 
 
-class ares_nameinfo_result:
+class ares_nameinfo_result(AresResult):
     __slots__ = ('node', 'service')
 
     def __init__(self, node, service):
