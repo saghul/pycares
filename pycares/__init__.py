@@ -170,13 +170,10 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                 status = parse_status
             else:
                 result = []
-                mx_reply_ptr = _ffi.new("struct ares_mx_reply **")
-                mx_reply_ptr[0] = mx_reply[0]
-                while True:
-                    if mx_reply_ptr[0] == _ffi.NULL:
-                        break
-                    result.append(ares_query_mx_result(mx_reply[0]))
-                    mx_reply_ptr[0] = mx_reply_ptr[0].next
+                mx_reply_ptr = mx_reply[0]
+                while mx_reply_ptr != _ffi.NULL:
+                    result.append(ares_query_mx_result(mx_reply_ptr))
+                    mx_reply_ptr = mx_reply_ptr.next
                 _lib.ares_free_data(mx_reply)
                 status = None
         elif query_type == _lib.T_NAPTR:
