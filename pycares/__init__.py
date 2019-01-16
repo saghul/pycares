@@ -370,7 +370,7 @@ class Channel:
 
         r = _lib.ares_init_options(channel, options, optmask)
         if r != _lib.ARES_SUCCESS:
-            raise AresError()
+            raise AresError('Failed to initialize c-ares channel')
 
         self.channel = channel[0]
 
