@@ -92,9 +92,10 @@ class cares_build_ext(build_ext):
         elif sys.platform.startswith('openbsd'):
             self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_openbsd'))
         elif sys.platform.startswith('sunos'):
+            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_sunos'))
             self.compiler.add_library('socket')
             self.compiler.add_library('nsl')
-            self.compiler.add_library('lkstat')
+            self.compiler.add_library('kstat')
         elif sys.platform == 'win32':
             if 'mingw' not in self.compiler.compiler_type:
                 self.extensions[0].extra_link_args = ['/NODEFAULTLIB:libcmt']
