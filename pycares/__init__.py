@@ -184,13 +184,10 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                 status = parse_status
             else:
                 result = []
-                naptr_reply_ptr = _ffi.new("struct ares_naptr_reply **")
-                naptr_reply_ptr[0] = naptr_reply[0]
-                while True:
-                    if naptr_reply_ptr[0] == _ffi.NULL:
-                        break
-                    result.append(ares_query_naptr_result(naptr_reply[0]))
-                    naptr_reply_ptr[0] = naptr_reply_ptr[0].next
+                naptr_reply_ptr = naptr_reply[0]
+                while naptr_reply_ptr != _ffi.NULL:
+                    result.append(ares_query_naptr_result(naptr_reply_ptr))
+                    naptr_reply_ptr = naptr_reply_ptr.next
                 _lib.ares_free_data(naptr_reply)
                 status = None
         elif query_type == _lib.T_NS:
