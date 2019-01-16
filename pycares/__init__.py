@@ -94,8 +94,6 @@ _global_set = set()
 @_ffi.callback("void (void *data, ares_socket_t socket_fd, int readable, int writable )")
 def _sock_state_cb(data, socket_fd, readable, writable):
     sock_state_cb = _ffi.from_handle(data)
-    _global_set.discard(data)
-
     sock_state_cb(socket_fd, readable, writable)
 
 @_ffi.callback("void (void *arg, int status, int timeouts, struct hostent *hostent)")
@@ -341,7 +339,10 @@ class Channel:
                 raise TypeError("sock_state_cb is not callable")
 
             userdata = _ffi.new_handle(sock_state_cb)
-            _global_set.add(userdata)     # must keep this alive!
+
+            # This must be kept alive while the channel is alive.
+            self._sock_state_cb_handle = userdata
+
             options.sock_state_cb = _sock_state_cb
             options.sock_state_cb_data = userdata
             optmask = optmask |  _lib.ARES_OPT_SOCK_STATE_CB
@@ -389,6 +390,7 @@ class Channel:
         if self.channel:
             _lib.ares_destroy(self.channel)
             self.channel = None
+        self._sock_state_cb_handle = None
 
     @check_channel
     def cancel(self):
