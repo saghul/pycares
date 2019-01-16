@@ -1,3 +1,10 @@
+Version 3.0.0b0
+===============
+ - core: drop C backend
+ - core: drop Python < 3.5 support
+ - core: use None instead of -1 for default values
+ - core: set TTL to -1 when we cannot parse it
+
 Version 2.4.0
 =============
  - misc: fix building wheels for unavailable Python versions
