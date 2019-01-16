@@ -149,8 +149,8 @@ class DNSTest(unittest.TestCase):
             self.result, self.errorno = result, errorno
         self.channel.query('www.amazon.com', pycares.QUERY_TYPE_CNAME, cb)
         self.wait()
-        self.assertEqual(type(self.result), pycares.ares_query_cname_result)
         self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.ares_query_cname_result)
 
     def test_query_mx(self):
         self.result, self.errorno = None, None
@@ -237,8 +237,8 @@ class DNSTest(unittest.TestCase):
             self.result, self.errorno = result, errorno
         self.channel.query('google.com', pycares.QUERY_TYPE_SOA, cb)
         self.wait()
-        self.assertEqual(type(self.result), pycares.ares_query_soa_result)
         self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.ares_query_soa_result)
         self.assertTrue(self.result.ttl >= 0)
 
     def test_query_srv(self):
@@ -270,8 +270,8 @@ class DNSTest(unittest.TestCase):
         ip = '8.8.8.8'
         self.channel.query(ipaddress.ip_address(ip).reverse_pointer, pycares.QUERY_TYPE_PTR, cb)
         self.wait()
-        self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
         self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
         self.assertIsInstance(self.result.ttl, int)
         self.assertGreaterEqual(self.result.ttl, 0)
         self.assertLessEqual(self.result.ttl, 2**31-1)
@@ -284,8 +284,8 @@ class DNSTest(unittest.TestCase):
         ip = '2001:4860:4860::8888'
         self.channel.query(ipaddress.ip_address(ip).reverse_pointer, pycares.QUERY_TYPE_PTR, cb)
         self.wait()
-        self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
         self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
         self.assertIsInstance(self.result.ttl, int)
         self.assertGreaterEqual(self.result.ttl, 0)
         self.assertLessEqual(self.result.ttl, 2**31-1)
@@ -408,8 +408,8 @@ class DNSTest(unittest.TestCase):
             self.result, self.errorno = result, errorno
         self.channel.query('ayesas.com', pycares.QUERY_TYPE_SOA, cb)
         self.wait()
-        self.assertEqual(type(self.result), pycares.ares_query_soa_result)
         self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.ares_query_soa_result)
         self.assertIsInstance(self.result.hostmaster, bytes)  # it's not ASCII
         self.assertTrue(self.result.ttl >= 0)
 
