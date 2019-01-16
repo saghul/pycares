@@ -1,9 +1,6 @@
 
 import pycares
-try:
-    import selectors
-except ImportError:
-    import selectors34 as selectors
+import selectors
 import socket
 
 

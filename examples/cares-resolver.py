@@ -55,11 +55,11 @@ class DNSResolver(object):
 
 if __name__ == '__main__':
     def query_cb(result, error):
-        print result
-        print error
+        print(result)
+        print(error)
     def gethostbyname_cb(result, error):
-        print result
-        print error
+        print(result)
+        print(error)
     loop = pyuv.Loop.default_loop()
     resolver = DNSResolver(loop)
     resolver.query('google.com', pycares.QUERY_TYPE_A, query_cb)
