@@ -21,15 +21,6 @@ Contents
     pycares
 
 
-ToDo
-####
-
-.. toctree::
-    :maxdepth: 1
-
-    TODO
-
-
 Indices and tables
 ##################
 

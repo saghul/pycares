@@ -9,7 +9,7 @@
 ====================================
 
 
-.. py:class:: Channel([flags, timeout, tries, ndots, tcp_port, udp_port, servers, domains, lookups, sock_state_cb, socket_send_buffer_size, socket_receive_buffer_size, rotate])
+.. py:class:: Channel([flags, timeout, tries, ndots, tcp_port, udp_port, servers, domains, lookups, sock_state_cb, socket_send_buffer_size, socket_receive_buffer_size, rotate, local_ip, local_dev, resolvconf_path])
 
     :param int flags: Flags controlling the behavior of the resolver. See ``constants``
         for available values.
@@ -46,6 +46,12 @@
     :param int socket_receive_buffer_size: Size for the created socket's receive buffer.
 
     :param bool rotate: If set to True, the nameservers are rotated when doing queries.
+
+    :param str local_ip: Sets the local IP address for DNS operations.
+
+    :param str local_dev: Sets the local network adapter to use for DNS operations. Linux only.
+
+    :param str resolvconf_path: Path to resolv.conf, defaults to /etc/resolv.conf. Unix only.
 
     The c-ares ``Channel`` provides asynchronous DNS operations.
 
@@ -174,7 +180,7 @@
               - ttl
 
         .. note::
-            TTL is not implemented for CNAME, NS and PTR), so it's set to None.
+            TTL is not implemented for CNAME, NS and PTR), so it's set to -1.
 
 
     .. py:method:: cancel()

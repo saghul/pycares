@@ -8,7 +8,9 @@ Event loop integration
 pycares can be integrated in an already existing event loop without much trouble.
 The examples folder contains several examples:
 
-* cares-select.py: ntegration with plain select
+* cares-select.py: integration with plain select
+* cares-poll.py: integration with plain poll
+* cares-selectors.py: integration with the builtin selectors module
 * cares-resolver.py: integration with the pyuv event loop
 * cares-asyncio.py: integration with the asyncio framework
 

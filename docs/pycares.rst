@@ -22,7 +22,6 @@ Objects
     :titlesonly:
 
     channel
-    utils
     constants
     errno
     event_loops
