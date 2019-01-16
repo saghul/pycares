@@ -76,6 +76,32 @@ There are several ways of running the test ruite:
   on Python 3.5, 3.6 and 3.7 (you'll need to have them installed beforehand)
 
 
+Using it from the cli, a la dig
+===============================
+
+This module can be used directly from the command line in a similar fashion to dig (limited, of course):
+
+::
+
+   $ python -m pycares google.com
+   ;; QUESTION SECTION:
+   ;google.com			IN	A
+
+   ;; ANSWER SECTION:
+   google.com		300	IN	A	172.217.17.142
+
+   $ python -m pycares mx google.com
+   ;; QUESTION SECTION:
+   ;google.com			IN	MX
+
+   ;; ANSWER SECTION:
+   google.com		600	IN	MX	50 alt4.aspmx.l.google.com
+   google.com		600	IN	MX	10 aspmx.l.google.com
+   google.com		600	IN	MX	40 alt3.aspmx.l.google.com
+   google.com		600	IN	MX	20 alt1.aspmx.l.google.com
+   google.com		600	IN	MX	30 alt2.aspmx.l.google.com
+
+
 Author
 ======
 
