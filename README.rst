@@ -47,19 +47,18 @@ FreeBSD:
 
     cd /usr/ports/dns/py-pycares && make install
 
-Mac OSX:
+macOS:
 
 ::
 
     (XCode needs to be installed)
-    export ARCHFLAGS="-arch x86_64"
     python setup.py install
 
-Microsoft Windows (with Visual Studio 2008, 2010, 2015 or the Windows SDK):
+Microsoft Windows (with Visual Studio 2015 or the Windows SDK):
 
 ::
 
-    ./build_inplace
+    python setup.py install
 
 
 Running the test suite
@@ -73,8 +72,8 @@ There are several ways of running the test ruite:
 
 - Use Tox to run the test suite in several virtualenvs with several interpreters
 
-  From the toplevel directory, run: ``tox -e py27,py33,py34,py35`` this will run the test suite
-  on Python 2.7, 3.3, 3.4 and 3.5 (you'll need to have them installed beforehand)
+  From the toplevel directory, run: ``tox -e py35,py36,py37`` this will run the test suite
+  on Python 3.5, 3.6 and 3.7 (you'll need to have them installed beforehand)
 
 
 Author
@@ -89,11 +88,10 @@ License
 Unless stated otherwise on-file pycares uses the MIT license, check LICENSE file.
 
 
-Python versions
-===============
+Supported Python versions
+=========================
 
-Python >= 2.7 and >= 3.3 are supported. Other older versions might work too, but they are
-not actively tested. Both CPython and PyPy (tested with version 5) are supported.
+Python >= 3.5 are supported. Both CPython and PyPy are supported.
 
 
 Contributing
