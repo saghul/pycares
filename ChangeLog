@@ -1,3 +1,7 @@
+Version 3.0.0b2
+===============
+ - errno: fix errorcode dictionary
+
 Version 3.0.0b1
 ===============
  - core: add support for ANY queries
