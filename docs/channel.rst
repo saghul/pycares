@@ -107,6 +107,7 @@
         Do a DNS query of the specified type. Available types:
             - ``QUERY_TYPE_A``
             - ``QUERY_TYPE_AAAA``
+            - ``QUERY_TYPE_ANY``
             - ``QUERY_TYPE_CNAME``
             - ``QUERY_TYPE_MX``
             - ``QUERY_TYPE_NAPTR``
@@ -119,7 +120,12 @@
         Callback signature: ``callback(result, errorno)``. The result type varies depending on the
         query type:
 
-            - A and AAAA: ``ares_query_simple_result``, fields:
+            - A: (list of) ``ares_query_a_result``, fields:
+
+              - host
+              - ttl
+
+            - AAAA: (list of) ``ares_query_aaaa_result``, fields:
 
               - host
               - ttl
@@ -129,13 +135,13 @@
               - cname
               - ttl
 
-            - MX: ``ares_query_mx_result``, fields:
+            - MX: (list of) ``ares_query_mx_result``, fields:
 
               - host
               - priority
               - ttl
 
-            - NAPTR: ``ares_query_naptr_result``, fields:
+            - NAPTR: (list of) ``ares_query_naptr_result``, fields:
 
               - order
               - preference
@@ -145,12 +151,12 @@
               - replacement
               - ttl
 
-            - NS: ``ares_query_ns_result``, fields:
+            - NS: (list of) ``ares_query_ns_result``, fields:
 
               - host
               - ttl
 
-            - PTR: ``ares_query_ptr_result``, fields:
+            - PTR: (list of) ``ares_query_ptr_result``, fields:
 
               - name
               - ttl
@@ -166,7 +172,7 @@
               - minttl
               - ttl
 
-            - SRV: ``ares_query_srv_result``, fields:
+            - SRV: (list of) ``ares_query_srv_result``, fields:
 
               - host
               - port
@@ -174,13 +180,15 @@
               - weight
               - ttl
 
-            - TXT: ``ares_query_txt_result``, fields:
+            - TXT: (list of) ``ares_query_txt_result``, fields:
 
               - text
               - ttl
 
+            - ANY: a list of any of the above.
+
         .. note::
-            TTL is not implemented for CNAME, NS and PTR), so it's set to -1.
+            TTL is not implemented for CNAME and NS), so it's set to -1.
 
 
     .. py:method:: cancel()
