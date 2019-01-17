@@ -291,6 +291,14 @@ class DNSTest(unittest.TestCase):
         self.assertLessEqual(self.result.ttl, 2**31-1)
         self.assertEqual(type(self.result.aliases), list)
 
+    def test_query_any(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.query('google.com', pycares.QUERY_TYPE_ANY, cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        self.assertTrue(len(self.result) > 1)
 
     def test_query_cancelled(self):
         self.result, self.errorno = None, None
