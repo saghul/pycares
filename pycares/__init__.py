@@ -260,13 +260,10 @@ def parse_result(query_type, abuf, alen):
             status = parse_status
         else:
             result = []
-            srv_reply_ptr = _ffi.new("struct ares_srv_reply **")
-            srv_reply_ptr[0] = srv_reply[0]
-            while True:
-                if srv_reply_ptr[0] == _ffi.NULL:
-                    break
-                result.append(ares_query_srv_result(srv_reply_ptr[0]))
-                srv_reply_ptr[0] = srv_reply_ptr[0].next
+            srv_reply_ptr = srv_reply[0]
+            while srv_reply_ptr != _ffi.NULL:
+                result.append(ares_query_srv_result(srv_reply_ptr))
+                srv_reply_ptr = srv_reply_ptr.next
             _lib.ares_free_data(srv_reply[0])
             status = None
     elif query_type == _lib.T_TXT:
@@ -277,22 +274,21 @@ def parse_result(query_type, abuf, alen):
             status = parse_status
         else:
             result = []
-            txt_reply_ptr = _ffi.new("struct ares_txt_ext **")
-            txt_reply_ptr[0] = txt_reply[0]
+            txt_reply_ptr = txt_reply[0]
             tmp_obj = None
             while True:
-                if txt_reply_ptr[0] == _ffi.NULL:
+                if txt_reply_ptr == _ffi.NULL:
                     if tmp_obj is not None:
                         result.append(tmp_obj)
                     break
-                if txt_reply_ptr[0].record_start == 1:
+                if txt_reply_ptr.record_start == 1:
                     if tmp_obj is not None:
                         result.append(tmp_obj)
-                    tmp_obj = ares_query_txt_result(txt_reply_ptr[0])
+                    tmp_obj = ares_query_txt_result(txt_reply_ptr)
                 else:
-                    new_chunk = ares_query_txt_result(txt_reply_ptr[0])
+                    new_chunk = ares_query_txt_result(txt_reply_ptr)
                     tmp_obj.text += new_chunk.text
-                txt_reply_ptr[0] = txt_reply_ptr[0].next
+                txt_reply_ptr = txt_reply_ptr.next
             _lib.ares_free_data(txt_reply[0])
             status = None
     else:
