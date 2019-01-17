@@ -1,3 +1,8 @@
+Version 3.0.0b1
+===============
+ - core: add support for ANY queries
+ - cffi: fix memory leak
+
 Version 3.0.0b0
 ===============
  - core: drop C backend
