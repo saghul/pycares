@@ -37,24 +37,24 @@ def cb(result, error):
             result = [result]
 
         for r in result:
-            txt = '%s\t\t%d\tIN\t%s' % (hostname, r.ttl, qtype.upper())
-            if query_type == pycares.QUERY_TYPE_A or query_type == pycares.QUERY_TYPE_AAAA:
+            txt = '%s\t\t%d\tIN\t%s' % (hostname, r.ttl, r.type)
+            if r.type in ('A', 'AAAA'):
                 parts.append('%s\t%s' % (txt, r.host))
-            elif query_type == pycares.QUERY_TYPE_CNAME:
+            elif r.type == 'CNAME':
                 parts.append('%s\t%s' % (txt, r.cname))
-            elif query_type == pycares.QUERY_TYPE_MX:
+            elif r.type == 'MX':
                 parts.append('%s\t%d %s' % (txt, r.priority, r.host))
-            elif query_type == pycares.QUERY_TYPE_NAPTR:
+            elif r.type == 'NAPTR':
                 parts.append('%s\t%d %d "%s" "%s" "%s" %s' % (txt, r.order, r.preference, r.flags, r.service, r.regex, r.replacement))
-            elif query_type == pycares.QUERY_TYPE_NS:
+            elif r.type == 'NS':
                 parts.append('%s\t%s' % (txt, r.host))
-            elif query_type == pycares.QUERY_TYPE_PTR:
+            elif r.type == 'PTR':
                 parts.append('%s\t%s' % (txt, r.name))
-            elif query_type == pycares.QUERY_TYPE_SOA:
+            elif r.type == 'SOA':
                 parts.append('%s\t%s %s %d %d %d %d %d' % (txt, r.nsname, r.hostmaster, r.serial, r.refresh, r.retry, r.expires, r.minttl))
-            elif query_type == pycares.QUERY_TYPE_SRV:
+            elif r.type == 'SRV':
                 parts.append('%s\t%d %d %d %s' % (txt, r.priority, r.weight, r.port, r.host))
-            elif query_type == pycares.QUERY_TYPE_TXT:
+            elif r.type == 'TXT':
                 parts.append('%s\t"%s"' % (txt, r.text))
 
         print('\n'.join(parts))

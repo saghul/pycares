@@ -102,7 +102,7 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertNoError(self.errorno)
         for r in self.result:
-            self.assertEqual(type(r), pycares.ares_query_simple_result)
+            self.assertEqual(type(r), pycares.ares_query_a_result)
             self.assertNotEqual(r.host, None)
             self.assertTrue(r.ttl >= 0)
 
@@ -139,7 +139,7 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertNoError(self.errorno)
         for r in self.result:
-            self.assertEqual(type(r), pycares.ares_query_simple_result)
+            self.assertEqual(type(r), pycares.ares_query_aaaa_result)
             self.assertNotEqual(r.host, None)
             self.assertTrue(r.ttl >= 0)
 
