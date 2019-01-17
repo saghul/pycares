@@ -194,7 +194,7 @@ def parse_result(query_type, abuf, alen):
             while mx_reply_ptr != _ffi.NULL:
                 result.append(ares_query_mx_result(mx_reply_ptr))
                 mx_reply_ptr = mx_reply_ptr.next
-            _lib.ares_free_data(mx_reply)
+            _lib.ares_free_data(mx_reply[0])
             status = None
     elif query_type == _lib.T_NAPTR:
         naptr_reply = _ffi.new("struct ares_naptr_reply **")
@@ -208,7 +208,7 @@ def parse_result(query_type, abuf, alen):
             while naptr_reply_ptr != _ffi.NULL:
                 result.append(ares_query_naptr_result(naptr_reply_ptr))
                 naptr_reply_ptr = naptr_reply_ptr.next
-            _lib.ares_free_data(naptr_reply)
+            _lib.ares_free_data(naptr_reply[0])
             status = None
     elif query_type == _lib.T_NS:
         hostent = _ffi.new("struct hostent **")
