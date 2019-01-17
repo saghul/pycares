@@ -31,10 +31,12 @@ exported_pycares_symbols = [
     'ARES_ECANCELLED',
 ]
 
-globals()["errorcode"] = {}
+errorcode = {}
 
 for symbol in exported_pycares_symbols:
-    globals()[symbol] = globals()["errorcode"][symbol] = getattr(_lib, symbol)
+    value = getattr(_lib, symbol)
+    globals()[symbol] = value
+    globals()["errorcode"][value] = symbol
 
 
 def strerror(code):

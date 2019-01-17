@@ -442,6 +442,11 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(self.result, None)
         self.assertEqual(self.errorno, pycares.errno.ARES_ETIMEOUT)
 
+    def test_errorcode_dict(self):
+        for err in ('ARES_SUCCESS', 'ARES_ENODATA', 'ARES_ECANCELLED'):
+            val = getattr(pycares.errno, err)
+            self.assertEqual(pycares.errno.errorcode[val], err)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
