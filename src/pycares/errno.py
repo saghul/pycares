@@ -1,5 +1,5 @@
 
-from _pycares_cffi import ffi as _ffi, lib as _lib
+from ._cares import ffi as _ffi, lib as _lib
 
 
 exported_pycares_symbols = [

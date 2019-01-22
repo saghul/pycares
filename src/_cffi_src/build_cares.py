@@ -509,5 +509,5 @@ INCLUDES = """
 
 ffi = cffi.FFI()
 ffi.cdef(PLATFORM_TYPES + TYPES + FUNCTIONS)
-ffi.set_source("_pycares_cffi", INCLUDES)
+ffi.set_source('_cares', INCLUDES)
 

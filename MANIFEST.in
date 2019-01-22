@@ -1,10 +1,10 @@
 include README.rst LICENSE ChangeLog
 include setup.py setup_cares.py tox.ini
-recursive-include docs *
-recursive-include examples *
-recursive-include tests *
-recursive-include deps *
-recursive-include pycares *
+graft docs
+graft examples
+graft tests
+graft deps
+graft src
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 recursive-exclude * *.[ao]

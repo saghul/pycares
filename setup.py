@@ -9,7 +9,7 @@ from setup_cares import cares_build_ext
 
 
 def get_version():
-    return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""", open('pycares/_version.py').read()).group('version')
+    return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""", open('src/pycares/_version.py').read()).group('version')
 
 
 setup(name             = 'pycares',
@@ -37,6 +37,9 @@ setup(name             = 'pycares',
       cmdclass         = {'build_ext': cares_build_ext},
       setup_requires   = ['cffi>=1.5.0'],
       install_requires = ['cffi>=1.5.0'],
-      cffi_modules     = ['pycares/build_cares.py:ffi'],
-      packages         = ['pycares']
+      cffi_modules     = ['src/_cffi_src/build_cares.py:ffi'],
+      package_dir      = {'': 'src'},
+      packages         = ['pycares'],
+      ext_package      = 'pycares',
+      zip_safe         = False
 )

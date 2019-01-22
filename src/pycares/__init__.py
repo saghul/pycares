@@ -1,5 +1,5 @@
 
-from _pycares_cffi import ffi as _ffi, lib as _lib
+from ._cares import ffi as _ffi, lib as _lib
 import _cffi_backend  # hint for bundler tools
 
 if _lib.ARES_SUCCESS != _lib.ares_library_init(_lib.ARES_LIB_INIT_ALL):
