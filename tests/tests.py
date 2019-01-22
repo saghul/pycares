@@ -426,15 +426,13 @@ class DNSTest(unittest.TestCase):
         self.result, self.errorno = None, None
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
-        # first try with the host as is
-        self.assertRaises(UnicodeEncodeError, self.channel.gethostbyname, host, socket.AF_INET, cb)
-        # now try encoding it as utf-8
+        # try encoding it as utf-8
         self.channel.gethostbyname(host.encode(), socket.AF_INET, cb)
         self.wait()
         self.assertEqual(self.errorno, pycares.errno.ARES_ENOTFOUND)
         self.assertEqual(self.result, None)
-        # now comes the good one: use IDNA encoding
-        self.channel.gethostbyname(host.encode('idna'), socket.AF_INET, cb)
+        # use it as is (it's IDNA encoded internally)
+        self.channel.gethostbyname(host, socket.AF_INET, cb)
         self.wait()
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.ares_host_result)

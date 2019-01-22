@@ -6,7 +6,7 @@ if _lib.ARES_SUCCESS != _lib.ares_library_init(_lib.ARES_LIB_INIT_ALL):
     raise RuntimeError('Could not initialize c-ares')
 
 from . import errno
-from .utils import ensure_bytes, maybe_str
+from .utils import ascii_bytes, maybe_str, parse_name
 from ._version import __version__
 
 import collections.abc
@@ -370,7 +370,7 @@ class Channel:
             optmask = optmask |  _lib.ARES_OPT_LOOKUPS
 
         if domains:
-            strs = [_ffi.new("char[]", ensure_bytes(i)) for i in domains]
+            strs = [_ffi.new("char[]", ascii_bytes(i)) for i in domains]
             c = _ffi.new("char *[%d]" % (len(domains) + 1))
             for i in range(len(domains)):
                c[i] = strs[i]
@@ -384,7 +384,7 @@ class Channel:
 
         if resolvconf_path is not None:
             optmask = optmask |  _lib.ARES_OPT_RESOLVCONF
-            options.resolvconf_path = _ffi.new('char[]', ensure_bytes(resolvconf_path))
+            options.resolvconf_path = _ffi.new('char[]', ascii_bytes(resolvconf_path))
 
         r = _lib.ares_init_options(channel, options, optmask)
         if r != _lib.ARES_SUCCESS:
@@ -418,9 +418,9 @@ class Channel:
     def _set_servers(self, servers):
         c = _ffi.new("struct ares_addr_node[%d]" % len(servers))
         for i, server in enumerate(servers):
-            if 1 == _lib.ares_inet_pton(socket.AF_INET, ensure_bytes(server), _ffi.addressof(c[i].addr.addr4)):
+            if 1 == _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(server), _ffi.addressof(c[i].addr.addr4)):
                 c[i].family = socket.AF_INET
-            elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ensure_bytes(server), _ffi.addressof(c[i].addr.addr6)):
+            elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(server), _ffi.addressof(c[i].addr.addr6)):
                 c[i].family = socket.AF_INET6
             else:
                 raise ValueError("invalid IP address")
@@ -503,10 +503,10 @@ class Channel:
 
         addr4 = _ffi.new("struct in_addr*")
         addr6 = _ffi.new("struct ares_in6_addr*")
-        if 1 == _lib.ares_inet_pton(socket.AF_INET,ensure_bytes(name), (addr4)):
+        if 1 == _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(name), (addr4)):
             address = addr4
             family = socket.AF_INET
-        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ensure_bytes(name), (addr6)):
+        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(name), (addr6)):
             address = addr6
             family = socket.AF_INET6
         else:
@@ -524,7 +524,7 @@ class Channel:
 
         userdata = _ffi.new_handle(callback)
         _global_set.add(userdata)
-        _lib.ares_gethostbyname(self.channel, ensure_bytes(name), family, _host_cb, userdata)
+        _lib.ares_gethostbyname(self.channel, parse_name(name), family, _host_cb, userdata)
 
     def query(self, name, query_type, callback):
         if not callable(callback):
@@ -535,15 +535,15 @@ class Channel:
 
         userdata = _ffi.new_handle((callback, query_type))
         _global_set.add(userdata)
-        _lib.ares_query(self.channel, ensure_bytes(name), _lib.C_IN, query_type, _query_cb, userdata)
+        _lib.ares_query(self.channel, parse_name(name), _lib.C_IN, query_type, _query_cb, userdata)
 
     @check_channel
     def set_local_ip(self, ip):
         addr4 = _ffi.new("struct in_addr*")
         addr6 = _ffi.new("struct ares_in6_addr*")
-        if 1 == _lib.ares_inet_pton(socket.AF_INET, ensure_bytes(ip), addr4):
+        if 1 == _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), addr4):
             _lib.ares_set_local_ip4(self.channel, socket.ntohl(addr4.s_addr))
-        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ensure_bytes(ip), addr6):
+        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), addr6):
             _lib.ares_set_local_ip6(self.channel, addr6)
         else:
             raise ValueError("invalid IP address")
@@ -561,11 +561,11 @@ class Channel:
         sa4 = _ffi.new("struct sockaddr_in*")
         sa6 = _ffi.new("struct sockaddr_in6*")
 
-        if 1 == _lib.ares_inet_pton(socket.AF_INET, ensure_bytes(ip), _ffi.addressof(sa4.sin_addr)):
+        if 1 == _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), _ffi.addressof(sa4.sin_addr)):
             sa4.sin_family = socket.AF_INET
             sa4.sin_port = socket.htons(port)
             sa = sa4
-        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ensure_bytes(ip), _ffi.addressof(sa6.sin6_addr)):
+        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), _ffi.addressof(sa6.sin6_addr)):
             sa6.sin6_family = socket.AF_INET6
             sa6.sin6_port = socket.htons(port)
             sa = sa6
