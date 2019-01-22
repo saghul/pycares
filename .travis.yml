@@ -3,6 +3,9 @@ sudo: false
 matrix:
   include:
     - python: 3.5
+    - name: IDNA
+      python: 3.5
+      env: TEST_IDNA=true
     - python: 3.6
     - python: 3.7
       dist: xenial
@@ -13,6 +16,7 @@ branches:
     - master
 install:
   - python -V
+  - if $TEST_IDNA; then pip install idna; fi
   - python setup.py install
 script:
   - ./tests/tests.py
