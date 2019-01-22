@@ -437,6 +437,21 @@ class DNSTest(unittest.TestCase):
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.ares_host_result)
 
+    def test_idna2008_encoding(self):
+        try:
+            import idna
+        except ImportError:
+            raise unittest.SkipTest('idna module not installed')
+        host = 'straße.de'
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.gethostbyname(host, socket.AF_INET, cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.ares_host_result)
+        self.assertTrue('81.169.145.78' in self.result.addresses)
+
     @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_custom_resolvconf(self):
         self.result, self.errorno = None, None
