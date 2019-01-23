@@ -1,3 +1,8 @@
+Version 3.0.0b3
+===============
+ - core: reorganize package
+ - core: automagically encode query names with IDNA
+
 Version 3.0.0b2
 ===============
  - errno: fix errorcode dictionary
