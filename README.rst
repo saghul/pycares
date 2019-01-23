@@ -45,33 +45,20 @@ I did apply the patch to the bundled c-ares, but unfortunately it breaks the ABI
 to use a system provided c-ares is not possible.
 
 
-Building
-========
+Installation
+============
 
-Linux:
+GNU/Linux, macOS, Windows, others:
 
 ::
 
-    python setup.py install
+    pip install pycares
 
 FreeBSD:
 
 ::
 
     cd /usr/ports/dns/py-pycares && make install
-
-macOS:
-
-::
-
-    (XCode needs to be installed)
-    python setup.py install
-
-Microsoft Windows (with Visual Studio 2015 or the Windows SDK):
-
-::
-
-    python setup.py install
 
 
 Running the test suite
