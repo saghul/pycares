@@ -30,12 +30,22 @@ def is_all_ascii(text):
             return False
     return True
 
+def parse_name_idna2008(name):
+    parts = name.split('.')
+    r = []
+    for part in parts:
+        if is_all_ascii(part):
+            r.append(part.encode('ascii'))
+        else:
+            r.append(idna2008.encode(part))
+    return b'.'.join(r)
+
 def parse_name(name):
     if isinstance(name, str):
         if is_all_ascii(name):
             return name.encode('ascii')
         if idna2008 is not None:
-            return idna2008.encode(name)
+            return parse_name_idna2008(name)
         return name.encode('idna')
     if isinstance(name, bytes):
         return name
