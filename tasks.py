@@ -3,7 +3,7 @@ import re
 from invoke import task
 
 def get_version():
-    return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""", open('pycares/_version.py').read()).group('version')
+    return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""", open('src/pycares/_version.py').read()).group('version')
 
 @task
 def release(c):
