@@ -13,5 +13,5 @@ def release(c):
     c.run("git push --tags")
 
     c.run("python setup.py sdist")
-    c.run("twine upload -r pypi dist/pycares-{0}*".format(version))
+    c.run("twine upload dist/pycares-{0}*".format(version))
 
