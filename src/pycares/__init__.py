@@ -430,7 +430,7 @@ class Channel:
 
         r = _lib.ares_set_servers(self.channel, c)
         if r != _lib.ARES_SUCCESS:
-            raise AresError()
+            raise AresError(r, errno.strerror(r))
 
     @check_channel
     def _get_servers(self):
@@ -438,7 +438,7 @@ class Channel:
 
         r = _lib.ares_get_servers(self.channel, servers)
         if r != _lib.ARES_SUCCESS:
-            raise AresError(errno.strerror(r))
+            raise AresError(r, errno.strerror(r))
 
         server_list = []
         server = _ffi.new("struct ares_addr_node **", servers[0])
