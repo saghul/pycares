@@ -437,6 +437,24 @@ class DNSTest(unittest.TestCase):
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.ares_host_result)
 
+    def test_idna_encoding_query_a(self):
+        host = 'españa.icom.museum'
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        # try encoding it as utf-8
+        self.channel.query(host.encode(), pycares.QUERY_TYPE_A, cb)
+        self.wait()
+        self.assertEqual(self.errorno, pycares.errno.ARES_ENOTFOUND)
+        self.assertEqual(self.result, None)
+        # use it as is (it's IDNA encoded internally)
+        self.channel.query(host, pycares.QUERY_TYPE_A, cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_a_result)
+            self.assertNotEqual(r.host, None)
+
     def test_idna2008_encoding(self):
         try:
             import idna
