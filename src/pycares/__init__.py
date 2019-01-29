@@ -418,9 +418,9 @@ class Channel:
     def _set_servers(self, servers):
         c = _ffi.new("struct ares_addr_node[%d]" % len(servers))
         for i, server in enumerate(servers):
-            if 1 == _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(server), _ffi.addressof(c[i].addr.addr4)):
+            if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(server), _ffi.addressof(c[i].addr.addr4)) == 1:
                 c[i].family = socket.AF_INET
-            elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(server), _ffi.addressof(c[i].addr.addr6)):
+            elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(server), _ffi.addressof(c[i].addr.addr6)) == 1:
                 c[i].family = socket.AF_INET6
             else:
                 raise ValueError("invalid IP address")
@@ -503,10 +503,10 @@ class Channel:
 
         addr4 = _ffi.new("struct in_addr*")
         addr6 = _ffi.new("struct ares_in6_addr*")
-        if 1 == _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(name), (addr4)):
+        if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(name), (addr4)) == 1:
             address = addr4
             family = socket.AF_INET
-        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(name), (addr6)):
+        elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(name), (addr6)) == 1:
             address = addr6
             family = socket.AF_INET6
         else:
@@ -541,9 +541,9 @@ class Channel:
     def set_local_ip(self, ip):
         addr4 = _ffi.new("struct in_addr*")
         addr6 = _ffi.new("struct ares_in6_addr*")
-        if 1 == _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), addr4):
+        if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), addr4) == 1:
             _lib.ares_set_local_ip4(self.channel, socket.ntohl(addr4.s_addr))
-        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), addr6):
+        elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), addr6) == 1:
             _lib.ares_set_local_ip6(self.channel, addr6)
         else:
             raise ValueError("invalid IP address")
@@ -561,11 +561,11 @@ class Channel:
         sa4 = _ffi.new("struct sockaddr_in*")
         sa6 = _ffi.new("struct sockaddr_in6*")
 
-        if 1 == _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), _ffi.addressof(sa4.sin_addr)):
+        if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), _ffi.addressof(sa4.sin_addr)) == 1:
             sa4.sin_family = socket.AF_INET
             sa4.sin_port = socket.htons(port)
             sa = sa4
-        elif 1 == _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), _ffi.addressof(sa6.sin6_addr)):
+        elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), _ffi.addressof(sa6.sin6_addr)) == 1:
             sa6.sin6_family = socket.AF_INET6
             sa6.sin6_port = socket.htons(port)
             sa = sa6
