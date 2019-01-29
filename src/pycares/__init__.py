@@ -497,16 +497,16 @@ class Channel:
         return (tv.tv_sec + tv.tv_usec / 1000000.0)
 
     @check_channel
-    def gethostbyaddr(self, name, callback):
+    def gethostbyaddr(self, addr, callback):
         if not callable(callback):
             raise TypeError("a callable is required")
 
         addr4 = _ffi.new("struct in_addr*")
         addr6 = _ffi.new("struct ares_in6_addr*")
-        if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(name), (addr4)) == 1:
+        if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(addr), (addr4)) == 1:
             address = addr4
             family = socket.AF_INET
-        elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(name), (addr6)) == 1:
+        elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(addr), (addr6)) == 1:
             address = addr6
             family = socket.AF_INET6
         else:
@@ -514,8 +514,7 @@ class Channel:
 
         userdata = _ffi.new_handle(callback)
         _global_set.add(userdata)
-        _lib.ares_gethostbyaddr(self.channel, (address), _ffi.sizeof(address[0]), family, _host_cb, userdata)
-
+        _lib.ares_gethostbyaddr(self.channel, address, _ffi.sizeof(address[0]), family, _host_cb, userdata)
 
     @check_channel
     def gethostbyname(self, name, family, callback):
