@@ -81,14 +81,6 @@ class AresError(Exception):
     pass
 
 
-def check_channel(f):
-    @functools.wraps(f)
-    def wrapper(self, *args, **kwds):
-        if not self.channel:
-            raise AresError("Channel has already been destroyed")
-        return f(self, *args, **kwds)
-    return wrapper
-
 # callback helpers
 
 _global_set = set()
@@ -390,7 +382,7 @@ class Channel:
         if r != _lib.ARES_SUCCESS:
             raise AresError('Failed to initialize c-ares channel')
 
-        self.channel = channel[0]
+        self._channel = _ffi.gc(channel, lambda x: _lib.ares_destroy(x[0]))
 
         if servers:
             self._set_servers(servers)
@@ -401,20 +393,9 @@ class Channel:
         if local_dev:
             self.set_local_dev(local_dev)
 
-    def __del__(self):
-        self.destroy()
-
-    def destroy(self):
-        if self.channel:
-            _lib.ares_destroy(self.channel)
-            self.channel = None
-        self._sock_state_cb_handle = None
-
-    @check_channel
     def cancel(self):
-        _lib.ares_cancel(self.channel)
+        _lib.ares_cancel(self._channel[0])
 
-    @check_channel
     def _set_servers(self, servers):
         c = _ffi.new("struct ares_addr_node[%d]" % len(servers))
         for i, server in enumerate(servers):
@@ -428,15 +409,14 @@ class Channel:
             if i > 0:
                 c[i - 1].next = _ffi.addressof(c[i])
 
-        r = _lib.ares_set_servers(self.channel, c)
+        r = _lib.ares_set_servers(self._channel[0], c)
         if r != _lib.ARES_SUCCESS:
             raise AresError(r, errno.strerror(r))
 
-    @check_channel
     def _get_servers(self):
         servers = _ffi.new("struct ares_addr_node **")
 
-        r = _lib.ares_get_servers(self.channel, servers)
+        r = _lib.ares_get_servers(self._channel[0], servers)
         if r != _lib.ARES_SUCCESS:
             raise AresError(r, errno.strerror(r))
 
@@ -457,12 +437,11 @@ class Channel:
 
     servers = property(_get_servers, _set_servers)
 
-    @check_channel
     def getsock(self):
         rfds = []
         wfds = []
         socks = _ffi.new("ares_socket_t [%d]" % _lib.ARES_GETSOCK_MAXNUM)
-        bitmask = _lib.ares_getsock(self.channel, socks, _lib.ARES_GETSOCK_MAXNUM)
+        bitmask = _lib.ares_getsock(self._channel[0], socks, _lib.ARES_GETSOCK_MAXNUM)
         for i in range(_lib.ARES_GETSOCK_MAXNUM):
             if _lib.ARES_GETSOCK_READABLE(bitmask, i):
                 rfds.append(socks[i])
@@ -471,12 +450,9 @@ class Channel:
 
         return rfds, wfds
 
-
-    @check_channel
     def process_fd(self, read_fd, write_fd):
-        _lib.ares_process_fd(self.channel, _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", write_fd))
+        _lib.ares_process_fd(self._channel[0], _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", write_fd))
 
-    @check_channel
     def timeout(self, t = None):
         maxtv = _ffi.NULL
         tv = _ffi.new("struct timeval*")
@@ -489,14 +465,13 @@ class Channel:
             else:
                 raise ValueError("timeout needs to be a positive number or None")
 
-        _lib.ares_timeout(self.channel, maxtv, tv)
+        _lib.ares_timeout(self._channel[0], maxtv, tv)
 
         if tv == _ffi.NULL:
             return 0.0
 
         return (tv.tv_sec + tv.tv_usec / 1000000.0)
 
-    @check_channel
     def gethostbyaddr(self, addr, callback):
         if not callable(callback):
             raise TypeError("a callable is required")
@@ -514,16 +489,15 @@ class Channel:
 
         userdata = _ffi.new_handle(callback)
         _global_set.add(userdata)
-        _lib.ares_gethostbyaddr(self.channel, address, _ffi.sizeof(address[0]), family, _host_cb, userdata)
+        _lib.ares_gethostbyaddr(self._channel[0], address, _ffi.sizeof(address[0]), family, _host_cb, userdata)
 
-    @check_channel
     def gethostbyname(self, name, family, callback):
         if not callable(callback):
             raise TypeError("a callable is required")
 
         userdata = _ffi.new_handle(callback)
         _global_set.add(userdata)
-        _lib.ares_gethostbyname(self.channel, parse_name(name), family, _host_cb, userdata)
+        _lib.ares_gethostbyname(self._channel[0], parse_name(name), family, _host_cb, userdata)
 
     def query(self, name, query_type, callback):
         if not callable(callback):
@@ -534,20 +508,18 @@ class Channel:
 
         userdata = _ffi.new_handle((callback, query_type))
         _global_set.add(userdata)
-        _lib.ares_query(self.channel, parse_name(name), _lib.C_IN, query_type, _query_cb, userdata)
+        _lib.ares_query(self._channel[0], parse_name(name), _lib.C_IN, query_type, _query_cb, userdata)
 
-    @check_channel
     def set_local_ip(self, ip):
         addr4 = _ffi.new("struct in_addr*")
         addr6 = _ffi.new("struct ares_in6_addr*")
         if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), addr4) == 1:
-            _lib.ares_set_local_ip4(self.channel, socket.ntohl(addr4.s_addr))
+            _lib.ares_set_local_ip4(self._channel[0], socket.ntohl(addr4.s_addr))
         elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), addr6) == 1:
-            _lib.ares_set_local_ip6(self.channel, addr6)
+            _lib.ares_set_local_ip6(self._channel[0], addr6)
         else:
             raise ValueError("invalid IP address")
 
-    @check_channel
     def getnameinfo(self, ip_port, flags, callback):
         if not callable(callback):
             raise TypeError("a callable is required")
@@ -573,11 +545,10 @@ class Channel:
 
         userdata = _ffi.new_handle(callback)
         _global_set.add(userdata)
-        _lib.ares_getnameinfo(self.channel, _ffi.cast("struct sockaddr*", sa), _ffi.sizeof(sa[0]), flags, _nameinfo_cb, userdata)
+        _lib.ares_getnameinfo(self._channel[0], _ffi.cast("struct sockaddr*", sa), _ffi.sizeof(sa[0]), flags, _nameinfo_cb, userdata)
 
-    @check_channel
     def set_local_dev(self, dev):
-        _lib.ares_set_local_dev(self.channel, dev)
+        _lib.ares_set_local_dev(self._channel[0], dev)
 
 
 class AresResult:
