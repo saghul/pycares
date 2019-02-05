@@ -195,10 +195,6 @@
 
         Cancel any pending query on this channel. All pending callbacks will be called with ARES_ECANCELLED errorno.
 
-    .. py:method:: destroy()
-
-        Destroy the channel. All pending callbacks will be called with ARES_EDESTRUCTION errorno.
-
     .. py:method:: process_fd(read_fd, write_fd)
 
         :param int read_fd: File descriptor ready to read from.
