@@ -482,6 +482,18 @@ class DNSTest(unittest.TestCase):
             val = getattr(pycares.errno, err)
             self.assertEqual(pycares.errno.errorcode[val], err)
 
+    def test_search(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel = pycares.Channel(timeout=5.0, tries=1, domains=['google.com'])
+        self.channel.search('cloud', pycares.QUERY_TYPE_A, cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_a_result)
+            self.assertNotEqual(r.host, None)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
