@@ -190,6 +190,16 @@
         .. note::
             TTL is not implemented for CNAME and NS), so it's set to -1.
 
+    .. py:method:: search(name, query_type, callback)
+
+        :param string name: Name to query.
+
+        :param int query_type: Type of query to perform.
+
+        :param callable callback: Callback to be called with the result of the query.
+
+        Tis function does the same as :py:meth:`query` but it will honor the ``domain`` and ``search`` directives in
+        ``resolv.conf``.
 
     .. py:method:: cancel()
 

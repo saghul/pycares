@@ -290,6 +290,8 @@ def parse_result(query_type, abuf, alen):
 
 
 class Channel:
+    __qtypes__ = (_lib.T_A, _lib.T_AAAA, _lib.T_ANY, _lib.T_CNAME, _lib.T_MX, _lib.T_NAPTR, _lib.T_NS, _lib.T_PTR, _lib.T_SOA, _lib.T_SRV, _lib.T_TXT)
+
     def __init__(self,
                  flags = None,
                  timeout = None,
@@ -500,15 +502,21 @@ class Channel:
         _lib.ares_gethostbyname(self._channel[0], parse_name(name), family, _host_cb, userdata)
 
     def query(self, name, query_type, callback):
-        if not callable(callback):
-            raise TypeError("a callable is required")
+        self._do_query(_lib.ares_query, name, query_type, callback)
 
-        if query_type not in (_lib.T_A, _lib.T_AAAA, _lib.T_ANY, _lib.T_CNAME, _lib.T_MX, _lib.T_NAPTR, _lib.T_NS, _lib.T_PTR, _lib.T_SOA, _lib.T_SRV, _lib.T_TXT):
-            raise ValueError("invalid query type specified")
+    def search(self, name, query_type, callback):
+        self._do_query(_lib.ares_search, name, query_type, callback)
+
+    def _do_query(self, func, name, query_type, callback):
+        if not callable(callback):
+            raise TypeError('a callable is required')
+
+        if query_type not in self.__qtypes__:
+            raise ValueError('invalid query type specified')
 
         userdata = _ffi.new_handle((callback, query_type))
         _global_set.add(userdata)
-        _lib.ares_query(self._channel[0], parse_name(name), _lib.C_IN, query_type, _query_cb, userdata)
+        func(self._channel[0], parse_name(name), _lib.C_IN, query_type, _query_cb, userdata)
 
     def set_local_ip(self, ip):
         addr4 = _ffi.new("struct in_addr*")
