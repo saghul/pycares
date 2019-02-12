@@ -385,7 +385,7 @@ class Channel:
         self._channel = _ffi.gc(channel, lambda x: _lib.ares_destroy(x[0]))
 
         if servers:
-            self._set_servers(servers)
+            self.servers = servers
 
         if local_ip:
             self.set_local_ip(local_ip)
@@ -396,24 +396,8 @@ class Channel:
     def cancel(self):
         _lib.ares_cancel(self._channel[0])
 
-    def _set_servers(self, servers):
-        c = _ffi.new("struct ares_addr_node[%d]" % len(servers))
-        for i, server in enumerate(servers):
-            if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(server), _ffi.addressof(c[i].addr.addr4)) == 1:
-                c[i].family = socket.AF_INET
-            elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(server), _ffi.addressof(c[i].addr.addr6)) == 1:
-                c[i].family = socket.AF_INET6
-            else:
-                raise ValueError("invalid IP address")
-
-            if i > 0:
-                c[i - 1].next = _ffi.addressof(c[i])
-
-        r = _lib.ares_set_servers(self._channel[0], c)
-        if r != _lib.ARES_SUCCESS:
-            raise AresError(r, errno.strerror(r))
-
-    def _get_servers(self):
+    @property
+    def servers(self):
         servers = _ffi.new("struct ares_addr_node **")
 
         r = _lib.ares_get_servers(self._channel[0], servers)
@@ -435,7 +419,23 @@ class Channel:
 
         return server_list
 
-    servers = property(_get_servers, _set_servers)
+    @servers.setter
+    def servers(self, servers):
+        c = _ffi.new("struct ares_addr_node[%d]" % len(servers))
+        for i, server in enumerate(servers):
+            if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(server), _ffi.addressof(c[i].addr.addr4)) == 1:
+                c[i].family = socket.AF_INET
+            elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(server), _ffi.addressof(c[i].addr.addr6)) == 1:
+                c[i].family = socket.AF_INET6
+            else:
+                raise ValueError("invalid IP address")
+
+            if i > 0:
+                c[i - 1].next = _ffi.addressof(c[i])
+
+        r = _lib.ares_set_servers(self._channel[0], c)
+        if r != _lib.ARES_SUCCESS:
+            raise AresError(r, errno.strerror(r))
 
     def getsock(self):
         rfds = []
