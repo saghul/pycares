@@ -1,3 +1,7 @@
+Version 3.0.0b5
+===============
+ - core: add support for ares_search
+
 Version 3.0.0b4
 ===============
  - core: give better errors descriptions for AresError
