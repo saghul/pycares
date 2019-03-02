@@ -17,19 +17,6 @@ pycares is a Python module which provides an interface to c-ares.
 DNS requests and name resolutions asynchronously.
 
 
-PLEASE TEST VERSION 3.0.0!
-==========================
-
-pycares 3.0.0 beta can be installed as follows:
-
-::
-
-   pip install pycares --pre
-
-Note that no binary wheels are provided until a stable release is made.
-
-This new release swaps the C core for the CFFI one, amongst other things. Please give it a try and report any issues!
-
 Documentation
 =============
 
