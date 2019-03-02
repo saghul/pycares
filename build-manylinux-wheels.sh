@@ -29,6 +29,7 @@ cd ..
 for version in $VERSIONS; do
     if [[ -d /opt/python/${version} ]]; then
         /opt/python/${version}/bin/python --version
+        /opt/python/${version}/bin/pip install cffi
         /opt/python/${version}/bin/pip install pycares --no-index -f /pycares/wheelhouse
         /opt/python/${version}/bin/python -c "import pycares; print('%s - %s' % (pycares.__version__, pycares.ARES_VERSION));"
     fi
