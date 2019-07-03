@@ -76,7 +76,6 @@ class cares_build_ext(build_ext):
                 self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_android'))
             else:
                 self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_linux'))
-            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_linux'))
             self.compiler.add_library('dl')
             self.compiler.add_library('rt')
         elif sys.platform == 'darwin':
