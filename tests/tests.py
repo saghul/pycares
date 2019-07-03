@@ -231,6 +231,20 @@ class DNSTest(unittest.TestCase):
             self.assertIsInstance(r.text, bytes)
             self.assertTrue(r.ttl >= 0)
 
+    def test_query_txt_multiple_chunked_with_non_ascii_content(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.query('txt-non-ascii.dns-test.hmnid.ru', pycares.QUERY_TYPE_TXT, cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        # txt-non-ascii.dns-test.hmnid.ru.      3600    IN  TXT "<!--LiveInternet counter--><script type=\"text/javascript\"> document.write(\"<a href='//www.liveinternet.ru/click' \"+ \"target=_blank><img src='//counter.xxxxx.ru/hit?t00.00;r\"+ escape(document.referrer)+((typeof(screen)==\"undefined\")?\"\": \";s\"+screen.width+\"" "*\"+screen.height+\"*\"+(screen.colorDepth? screen.colorDepth:screen.pixelDepth))+\";u\"+escape(document.URL)+ \";h\"+escape(document.title.substring(0,150))+\";\"+Math.random()+ \"' alt='' title='LiveInternet: \208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208 \208\208\208\208\208\208\208\208\208\208 \208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208 \208\208\"+ " "\" \208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208\208 \208\208\208\208 42 \208\208\208\208\208\208\208\208' \"+ \"border='0' width='80' height='30'><\\/a>\") </script><!--/LiveInternet-->"
+        self.assertEqual(len(self.result), 1)
+        r = self.result[0]
+        self.assertEqual(type(r), pycares.ares_query_txt_result)
+        self.assertIsInstance(r.text, bytes)
+        self.assertTrue(r.ttl >= 0)
+
     def test_query_soa(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):

@@ -271,14 +271,14 @@ def parse_result(query_type, abuf, alen):
             while True:
                 if txt_reply_ptr == _ffi.NULL:
                     if tmp_obj is not None:
-                        result.append(tmp_obj)
+                        result.append(ares_query_txt_result(tmp_obj))
                     break
                 if txt_reply_ptr.record_start == 1:
                     if tmp_obj is not None:
-                        result.append(tmp_obj)
-                    tmp_obj = ares_query_txt_result(txt_reply_ptr)
+                        result.append(ares_query_txt_result(tmp_obj))
+                    tmp_obj = ares_query_txt_result_chunk(txt_reply_ptr)
                 else:
-                    new_chunk = ares_query_txt_result(txt_reply_ptr)
+                    new_chunk = ares_query_txt_result_chunk(txt_reply_ptr)
                     tmp_obj.text += new_chunk.text
                 txt_reply_ptr = txt_reply_ptr.next
             _lib.ares_free_data(txt_reply[0])
@@ -675,8 +675,17 @@ class ares_query_txt_result(AresResult):
     __slots__ = ('text', 'ttl')
     type = 'TXT'
 
+    def __init__(self, txt_chunk):
+        self.text = maybe_str(txt_chunk.text)
+        self.ttl = txt_chunk.ttl
+
+
+class ares_query_txt_result_chunk(AresResult):
+    __slots__ = ('text', 'ttl')
+    type = 'TXT'
+
     def __init__(self, txt):
-        self.text = maybe_str(_ffi.string(txt.txt))
+        self.text = _ffi.string(txt.txt)
         self.ttl = txt.ttl
 
 
