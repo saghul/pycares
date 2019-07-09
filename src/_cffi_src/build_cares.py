@@ -29,6 +29,7 @@ struct in_addr {
 
 struct in6_addr {
     uint8_t s6_addr[16];
+    ...;
 };
 
 struct timeval {
