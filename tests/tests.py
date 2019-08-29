@@ -8,6 +8,8 @@ import sys
 import unittest
 
 import pycares
+from functools import partial
+from tornado.tcpclient import Resolver
 
 FIXTURES_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'fixtures'))
 
@@ -508,6 +510,37 @@ class DNSTest(unittest.TestCase):
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_a_result)
             self.assertNotEqual(r.host, None)
+
+    def test_lookup(self):
+        Resolver.configure("tornado.platform.caresresolver.CaresResolver")
+        resolver = Resolver()
+        resolver.channel = pycares.Channel(
+            lookups="b",
+            sock_state_cb=resolver._sock_state_cb,
+            timeout=5,
+            tries=1,
+            socket_receive_buffer_size=4096,
+            servers=["8.8.8.8", "8.8.4.4"],
+            tcp_port=53,
+            udp_port=53,
+            rotate=True,
+        )
+        sys.stdout.write("\n")
+        for domain in [
+            "google.com",
+            "microsoft.com",
+            "apple.com",
+            "amazon.com",
+            "baidu.com",
+            "alipay.com",
+            "tencent.com",
+        ]:
+            r = resolver.io_loop.run_sync(partial(resolver.resolve, domain, None))
+            assert isinstance(r, list) and len(r) > 0, "Error Resolving: %s" % domain
+            sys.stdout.write(
+                "Resolving: %s:%s\n" % (domain, [i[1][0] for i in r if i[1]])
+            )
+            sys.stdout.flush()
 
 
 if __name__ == '__main__':
