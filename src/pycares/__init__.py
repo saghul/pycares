@@ -360,7 +360,7 @@ class Channel:
             optmask = optmask |  _lib.ARES_OPT_SOCK_STATE_CB
 
         if lookups:
-            options.lookups = lookups
+            options.lookups = _ffi.new('char[]', ascii_bytes(lookups))
             optmask = optmask |  _lib.ARES_OPT_LOOKUPS
 
         if domains:
