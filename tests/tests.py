@@ -8,8 +8,6 @@ import sys
 import unittest
 
 import pycares
-from functools import partial
-from tornado.tcpclient import Resolver
 
 FIXTURES_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'fixtures'))
 
@@ -512,20 +510,20 @@ class DNSTest(unittest.TestCase):
             self.assertNotEqual(r.host, None)
 
     def test_lookup(self):
-        Resolver.configure("tornado.platform.caresresolver.CaresResolver")
-        resolver = Resolver()
-        resolver.channel = pycares.Channel(
+        channel = pycares.Channel(
             lookups="b",
-            sock_state_cb=resolver._sock_state_cb,
-            timeout=5,
+            timeout=1,
             tries=1,
             socket_receive_buffer_size=4096,
             servers=["8.8.8.8", "8.8.4.4"],
             tcp_port=53,
             udp_port=53,
             rotate=True,
-        )
-        sys.stdout.write("\n")
+        )   
+
+        def on_result(result, errorno):
+            self.result, self.errorno = result, errorno
+
         for domain in [
             "google.com",
             "microsoft.com",
@@ -534,14 +532,17 @@ class DNSTest(unittest.TestCase):
             "baidu.com",
             "alipay.com",
             "tencent.com",
-        ]:
-            r = resolver.io_loop.run_sync(partial(resolver.resolve, domain, None))
-            assert isinstance(r, list) and len(r) > 0, "Error Resolving: %s" % domain
-            sys.stdout.write(
-                "Resolving: %s:%s\n" % (domain, [i[1][0] for i in r if i[1]])
-            )
-            sys.stdout.flush()
-
+        ]:  
+            self.result, self.errorno = None, None
+            self.channel.query(domain, pycares.QUERY_TYPE_A, on_result)
+            self.wait()
+            self.assertNoError(self.errorno)
+            self.assertTrue(self.result is not None and len(self.result) > 0)
+            for r in self.result:
+                self.assertEqual(type(r), pycares.ares_query_a_result)
+                self.assertNotEqual(r.host, None)
+                self.assertTrue(r.type == 'A')
+                self.assertTrue(r.ttl >= 0)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
