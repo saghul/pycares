@@ -203,9 +203,10 @@ class DNSTest(unittest.TestCase):
         self.channel.query('s-pulse.co.jp', pycares.QUERY_TYPE_TXT, cb)
         self.wait()
         self.assertNoError(self.errorno)
-        # s-pulse.co.jp.      3600    IN  TXT "MS=ms18955624"
-        # s-pulse.co.jp.      3600    IN  TXT "v=spf1 " "include:spf-bma.mpme.jp ip4:202.248.11.9 ip4:202.248.11.10 " "ip4:218.223.68.132 ip4:218.223.68.77 ip4:210.254.139.121 " "ip4:211.128.73.121 ip4:210.254.139.122 ip4:211.128.73.122 " "ip4:210.254.139.123 ip4:211.128.73.123 ip4:210.254.139.124 " "ip4:211.128.73.124 ip4:210.254.139.13 ip4:211.128.73.13 " "ip4:52.68.199.198 include:spf.betrend.com " "include:spf.protection.outlook.com " "~all"
-        self.assertEqual(len(self.result), 2)
+        # s-pulse.co.jp.    3600	IN	TXT	"MS=ms18955624"
+        # s-pulse.co.jp.    3600	IN	TXT	"amazonses:lOgEcA9DwKFkIusIbgjpvZ2kCxaVADMlaxq9hSO3k4o="
+        # s-pulse.co.jp.    3600	IN	TXT	"v=spf1 " "include:spf-bma.mpme.jp ip4:202.248.11.9 ip4:202.248.11.10 " "ip4:218.223.68.132 ip4:218.223.68.77 ip4:210.254.139.121 " "ip4:211.128.73.121 ip4:210.254.139.122 ip4:211.128.73.122 " "ip4:210.254.139.123 ip4:211.128.73.123 ip4:210.254.139.124 " "ip4:211.128.73.124 ip4:210.254.139.13 ip4:211.128.73.13 " "ip4:52.68.199.198 include:spf.betrend.com " "include:spf.protection.outlook.com include:crmstyle.com " "~all"
+        self.assertEqual(len(self.result), 3)
 
     def test_query_txt_bytes1(self):
         self.result, self.errorno = None, None
