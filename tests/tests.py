@@ -509,6 +509,40 @@ class DNSTest(unittest.TestCase):
             self.assertEqual(type(r), pycares.ares_query_a_result)
             self.assertNotEqual(r.host, None)
 
+    def test_lookup(self):
+        channel = pycares.Channel(
+            lookups="b",
+            timeout=1,
+            tries=1,
+            socket_receive_buffer_size=4096,
+            servers=["8.8.8.8", "8.8.4.4"],
+            tcp_port=53,
+            udp_port=53,
+            rotate=True,
+        )   
+
+        def on_result(result, errorno):
+            self.result, self.errorno = result, errorno
+
+        for domain in [
+            "google.com",
+            "microsoft.com",
+            "apple.com",
+            "amazon.com",
+            "baidu.com",
+            "alipay.com",
+            "tencent.com",
+        ]:  
+            self.result, self.errorno = None, None
+            self.channel.query(domain, pycares.QUERY_TYPE_A, on_result)
+            self.wait()
+            self.assertNoError(self.errorno)
+            self.assertTrue(self.result is not None and len(self.result) > 0)
+            for r in self.result:
+                self.assertEqual(type(r), pycares.ares_query_a_result)
+                self.assertNotEqual(r.host, None)
+                self.assertTrue(r.type == 'A')
+                self.assertTrue(r.ttl >= 0)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
