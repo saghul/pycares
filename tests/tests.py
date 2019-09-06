@@ -340,6 +340,15 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(self.result, None)
         self.assertEqual(self.errorno, pycares.errno.ARES_ETIMEOUT)
 
+    def test_query_onion(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.query('foo.onion', pycares.QUERY_TYPE_A, cb)
+        self.wait()
+        self.assertEqual(self.result, None)
+        self.assertEqual(self.errorno, pycares.errno.ARES_ENOTFOUND)
+
     def test_channel_nameservers(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
@@ -520,7 +529,7 @@ class DNSTest(unittest.TestCase):
             tcp_port=53,
             udp_port=53,
             rotate=True,
-        )   
+        )
 
         def on_result(result, errorno):
             self.result, self.errorno = result, errorno
@@ -533,7 +542,7 @@ class DNSTest(unittest.TestCase):
             "baidu.com",
             "alipay.com",
             "tencent.com",
-        ]:  
+        ]:
             self.result, self.errorno = None, None
             self.channel.query(domain, pycares.QUERY_TYPE_A, on_result)
             self.wait()
