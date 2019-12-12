@@ -416,18 +416,6 @@ class DNSTest(unittest.TestCase):
         self.result, self.errorno = None, None
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
-        self.channel.query('xn--cardeosapeluqueros-r0b.com', pycares.QUERY_TYPE_MX, cb)
-        self.wait()
-        self.assertNoError(self.errorno)
-        for r in self.result:
-            self.assertEqual(type(r), pycares.ares_query_mx_result)
-            self.assertIsInstance(r.host, bytes)  # it's not ASCII
-            self.assertTrue(r.ttl >= 0)
-
-    def test_result_not_ascii2(self):
-        self.result, self.errorno = None, None
-        def cb(result, errorno):
-            self.result, self.errorno = result, errorno
         self.channel.query('ayesas.com', pycares.QUERY_TYPE_SOA, cb)
         self.wait()
         self.assertNoError(self.errorno)
