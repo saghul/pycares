@@ -1,3 +1,23 @@
+Version 3.1.0
+=============
+- misc: add Python 3.8 classifier
+- (origin/master, origin/HEAD) build: use Travis to build Python Wheels
+- ci: use GH Actions to test on macOS
+- ci: run tests in Python 3.8 too
+- test: remove no longer valid test
+- test: remove empty test
+- errno: return str from errno.strerror
+- core: fix crash when processing .onion queries
+- test: fix test_query_txt_multiple_chunked
+- doc: fix path of _version.py file
+- core: fix support for ARES_OPT_LOOKUPS option
+- build: add cygwin support
+- core: fix struct in6_addr alignment
+- misc: simplify non-ascii txt test example
+- core: fix long TXT record with non-ascii bytes
+- build: remove extra add_include_dir line on linux
+- build: fix testing manylinux wheels
+
 Version 3.0.0
 =============
 (changes since version 2.x)
