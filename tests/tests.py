@@ -395,13 +395,6 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(self.errorno, pycares.errno.ARES_ECONNREFUSED)
         self.assertRaises(ValueError, self.channel.set_local_ip, 'an invalid ip')
 
-    def test_channel_local_dev(self):
-        '''
-        Comments in c-ares say this only works for root, and ares ignores
-        errors. So we won't test it.
-        '''
-        pass
-
     def test_channel_timeout(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
