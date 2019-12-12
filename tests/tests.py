@@ -554,6 +554,11 @@ class DNSTest(unittest.TestCase):
                 self.assertTrue(r.type == 'A')
                 self.assertTrue(r.ttl >= 0)
 
+    def test_strerror_str(self):
+        for key in pycares.errno.errorcode:
+            self.assertTrue(type(pycares.errno.strerror(key)), str)
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 
