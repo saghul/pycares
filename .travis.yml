@@ -12,6 +12,7 @@ before_install:
     fi
 
 install:
+  - env | grep '^TRAVIS'
   - python -V
   - if $TEST_IDNA; then pip install idna; fi
   - python setup.py install
