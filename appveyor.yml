@@ -64,21 +64,9 @@ install:
   # Upgrade to the latest version of pip
   - "python -m pip install --upgrade pip"
 
-  # Install wheel
-  - "%CMD_IN_ENV% pip install wheel"
-
 build: false  # Not a C# project, build stuff at the test step instead.
 
 test_script:
   # Build the compiled extension and run the project tests
   - "%CMD_IN_ENV% python setup.py install"
   - "%CMD_IN_ENV% python tests/tests.py"
-
-after_test:
-  # If tests are successful, create binary packages for the project.
-  - "%CMD_IN_ENV% python setup.py bdist_wheel"
-  - ps: "ls dist"
-
-artifacts:
-  # Archive the generated packages in the ci.appveyor.com build report.
-  - path: dist\*.whl
