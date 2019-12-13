@@ -46,7 +46,7 @@ jobs:
     # Deploy source distribution
     - stage: deploy
       name: Deploy source distribution
-      install: skip
+      install: python -m pip install twine
       script: python setup.py sdist --formats=gztar
       after_success: python -m twine upload --skip-existing dist/*.tar.gz
     # Deploy on linux
