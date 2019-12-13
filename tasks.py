@@ -11,7 +11,3 @@ def release(c):
 
     c.run("git tag -a pycares-{0} -m \"pycares {0} release\"".format(version))
     c.run("git push --tags")
-
-    c.run("python setup.py sdist")
-    c.run("twine upload dist/pycares-{0}*".format(version))
-
