@@ -10,6 +10,9 @@ pycares: Python interface for c-ares
 .. image:: https://ci.appveyor.com/api/projects/status/vx1wbkfq3l7nm1m8?svg=true
     :target: https://ci.appveyor.com/project/saghul/pycares
 
+.. image:: https://github.com/saghul/pycares/workflows/Test%20macOS/badge.svg
+    :target: https://github.com/saghul/pycares/actions)
+
 pycares is a Python module which provides an interface to c-ares.
 `c-ares <http://c-ares.haxx.se>`_ is a C library that performs
 DNS requests and name resolutions asynchronously.
