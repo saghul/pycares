@@ -1,5 +1,3 @@
-
-====================================
 pycares: Python interface for c-ares
 ====================================
 
@@ -18,13 +16,13 @@ DNS requests and name resolutions asynchronously.
 
 
 Documentation
-=============
+-------------
 
 http://readthedocs.org/docs/pycares/
 
 
 Bundled c-ares
-==============
+--------------
 
 pycares currently bundles c-ares and as of pycares 1.0.0 this is a strong requirement. Upstream
 c-ares is not willing to apply `a patch adding TTL support <http://c-ares.haxx.se/mail/c-ares-archive-2013-07/0005.shtml>`_.
@@ -33,7 +31,7 @@ to use a system provided c-ares is not possible.
 
 
 Installation
-============
+------------
 
 GNU/Linux, macOS, Windows, others:
 
@@ -62,7 +60,7 @@ You can force this at installation time as follows:
 
 
 Running the test suite
-======================
+----------------------
 
 There are several ways of running the test ruite:
 
@@ -77,7 +75,7 @@ There are several ways of running the test ruite:
 
 
 Using it from the cli, a la dig
-===============================
+-------------------------------
 
 This module can be used directly from the command line in a similar fashion to dig (limited, of course):
 
@@ -103,27 +101,26 @@ This module can be used directly from the command line in a similar fashion to d
 
 
 Author
-======
+------
 
 Saúl Ibarra Corretgé <s@saghul.net>
 
 
 License
-=======
+-------
 
 Unless stated otherwise on-file pycares uses the MIT license, check LICENSE file.
 
 
 Supported Python versions
-=========================
+-------------------------
 
 Python >= 3.5 are supported. Both CPython and PyPy are supported.
 
 
 Contributing
-============
+------------
 
 If you'd like to contribute, fork the project, make a patch and send a pull
 request. Have a look at the surrounding code and please, make yours look
 alike :-)
-
