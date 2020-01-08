@@ -85,12 +85,12 @@ class AresError(Exception):
 
 _global_set = set()
 
-@_ffi.callback("void (void *data, ares_socket_t socket_fd, int readable, int writable )")
+@_ffi.def_extern()
 def _sock_state_cb(data, socket_fd, readable, writable):
     sock_state_cb = _ffi.from_handle(data)
     sock_state_cb(socket_fd, readable, writable)
 
-@_ffi.callback("void (void *arg, int status, int timeouts, struct hostent *hostent)")
+@_ffi.def_extern()
 def _host_cb(arg, status, timeouts, hostent):
     callback = _ffi.from_handle(arg)
     _global_set.discard(arg)
@@ -103,7 +103,7 @@ def _host_cb(arg, status, timeouts, hostent):
 
     callback(result, status)
 
-@_ffi.callback("void (void *arg, int status, int timeouts, char *node, char *service)")
+@_ffi.def_extern()
 def _nameinfo_cb(arg, status, timeouts, node, service):
     callback = _ffi.from_handle(arg)
     _global_set.discard(arg)
@@ -116,7 +116,7 @@ def _nameinfo_cb(arg, status, timeouts, node, service):
 
     callback(result, status)
 
-@_ffi.callback("void (void *arg, int status, int timeouts, unsigned char *abuf, int alen)")
+@_ffi.def_extern()
 def _query_cb(arg, status, timeouts, abuf, alen):
     callback, query_type = _ffi.from_handle(arg)
     _global_set.discard(arg)
@@ -355,7 +355,7 @@ class Channel:
             # This must be kept alive while the channel is alive.
             self._sock_state_cb_handle = userdata
 
-            options.sock_state_cb = _sock_state_cb
+            options.sock_state_cb = _lib._sock_state_cb
             options.sock_state_cb_data = userdata
             optmask = optmask |  _lib.ARES_OPT_SOCK_STATE_CB
 
@@ -491,7 +491,7 @@ class Channel:
 
         userdata = _ffi.new_handle(callback)
         _global_set.add(userdata)
-        _lib.ares_gethostbyaddr(self._channel[0], address, _ffi.sizeof(address[0]), family, _host_cb, userdata)
+        _lib.ares_gethostbyaddr(self._channel[0], address, _ffi.sizeof(address[0]), family, _lib._host_cb, userdata)
 
     def gethostbyname(self, name, family, callback):
         if not callable(callback):
@@ -499,7 +499,7 @@ class Channel:
 
         userdata = _ffi.new_handle(callback)
         _global_set.add(userdata)
-        _lib.ares_gethostbyname(self._channel[0], parse_name(name), family, _host_cb, userdata)
+        _lib.ares_gethostbyname(self._channel[0], parse_name(name), family, _lib._host_cb, userdata)
 
     def query(self, name, query_type, callback):
         self._do_query(_lib.ares_query, name, query_type, callback)
@@ -516,7 +516,7 @@ class Channel:
 
         userdata = _ffi.new_handle((callback, query_type))
         _global_set.add(userdata)
-        func(self._channel[0], parse_name(name), _lib.C_IN, query_type, _query_cb, userdata)
+        func(self._channel[0], parse_name(name), _lib.C_IN, query_type, _lib._query_cb, userdata)
 
     def set_local_ip(self, ip):
         addr4 = _ffi.new("struct in_addr*")
@@ -553,7 +553,7 @@ class Channel:
 
         userdata = _ffi.new_handle(callback)
         _global_set.add(userdata)
-        _lib.ares_getnameinfo(self._channel[0], _ffi.cast("struct sockaddr*", sa), _ffi.sizeof(sa[0]), flags, _nameinfo_cb, userdata)
+        _lib.ares_getnameinfo(self._channel[0], _ffi.cast("struct sockaddr*", sa), _ffi.sizeof(sa[0]), flags, _lib._nameinfo_cb, userdata)
 
     def set_local_dev(self, dev):
         _lib.ares_set_local_dev(self._channel[0], dev)
