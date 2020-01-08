@@ -489,7 +489,30 @@ const char *ares_inet_ntop(int af, const void *src, char *dst,
                                         ares_socklen_t size);
 
 int ares_inet_pton(int af, const char *src, void *dst);
+"""
 
+CALLBACKS = """
+extern "Python" void _sock_state_cb(void *data,
+                                    ares_socket_t socket_fd,
+                                    int readable,
+                                    int writable);
+
+extern "Python" void _host_cb(void *arg,
+                              int status,
+                              int timeouts,
+                              struct hostent *hostent);
+
+extern "Python" void _nameinfo_cb(void *arg,
+                                  int status,
+                                  int timeouts,
+                                  char *node,
+                                  char *service);
+
+extern "Python" void _query_cb(void *arg,
+                               int status,
+                               int timeouts,
+                               unsigned char *abuf,
+                               int alen);
 """
 
 INCLUDES = """
@@ -509,6 +532,6 @@ INCLUDES = """
 
 
 ffi = cffi.FFI()
-ffi.cdef(PLATFORM_TYPES + TYPES + FUNCTIONS)
+ffi.cdef(PLATFORM_TYPES + TYPES + FUNCTIONS + CALLBACKS)
 ffi.set_source('_cares', INCLUDES)
 
