@@ -1,3 +1,7 @@
+Version 3.1.1
+=============
+- ffi: new style callbacks
+
 Version 3.1.0
 =============
 - misc: add Python 3.8 classifier
