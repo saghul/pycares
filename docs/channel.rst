@@ -163,7 +163,7 @@
 
             - SOA: ``ares_query_soa_result``, fields:
 
-              - nsmane
+              - nsname
               - hostmaster
               - serial
               - refresh
