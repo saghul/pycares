@@ -528,28 +528,30 @@ class Channel:
         else:
             raise ValueError("invalid IP address")
 
-    def getnameinfo(self, ip_port, flags, callback):
+    def getnameinfo(self, address, flags, callback):
         if not callable(callback):
             raise TypeError("a callable is required")
 
-        ip, port = ip_port
-
-        if port < 0 or port > 65535:
-            raise ValueError("port must be between 0 and 65535")
-
-        sa4 = _ffi.new("struct sockaddr_in*")
-        sa6 = _ffi.new("struct sockaddr_in6*")
-
-        if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), _ffi.addressof(sa4.sin_addr)) == 1:
+        if len(address) == 2:
+            (ip, port) = address
+            sa4 = _ffi.new("struct sockaddr_in*")
+            if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), _ffi.addressof(sa4.sin_addr)) != 1:
+                raise ValueError("Invalid IPv4 address %r" % ip)
             sa4.sin_family = socket.AF_INET
             sa4.sin_port = socket.htons(port)
             sa = sa4
-        elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), _ffi.addressof(sa6.sin6_addr)) == 1:
+        elif len(address) == 4:
+            (ip, port, flowinfo, scope_id) = address
+            sa6 = _ffi.new("struct sockaddr_in6*")
+            if _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), _ffi.addressof(sa6.sin6_addr)) != 1:
+                raise ValueError("Invalid IPv6 address %r" % ip)
             sa6.sin6_family = socket.AF_INET6
             sa6.sin6_port = socket.htons(port)
+            sa6.sin6_flowinfo = socket.htonl(flowinfo) # I'm unsure about byteorder here.
+            sa6.sin6_scope_id = scope_id # Yes, without htonl.
             sa = sa6
         else:
-            raise ValueError("invalid IP address")
+            raise ValueError("Invalid address argument")
 
         userdata = _ffi.new_handle(callback)
         _global_set.add(userdata)
