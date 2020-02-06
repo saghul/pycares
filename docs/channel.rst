@@ -80,11 +80,9 @@
         Callback signature: ``callback(result, errorno)``
 
 
-    .. py:method:: getnameinfo(name, port, flags, callback)
+    .. py:method:: getnameinfo(address, flags, callback)
 
-        :param string name: Name to query.
-
-        :param int port: Port of the service to query.
+        :param tuple address: address tuple to get info about.
 
         :param int flags: Query flags, see the NI flags section.
 
@@ -92,6 +90,9 @@
 
         Provides protocol-independent name resolution from an address to a host name and
         from a port number to the service name.
+
+        ``address`` must be a 2-item tuple for IPv4 or a 4-item tuple for IPv6. Format of
+        fields is the same as one returned by `getaddrinfo()`.
 
         Callback signature: ``callback(result, errorno)``
 
