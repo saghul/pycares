@@ -501,22 +501,32 @@ class Channel:
         _global_set.add(userdata)
         _lib.ares_gethostbyname(self._channel[0], parse_name(name), family, _lib._host_cb, userdata)
 
-    def query(self, name, query_type, callback):
-        self._do_query(_lib.ares_query, name, query_type, callback)
+    def query(self, name, query_type, callback, dnsclass=None):
+        self._do_query(_lib.ares_query, name, query_type, callback, dnsclass=dnsclass)
 
-    def search(self, name, query_type, callback):
-        self._do_query(_lib.ares_search, name, query_type, callback)
+    def search(self, name, query_type, callback, dnsclass=None):
+        self._do_query(_lib.ares_search, name, query_type, callback, dnsclass=dnsclass)
 
-    def _do_query(self, func, name, query_type, callback):
+    def _do_query(self, func, name, query_type, callback, dnsclass=None):
         if not callable(callback):
             raise TypeError('a callable is required')
 
         if query_type not in self.__qtypes__:
             raise ValueError('invalid query type specified')
 
+        DNSCLASS_MAP = {
+            "IN": _lib.C_IN,
+            "CH": _lib.C_CHAOS,
+            "HS": _lib.C_HS,
+            "NONE": _lib.C_NONE,
+            "ANY": _lib.C_ANY,
+        }
+
+        dnsclass_cares = DNSCLASS_MAP.get(dnsclass, _lib.C_IN)
+
         userdata = _ffi.new_handle((callback, query_type))
         _global_set.add(userdata)
-        func(self._channel[0], parse_name(name), _lib.C_IN, query_type, _lib._query_cb, userdata)
+        func(self._channel[0], parse_name(name), dnsclass_cares, query_type, _lib._query_cb, userdata)
 
     def set_local_ip(self, ip):
         addr4 = _ffi.new("struct in_addr*")
