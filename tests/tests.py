@@ -273,6 +273,36 @@ class DNSTest(unittest.TestCase):
         self.assertIsInstance(r.text, bytes)
         self.assertTrue(r.ttl >= 0)
 
+    def test_query_dnsclass_chaos(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+
+        self.channel.servers = ['199.7.83.42']  # l.root-servers.net
+        self.channel.query('id.server', pycares.QUERY_TYPE_TXT, cb, "CH")
+        self.wait()
+        self.assertNoError(self.errorno)
+        # id.server.              0       CH      TXT     "aa.de-ham.l.root"
+
+        self.assertEqual(len(self.result), 1)
+        r = self.result[0]
+        self.assertEqual(type(r), pycares.ares_query_txt_result)
+        self.assertIsInstance(r.text, str)
+        self.assertTrue(r.ttl >= 0)
+
+    def test_query_dnsclass_fallback_to_in(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+
+        self.channel.query('google.com', pycares.QUERY_TYPE_A, cb, "INVALIDTYPE")
+        self.wait()
+        self.assertNoError(self.errorno)
+
+        r = self.result[0]
+        self.assertEqual(type(r), pycares.ares_query_a_result)
+        self.assertTrue(r.ttl >= 0)
+
     def test_query_soa(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
