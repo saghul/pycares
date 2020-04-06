@@ -279,7 +279,7 @@ class DNSTest(unittest.TestCase):
             self.result, self.errorno = result, errorno
 
         self.channel.servers = ['199.7.83.42']  # l.root-servers.net
-        self.channel.query('id.server', pycares.QUERY_TYPE_TXT, cb, pycares.QUERY_CLASS_CH)
+        self.channel.query('id.server', pycares.QUERY_TYPE_TXT, cb, pycares.QUERY_CLASS_CHAOS)
         self.wait()
         self.assertNoError(self.errorno)
         # id.server.              0       CH      TXT     "aa.de-ham.l.root"

@@ -68,7 +68,7 @@ exported_pycares_symbols_map = {
 
     # Query classes
     "QUERY_CLASS_IN": "C_IN",
-    "QUERY_CLASS_CH": "C_CHAOS",
+    "QUERY_CLASS_CHAOS": "C_CHAOS",
     "QUERY_CLASS_HS": "C_HS",
     "QUERY_CLASS_NONE":"C_NONE",
     "QUERY_CLASS_ANY": "C_ANY",
