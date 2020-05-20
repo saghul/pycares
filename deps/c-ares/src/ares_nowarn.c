@@ -40,13 +40,23 @@
 
 #include "ares_nowarn.h"
 
-#define CARES_MASK_USHORT (~(unsigned short) 0)
-#define CARES_MASK_UINT   (~(unsigned int) 0)
-#define CARES_MASK_ULONG  (~(unsigned long) 0)
-
-#define CARES_MASK_SSHORT (CARES_MASK_USHORT >> 1)
-#define CARES_MASK_SINT   (CARES_MASK_UINT >> 1)
-#define CARES_MASK_SLONG  (CARES_MASK_ULONG >> 1)
+#ifndef HAVE_LIMITS_H
+/* systems without <limits.h> we guess have 16 bit shorts, 32bit ints and
+   32bit longs */
+#  define CARES_MASK_SSHORT  0x7FFF
+#  define CARES_MASK_USHORT  0xFFFF
+#  define CARES_MASK_SINT    0x7FFFFFFF
+#  define CARES_MASK_UINT    0xFFFFFFFF
+#  define CARES_MASK_SLONG   0x7FFFFFFFL
+#  define CARES_MASK_ULONG   0xFFFFFFFFUL
+#else
+#  define CARES_MASK_SSHORT  SHRT_MAX
+#  define CARES_MASK_USHORT  USHRT_MAX
+#  define CARES_MASK_SINT    INT_MAX
+#  define CARES_MASK_UINT    UINT_MAX
+#  define CARES_MASK_SLONG   LONG_MAX
+#  define CARES_MASK_ULONG   ULONG_MAX
+#endif
 
 /*
 ** unsigned size_t to signed long

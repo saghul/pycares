@@ -136,7 +136,7 @@ ares_parse_mx_reply (const unsigned char *abuf, int alen,
 
           vptr = aptr;
           mx_curr->priority = DNS__16BIT(vptr);
-	  mx_curr->ttl = rr_ttl;
+          mx_curr->ttl = rr_ttl;
           vptr += sizeof(unsigned short);
 
           status = ares_expand_name (vptr, abuf, alen, &mx_curr->host, &len);
