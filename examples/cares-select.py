@@ -28,6 +28,8 @@ if __name__ == '__main__':
     channel.gethostbyname('google.com', socket.AF_INET, cb)
     channel.query('google.com', pycares.QUERY_TYPE_A, cb)
     channel.query('sip2sip.info', pycares.QUERY_TYPE_SOA, cb)
+    channel.getaddrinfo('youku.com', 80, cb)
+    channel.getaddrinfo('youku.com', 80, cb, family=socket.AF_INET)
     wait_channel(channel)
     print('Done!')
 

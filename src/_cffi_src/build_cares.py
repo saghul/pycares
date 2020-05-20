@@ -203,6 +203,11 @@ typedef int  (*ares_sock_create_callback)(ares_socket_t socket_fd,
                                           int type,
                                           void *data);
 
+typedef void (*ares_addrinfo_callback)(void *arg,
+                                   int status,
+                                   int timeouts,
+                                   struct ares_addrinfo *res);
+
 struct ares_channeldata;
 typedef struct ares_channeldata *ares_channel;
 
@@ -294,6 +299,44 @@ struct ares_soa_reply {
   unsigned int minttl;
   int          ttl;
 };
+/*
+ * Similar to addrinfo, but with extra ttl and missing canonname.
+ */
+struct ares_addrinfo_node {
+  int                        ai_ttl;
+  int                        ai_flags;
+  int                        ai_family;
+  int                        ai_socktype;
+  int                        ai_protocol;
+  ares_socklen_t             ai_addrlen;
+  struct sockaddr           *ai_addr;
+  struct ares_addrinfo_node *ai_next;
+};
+
+/*
+ * alias - label of the resource record.
+ * name - value (canonical name) of the resource record.
+ * See RFC2181 10.1.1. CNAME terminology.
+ */
+struct ares_addrinfo_cname {
+  int                         ttl;
+  char                       *alias;
+  char                       *name;
+  struct ares_addrinfo_cname *next;
+};
+
+struct ares_addrinfo {
+  struct ares_addrinfo_cname *cnames;
+  struct ares_addrinfo_node  *nodes;
+};
+
+struct ares_addrinfo_hints {
+  int ai_flags;
+  int ai_family;
+  int ai_socktype;
+  int ai_protocol;
+};
+
 
 struct ares_addr_node {
   struct ares_addr_node *next;
@@ -342,6 +385,15 @@ void ares_set_local_dev(ares_channel channel,
 void ares_set_socket_callback(ares_channel channel,
                                            ares_sock_create_callback callback,
                                            void *user_data);
+
+void ares_getaddrinfo(ares_channel channel,
+                                   const char* node,
+                                   const char* service,
+                                   const struct ares_addrinfo_hints* hints,
+                                   ares_addrinfo_callback callback,
+                                   void* arg);
+
+void ares_freeaddrinfo(struct ares_addrinfo* ai);
 
 void ares_send(ares_channel channel,
                             const unsigned char *qbuf,
@@ -515,6 +567,10 @@ extern "Python" void _query_cb(void *arg,
                                int timeouts,
                                unsigned char *abuf,
                                int alen);
+extern "Python" void _addrinfo_cb(void *arg,
+                                  int status,
+                                  int timeouts,
+                                  struct ares_addrinfo *res);
 """
 
 INCLUDES = """

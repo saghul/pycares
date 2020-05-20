@@ -143,6 +143,19 @@ def _query_cb(arg, status, timeouts, abuf, alen):
 
     callback(result, status)
 
+@_ffi.def_extern()
+def _addrinfo_cb(arg, status, timeouts, res):
+    callback = _ffi.from_handle(arg)
+    _global_set.discard(arg)
+
+    if status != _lib.ARES_SUCCESS:
+        result = None
+    else:
+        result = ares_addrinfo_result(res)
+        status = None
+
+    callback(result, status)
+
 def parse_result(query_type, abuf, alen):
     if query_type == _lib.T_A:
         addrttls = _ffi.new("struct ares_addrttl[]", PYCARES_ADDRTTL_SIZE)
@@ -501,6 +514,20 @@ class Channel:
         _global_set.add(userdata)
         _lib.ares_gethostbyname(self._channel[0], parse_name(name), family, _lib._host_cb, userdata)
 
+    def getaddrinfo(self, host, port, callback, family=0, type=0, proto=0, flags=0):
+        if not callable(callback):
+            raise TypeError("a callable is required")
+
+        userdata = _ffi.new_handle(callback)
+        _global_set.add(userdata)
+
+        hints = _ffi.new('struct ares_addrinfo_hints*')
+        hints.ai_flags = flags
+        hints.ai_family = family
+        hints.ai_socktype = type
+        hints.ai_protocol = proto
+        _lib.ares_getaddrinfo(self._channel[0], host.encode('utf-8'), str(port).encode('utf-8'), hints, _lib._addrinfo_cb, userdata)
+
     def query(self, name, query_type, callback):
         self._do_query(_lib.ares_query, name, query_type, callback)
 
@@ -720,6 +747,61 @@ class ares_nameinfo_result(AresResult):
     def __init__(self, node, service):
         self.node = maybe_str(_ffi.string(node))
         self.service = maybe_str(_ffi.string(service)) if service != _ffi.NULL else None
+
+
+class ares_addrinfo_node_result(AresResult):
+    __slots__ = ('ttl', 'flags', 'family', 'socktype', 'protocol', 'addr')
+
+    def __init__(self, ares_node):
+        self.ttl = ares_node.ai_ttl
+        self.flags = ares_node.ai_flags
+        self.socktype = ares_node.ai_socktype
+        self.protocol = ares_node.ai_protocol
+
+        addr = ares_node.ai_addr
+        assert addr.sa_family == ares_node.ai_family
+        ip = _ffi.new("char []", _lib.INET6_ADDRSTRLEN)
+        if addr.sa_family == socket.AF_INET:
+            self.family = socket.AF_INET
+            s = _ffi.cast("struct sockaddr_in*", addr)
+            if _ffi.NULL != _lib.ares_inet_ntop(s.sin_family, _ffi.addressof(s.sin_addr), ip, _lib.INET6_ADDRSTRLEN):
+                # (address, port) 2-tuple for AF_INET
+                self.addr = (_ffi.string(ip, _lib.INET6_ADDRSTRLEN), s.sin_port)
+        elif addr.sa_family == socket.AF_INET6:
+            self.family = socket.AF_INET6
+            s = _ffi.cast("struct sockaddr_in6*", addr)
+            if _ffi.NULL != _lib.ares_inet_ntop(s.sin6_family, _ffi.addressof(s.sin6_addr), ip, _lib.INET6_ADDRSTRLEN):
+                # (address, port, flow info, scope id) 4-tuple for AF_INET6
+                self.addr = (_ffi.string(ip, _lib.INET6_ADDRSTRLEN), s.sin6_port, s.sin6_flowinfo, s.sin6_scope_id)
+        else:
+            raise ValueError("invalid sockaddr family")
+
+
+class ares_addrinfo_cname_result(AresResult):
+    __slots__ = ('ttl', 'alias', 'name')
+
+    def __init__(self, ares_cname):
+        self.ttl = ares_cname.ttl
+        self.alias = maybe_str(_ffi.string(ares_cname.alias))
+        self.name = maybe_str(_ffi.string(ares_cname.name))
+
+
+class ares_addrinfo_result(AresResult):
+    __slots__ = ('cnames', 'nodes')
+
+    def __init__(self, ares_addrinfo):
+        self.cnames = []
+        self.nodes = []
+        cname_ptr = ares_addrinfo.cnames
+        while cname_ptr != _ffi.NULL:
+            self.cnames.append(ares_addrinfo_cname_result(cname_ptr))
+            cname_ptr = cname_ptr.next
+        node_ptr = ares_addrinfo.nodes
+        while node_ptr != _ffi.NULL:
+            self.nodes.append(ares_addrinfo_node_result(node_ptr))
+            node_ptr = node_ptr.ai_next
+        _lib.ares_freeaddrinfo(ares_addrinfo)
+
 
 
 __all__ = exported_pycares_symbols + list(exported_pycares_symbols_map.keys()) + ['AresError', 'Channel', 'errno', '__version__']
