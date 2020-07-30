@@ -16,6 +16,10 @@ class DNSResolver(object):
         self.loop = loop or asyncio.get_event_loop()
 
     def _sock_state_cb(self, fd, readable, writable):
+        if fd in self._fds:
+            # clear old events
+            self.loop.remove_reader(fd)
+            self.loop.remove_writer(fd)
         if readable or writable:
             if readable:
                 self.loop.add_reader(fd, self._process_events, fd, self.EVENT_READ)
