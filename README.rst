@@ -1,3 +1,8 @@
+Looking for new maintainers
+===========================
+
+https://github.com/saghul/pycares/issues/139
+
 pycares: Python interface for c-ares
 ====================================
 
