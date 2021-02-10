@@ -65,6 +65,13 @@ exported_pycares_symbols_map = {
     "QUERY_TYPE_SOA" : "T_SOA",
     "QUERY_TYPE_SRV" : "T_SRV",
     "QUERY_TYPE_TXT" : "T_TXT",
+
+    # Query classes
+    "QUERY_CLASS_IN": "C_IN",
+    "QUERY_CLASS_CHAOS": "C_CHAOS",
+    "QUERY_CLASS_HS": "C_HS",
+    "QUERY_CLASS_NONE":"C_NONE",
+    "QUERY_CLASS_ANY": "C_ANY",
 }
 
 for k, v in exported_pycares_symbols_map.items():
@@ -291,6 +298,7 @@ def parse_result(query_type, abuf, alen):
 
 class Channel:
     __qtypes__ = (_lib.T_A, _lib.T_AAAA, _lib.T_ANY, _lib.T_CNAME, _lib.T_MX, _lib.T_NAPTR, _lib.T_NS, _lib.T_PTR, _lib.T_SOA, _lib.T_SRV, _lib.T_TXT)
+    __qclasses__ = (_lib.C_IN, _lib.C_CHAOS, _lib.C_HS, _lib.C_NONE, _lib.C_ANY)
 
     def __init__(self,
                  flags = None,
@@ -501,22 +509,28 @@ class Channel:
         _global_set.add(userdata)
         _lib.ares_gethostbyname(self._channel[0], parse_name(name), family, _lib._host_cb, userdata)
 
-    def query(self, name, query_type, callback):
-        self._do_query(_lib.ares_query, name, query_type, callback)
+    def query(self, name, query_type, callback, query_class=None):
+        self._do_query(_lib.ares_query, name, query_type, callback, query_class=query_class)
 
-    def search(self, name, query_type, callback):
-        self._do_query(_lib.ares_search, name, query_type, callback)
+    def search(self, name, query_type, callback, query_class=None):
+        self._do_query(_lib.ares_search, name, query_type, callback, query_class=query_class)
 
-    def _do_query(self, func, name, query_type, callback):
+    def _do_query(self, func, name, query_type, callback, query_class=None):
         if not callable(callback):
             raise TypeError('a callable is required')
 
         if query_type not in self.__qtypes__:
             raise ValueError('invalid query type specified')
 
+        if query_class is None:
+            query_class = _lib.C_IN
+
+        if query_class not in self.__qclasses__:
+            raise ValueError('invalid query class specified')
+
         userdata = _ffi.new_handle((callback, query_type))
         _global_set.add(userdata)
-        func(self._channel[0], parse_name(name), _lib.C_IN, query_type, _lib._query_cb, userdata)
+        func(self._channel[0], parse_name(name), query_class, query_type, _lib._query_cb, userdata)
 
     def set_local_ip(self, ip):
         addr4 = _ffi.new("struct in_addr*")
