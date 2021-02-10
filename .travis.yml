@@ -1,12 +1,5 @@
 language: python
 
-before_install:
-  - |
-    if [[ "$TRAVIS_OS_NAME" = windows ]]; then
-        choco install python --version 3.8.0
-        export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
-    fi
-
 install:
   - env | grep '^TRAVIS'
   - python -V
@@ -30,17 +23,17 @@ stages:
 
 jobs:
   include:
-    - name: "CPython 3.5"
-      python: 3.5
-    - name: "CPython 3.5 (+ IDNA)"
-      python: 3.5
-      env: TEST_IDNA=true
     - name: "CPython 3.6"
       python: 3.6
+    - name: "CPython 3.6 (+ IDNA)"
+      python: 3.6
+      env: TEST_IDNA=true
     - name: "CPython 3.7"
       python: 3.7
     - name: "CPython 3.8"
       python: 3.8
+    - name: "CPython 3.9"
+      python: 3.9
     - name: "PyPy 3"
       python: pypy3
     # Deploy source distribution
@@ -53,7 +46,7 @@ jobs:
     - stage: deploy
       name: Build and deploy Linux wheels
       services: docker
-      install: python -m pip install twine cibuildwheel==1.1.0
+      install: python -m pip install twine cibuildwheel==1.9.0
       script: python -m cibuildwheel --output-dir wheelhouse
       after_success: python -m twine upload --skip-existing wheelhouse/*.whl
     # Deploy on mac
@@ -61,7 +54,7 @@ jobs:
       name: Build and deploy macOS wheels
       os: osx
       language: shell
-      install: python -m pip install twine cibuildwheel==1.1.0
+      install: python -m pip install twine cibuildwheel==1.9.0
       script: python -m cibuildwheel --output-dir wheelhouse
       after_success: python -m twine upload --skip-existing wheelhouse/*.whl
     # Deploy on windows
@@ -69,12 +62,12 @@ jobs:
       name: Build and deploy Windows wheels
       os: windows
       language: shell
-      install: python -m pip install twine cibuildwheel==1.1.0
+      install: python -m pip install twine cibuildwheel==1.9.0
       script: python -m cibuildwheel --output-dir wheelhouse
       after_success: python -m twine upload --skip-existing wheelhouse/*.whl
 
 env:
   global:
-    - CIBW_SKIP=cp27-*
+    - CIBW_BUILD="cp36-* cp37-* cp38-* cp39-*"
     - TWINE_USERNAME=saghul
       # Note: TWINE_PASSWORD is set in Travis settings
