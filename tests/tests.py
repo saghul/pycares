@@ -258,6 +258,7 @@ class DNSTest(unittest.TestCase):
             self.assertIsInstance(r.text, bytes)
             self.assertTrue(r.ttl >= 0)
 
+    @unittest.skip('No longer working domain name')
     def test_query_txt_multiple_chunked_with_non_ascii_content(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
