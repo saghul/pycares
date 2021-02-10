@@ -70,7 +70,7 @@ You can force this at installation time as follows:
 Running the test suite
 ----------------------
 
-There are several ways of running the test ruite:
+There are several ways of running the test suite:
 
 - Run the test with the current Python interpreter:
 
