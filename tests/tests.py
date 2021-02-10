@@ -359,7 +359,7 @@ class DNSTest(unittest.TestCase):
         self.result, self.errorno = None, None
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
-        self.channel.query('google.com', pycares.QUERY_TYPE_ANY, cb)
+        self.channel.query('github.com', pycares.QUERY_TYPE_ANY, cb)
         self.wait()
         self.assertNoError(self.errorno)
         self.assertTrue(len(self.result) > 1)
