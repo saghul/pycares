@@ -362,7 +362,7 @@ class DNSTest(unittest.TestCase):
         self.channel.query('github.com', pycares.QUERY_TYPE_ANY, cb)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertTrue(len(self.result) > 1)
+        self.assertTrue(len(self.result) >= 1)
 
     def test_query_cancelled(self):
         self.result, self.errorno = None, None
