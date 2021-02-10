@@ -459,6 +459,7 @@ class DNSTest(unittest.TestCase):
         from pycares.errno import ARES_SUCCESS
         self.assertTrue(True)
 
+    @unittest.skip('I no longer know of a domain with non-ASCII in the hostmaster')
     def test_result_not_ascii(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
