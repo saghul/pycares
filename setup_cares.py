@@ -64,8 +64,13 @@ if sys.platform == 'win32':
 class cares_build_ext(build_ext):
     cares_dir = os.path.join('deps', 'c-ares')
 
+    def add_include_dir(self, dir):
+        dirs = self.compiler.include_dirs
+        dirs.insert(0, dir)
+        self.compiler.set_include_dirs(dirs)
+
     def build_extensions(self):
-        self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src'))
+        self.add_include_dir(os.path.join(self.cares_dir, 'src'))
         if sys.platform != 'win32':
             self.compiler.define_macro('HAVE_CONFIG_H', 1)
             self.compiler.define_macro('_LARGEFILE_SOURCE', 1)
@@ -73,30 +78,30 @@ class cares_build_ext(build_ext):
         if sys.platform.startswith('linux'):
             # Check if it's actually Android
             if os.environ.get('ANDROID_ROOT') and os.environ.get('ANDROID_DATA'):
-                self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_android'))
+                self.add_include_dir(os.path.join(self.cares_dir, 'src/config_android'))
             else:
-                self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_linux'))
+                self.add_include_dir(os.path.join(self.cares_dir, 'src/config_linux'))
             self.compiler.add_library('dl')
             self.compiler.add_library('rt')
         elif sys.platform == 'darwin':
-            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_darwin'))
+            self.add_include_dir(os.path.join(self.cares_dir, 'src/config_darwin'))
             self.compiler.define_macro('_DARWIN_USE_64_BIT_INODE', 1)
         elif sys.platform.startswith('freebsd'):
-            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_freebsd'))
+            self.add_include_dir(os.path.join(self.cares_dir, 'src/config_freebsd'))
             self.compiler.add_library('kvm')
         elif sys.platform.startswith('dragonfly'):
-            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_freebsd'))
+            self.add_include_dir(os.path.join(self.cares_dir, 'src/config_freebsd'))
         elif sys.platform.startswith('netbsd'):
-            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_netbsd'))
+            self.add_include_dir(os.path.join(self.cares_dir, 'src/config_netbsd'))
         elif sys.platform.startswith('openbsd'):
-            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_openbsd'))
+            self.add_include_dir(os.path.join(self.cares_dir, 'src/config_openbsd'))
         elif sys.platform.startswith('sunos'):
-            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_sunos'))
+            self.add_include_dir(os.path.join(self.cares_dir, 'src/config_sunos'))
             self.compiler.add_library('socket')
             self.compiler.add_library('nsl')
             self.compiler.add_library('kstat')
         elif sys.platform == 'cygwin':
-            self.compiler.add_include_dir(os.path.join(self.cares_dir, 'src/config_cygwin'))
+            self.add_include_dir(os.path.join(self.cares_dir, 'src/config_cygwin'))
         elif sys.platform == 'win32':
             if 'mingw' not in self.compiler.compiler_type:
                 self.extensions[0].extra_link_args = ['/NODEFAULTLIB:libcmt']
@@ -105,5 +110,6 @@ class cares_build_ext(build_ext):
             self.compiler.add_library('psapi')
             self.compiler.add_library('ws2_32')
             self.compiler.define_macro('CARES_PULL_WS2TCPIP_H', 1)
+
         self.extensions[0].sources += cares_sources
         build_ext.build_extensions(self)
