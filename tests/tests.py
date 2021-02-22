@@ -467,7 +467,7 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.ares_query_soa_result)
-        self.assertIsInstance(self.result.hostmaster, bytes)  # it's not ASCII
+        self.assertEqual(self.result.hostmaster, '')  # it's not ASCII
         self.assertTrue(self.result.ttl >= 0)
 
     def test_idna_encoding(self):
@@ -589,4 +589,3 @@ class DNSTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
-
