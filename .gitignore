@@ -20,5 +20,6 @@ __pycache__/
 .tox/
 docs/_build/
 .venv/
-wheelhouse/
+venv/
 
+wheelhouse/

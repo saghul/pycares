@@ -540,4 +540,3 @@ INCLUDES = """
 ffi = cffi.FFI()
 ffi.cdef(PLATFORM_TYPES + TYPES + FUNCTIONS + CALLBACKS)
 ffi.set_source('_cares', INCLUDES)
-
