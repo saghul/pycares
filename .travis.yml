@@ -41,19 +41,69 @@ jobs:
       python: 3.7
     - name: "CPython 3.8"
       python: 3.8
+    - name: "CPython 3.9"
+      python: 3.9
     - name: "PyPy 3"
       python: pypy3
+    - name: "CPython 3.6"
+      python: 3.6
+      os: linux
+      arch: arm64-graviton2
+      dist: focal
+      virt: vm
+      group: edge
+    - name: "CPython 3.6 (+ IDNA)"
+      python: 3.6
+      os: linux
+      arch: arm64-graviton2
+      dist: focal
+      virt: vm
+      group: edge
+      env: TEST_IDNA=true
+    - name: "CPython 3.7"
+      python: 3.7
+      os: linux
+      arch: arm64-graviton2
+      dist: focal
+      virt: vm
+      group: edge
+    - name: "CPython 3.8"
+      python: 3.8
+      os: linux
+      arch: arm64-graviton2
+      dist: focal
+      virt: vm
+      group: edge
+    - name: "CPython 3.9"
+      python: 3.9
+      os: linux
+      arch: arm64-graviton2
+      dist: focal
+      virt: vm
+      group: edge
     # Deploy source distribution
     - stage: deploy
       name: Deploy source distribution
       install: python -m pip install twine
       script: python setup.py sdist --formats=gztar
       after_success: python -m twine upload --skip-existing dist/*.tar.gz
+    # Deploy on linux, aarch64
+    - stage: deploy
+      name: Build and deploy Linux aarch64 wheels
+      os: linux
+      arch: arm64-graviton2
+      dist: focal
+      virt: vm
+      group: edge
+      services: docker
+      install: python -m pip install twine cibuildwheel~=1.8.0
+      script: python -m cibuildwheel --output-dir wheelhouse
+      after_success: python -m twine upload --skip-existing wheelhouse/*.whl
     # Deploy on linux
     - stage: deploy
       name: Build and deploy Linux wheels
       services: docker
-      install: python -m pip install twine cibuildwheel==1.1.0
+      install: python -m pip install twine cibuildwheel~=1.8.0
       script: python -m cibuildwheel --output-dir wheelhouse
       after_success: python -m twine upload --skip-existing wheelhouse/*.whl
     # Deploy on mac
