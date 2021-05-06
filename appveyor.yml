@@ -46,7 +46,12 @@ install:
   - ps: "ls \"C:/\""
 
   - ECHO "Installed SDKs:"
-  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
+  - ps: "ls \"C:/Program Files (x86)/Microsoft SDKs/Windows\""
+
+  # Copy VS RC linker to fix missing linker issue
+  # https://stackoverflow.com/a/44563421
+  - ps: $src = @("C:\Program Files (x86)\Windows Kits\8.1\bin\x86\rc.exe", "C:\Program Files (x86)\Windows Kits\8.1\bin\x86\rcdll.dll")
+  - ps: Copy-Item -Path $src -Destination "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin"
 
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
