@@ -459,6 +459,8 @@ class DNSTest(unittest.TestCase):
         from pycares.errno import ARES_SUCCESS
         self.assertTrue(True)
 
+    # FIXME
+    @unittest.skip("The site used for this test no longer returns a non-ascii SOA.")
     def test_result_not_ascii(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
