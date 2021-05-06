@@ -32,7 +32,7 @@
 @ECHO OFF
 
 SET COMMAND_TO_RUN=%*
-SET WIN_SDK_ROOT=C:\Program Files\Microsoft SDKs\Windows
+SET WIN_SDK_ROOT=C:\Program Files (x86)\Microsoft SDKs\Windows
 SET WIN_WDK=c:\Program Files (x86)\Windows Kits\10\Include\wdf
 
 :: Extract the major and minor versions, and allow for the minor version to be
