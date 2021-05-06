@@ -30,11 +30,6 @@ stages:
 
 jobs:
   include:
-    - name: "CPython 3.5"
-      python: 3.5
-    - name: "CPython 3.5 (+ IDNA)"
-      python: 3.5
-      env: TEST_IDNA=true
     - name: "CPython 3.6"
       python: 3.6
     - name: "CPython 3.7"
