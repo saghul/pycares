@@ -40,12 +40,12 @@ function Download ($filename, $url) {
 }
 
 
-function DownloadPython ($python_version, $platform_suffix) {
+function DownloadPython ($python_version) {
     $version_obj = [version]$python_version
     if ($version_obj -lt [version]'3.3.0' -and $version_obj.Build -eq 0) {
         $python_version = "$($version_obj.Major).$($version_obj.Minor)"
     }
-    $filename = "python-" + $python_version + $platform_suffix + ".msi"
+    $filename = "python-" + $python_version + $platform_suffix + ".exe"
     $url = $BASE_URL + $python_version + "/" + $filename
     $filepath = Download $filename $url
     return $filepath
@@ -61,19 +61,15 @@ function InstallPython ($python_version, $architecture, $python_home) {
     if ($architecture -eq "32") {
         $platform_suffix = ""
     } else {
-        $platform_suffix = ".amd64"
+        $platform_suffix = "-amd64"
     }
-    $msipath = DownloadPython $python_version $platform_suffix
-    Write-Host "Installing" $msipath "to" $python_home
+
     $install_log = $python_home + ".log"
-    $install_args = "/qn /log $install_log /i $msipath TARGETDIR=$python_home"
-    $uninstall_args = "/qn /x $msipath"
-    RunCommand "msiexec.exe" $install_args
-    if (-not(Test-Path $python_home)) {
-        Write-Host "Python seems to be installed else-where, reinstalling."
-        RunCommand "msiexec.exe" $uninstall_args
-        RunCommand "msiexec.exe" $install_args
-    }
+    $exepath = DownloadPython $python_version
+    Write-Host "Installing" $exepath "to" $python_home
+
+    RunCommand $exepath "/quiet Include_tcltk=0 Include_test=0 TargetDir=$python_home"
+
     if (Test-Path $python_home) {
         Write-Host "Python $python_version ($architecture) installation complete"
     } else {
