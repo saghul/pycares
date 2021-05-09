@@ -1,3 +1,16 @@
+Version 3.2.0
+=============
+- misc: add Python 3.9 classifier
+- core: drop py3.5 from CI and documentation
+- ci: run tests in Python 3.9
+- ci: fix SDK path in appveyor
+- ci: fix VS linker in appveyor
+- ci: update python installer script in appveyor
+- misc: add compiled windows dll to gitignore
+- test: skip SOA non-ascii test due to changes in remote host
+- test: fix broken chunked TXT test due to changes in remote host
+- test: skip ANY test due to problems with mac
+
 Version 3.1.1
 =============
 - ffi: new style callbacks
