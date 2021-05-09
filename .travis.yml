@@ -75,6 +75,6 @@ jobs:
 
 env:
   global:
-    - CIBW_SKIP=cp27-*
+    - CIBW_BUILD="cp36-* cp37-* cp38-* cp39-*"
     - TWINE_USERNAME=saghul
       # Note: TWINE_PASSWORD is set in Travis settings
