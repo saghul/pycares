@@ -32,6 +32,9 @@ jobs:
   include:
     - name: "CPython 3.6"
       python: 3.6
+    - name: "CPython 3.6 (+ IDNA)"
+      python: 3.6
+      env: TEST_IDNA=true
     - name: "CPython 3.7"
       python: 3.7
     - name: "CPython 3.8"
