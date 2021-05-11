@@ -16,6 +16,7 @@ class DNSTest(unittest.TestCase):
 
     def setUp(self):
         self.channel = pycares.Channel(timeout=10.0, tries=1, servers=['8.8.8.8', '8.8.4.4'])
+        self.is_ci = os.environ.get('APPVEYOR') or os.environ.get('TRAVIS') or os.environ.get('GITHUB_ACTION')
 
     def tearDown(self):
         self.channel = None
@@ -36,7 +37,7 @@ class DNSTest(unittest.TestCase):
                 self.channel.process_fd(pycares.ARES_SOCKET_BAD, fd)
 
     def assertNoError(self, errorno):
-        if errorno == pycares.errno.ARES_ETIMEOUT and (os.environ.get('APPVEYOR') or os.environ.get('TRAVIS')):
+        if errorno == pycares.errno.ARES_ETIMEOUT and self.is_ci:
             raise unittest.SkipTest('timeout')
         self.assertEqual(errorno, None)
 
