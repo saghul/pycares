@@ -1,12 +1,5 @@
 language: python
 
-before_install:
-  - |
-    if [[ "$TRAVIS_OS_NAME" = windows ]]; then
-        choco install python --version 3.8.0
-        export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
-    fi
-
 install:
   - env | grep '^TRAVIS'
   - python -V
@@ -20,13 +13,6 @@ notifications:
   email:
     on_success: never
     on_failure: change
-
-stages:
-  - test
-  # Only execute deployment stage on master branch, tagged commits,
-  # and from your repository (e.g. not PRs). Replace with your repo name.
-  - name: deploy
-    if: tag IS present AND repo = saghul/pycares
 
 jobs:
   include:
@@ -43,38 +29,3 @@ jobs:
       python: 3.9
     - name: "PyPy 3"
       python: pypy3
-    # Deploy source distribution
-    - stage: deploy
-      name: Deploy source distribution
-      install: python -m pip install twine
-      script: python setup.py sdist --formats=gztar
-      after_success: python -m twine upload --skip-existing dist/*.tar.gz
-    # Deploy on linux
-    - stage: deploy
-      name: Build and deploy Linux wheels
-      services: docker
-      install: python -m pip install twine cibuildwheel==1.11.0
-      script: python -m cibuildwheel --output-dir wheelhouse
-      after_success: python -m twine upload --skip-existing wheelhouse/*.whl
-    # Deploy on mac
-    - stage: deploy
-      name: Build and deploy macOS wheels
-      os: osx
-      language: shell
-      install: python -m pip install twine cibuildwheel==1.11.0
-      script: python -m cibuildwheel --output-dir wheelhouse
-      after_success: python -m twine upload --skip-existing wheelhouse/*.whl
-    # Deploy on windows
-    - stage: deploy
-      name: Build and deploy Windows wheels
-      os: windows
-      language: shell
-      install: python -m pip install twine cibuildwheel==1.11.0
-      script: python -m cibuildwheel --output-dir wheelhouse
-      after_success: python -m twine upload --skip-existing wheelhouse/*.whl
-
-env:
-  global:
-    - CIBW_BUILD="cp36-* cp37-* cp38-* cp39-*"
-    - TWINE_USERNAME=saghul
-      # Note: TWINE_PASSWORD is set in Travis settings
