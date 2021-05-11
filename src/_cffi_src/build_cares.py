@@ -252,21 +252,18 @@ struct ares_srv_reply {
   unsigned short          priority;
   unsigned short          weight;
   unsigned short          port;
-  int                     ttl;
 };
 
 struct ares_mx_reply {
   struct ares_mx_reply   *next;
   char                   *host;
   unsigned short          priority;
-  int                     ttl;
 };
 
 struct ares_txt_reply {
   struct ares_txt_reply  *next;
   unsigned char          *txt;
   size_t                  length;
-  int                     ttl;
 };
 
 struct ares_txt_ext {
@@ -274,7 +271,6 @@ struct ares_txt_ext {
   unsigned char            *txt;
   size_t                   length;
   unsigned char            record_start;
-  int                      ttl;
 };
 
 struct ares_naptr_reply {
@@ -285,7 +281,6 @@ struct ares_naptr_reply {
   char                    *replacement;
   unsigned short           order;
   unsigned short           preference;
-  int                      ttl;
 };
 
 struct ares_soa_reply {
@@ -296,7 +291,6 @@ struct ares_soa_reply {
   unsigned int retry;
   unsigned int expire;
   unsigned int minttl;
-  int          ttl;
 };
 
 struct ares_addr_node {
@@ -450,8 +444,7 @@ int ares_parse_ptr_reply(const unsigned char *abuf,
                                       const void *addr,
                                       int addrlen,
                                       int family,
-                                      struct hostent **host,
-                                      int *hostttl);
+                                      struct hostent **host);
 
 int ares_parse_ns_reply(const unsigned char *abuf,
                                      int alen,
@@ -531,7 +524,7 @@ INCLUDES = """
 # include <netdb.h> /* struct hostent */
 # include <netinet/in.h> /* struct sockaddr_in/sockaddr_in6 */
 #endif
-#include <nameser.h>
+#include <ares_nameser.h>
 #define CARES_STATICLIB 1 /* static link it */
 #include <ares.h>
 """
