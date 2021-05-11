@@ -488,7 +488,7 @@ class DNSTest(unittest.TestCase):
         # try encoding it as utf-8
         self.channel.gethostbyname(host.encode(), socket.AF_INET, cb)
         self.wait()
-        self.assertEqual(self.errorno, pycares.errno.ARES_ENOTFOUND)
+        self.assertNotEqual(self.errorno, None)
         self.assertEqual(self.result, None)
         # use it as is (it's IDNA encoded internally)
         self.channel.gethostbyname(host, socket.AF_INET, cb)
