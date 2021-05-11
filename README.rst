@@ -7,10 +7,10 @@ pycares: Python interface for c-ares
 ====================================
 
 .. image:: https://badge.fury.io/py/pycares.png
-    :target: http://badge.fury.io/py/pycares
+    :target: https://pypi.org/project/pycares/
 
 .. image:: https://github.com/saghul/pycares/workflows/Test/badge.svg
-    :target: https://github.com/saghul/pycares/actions)
+    :target: https://github.com/saghul/pycares/actions
 
 pycares is a Python module which provides an interface to c-ares.
 `c-ares <http://c-ares.haxx.se>`_ is a C library that performs
