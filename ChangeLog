@@ -1,3 +1,29 @@
+Version 3.2.0
+=============
+- misc: add Python 3.9 classifier
+- core: drop py3.5 from CI and documentation
+- ci: run tests in Python 3.9
+- ci: fix SDK path in appveyor
+- ci: fix VS linker in appveyor
+- ci: update python installer script in appveyor
+- misc: add compiled windows dll to gitignore
+- test: skip SOA non-ascii test due to changes in remote host
+- test: fix broken chunked TXT test due to changes in remote host
+- test: skip ANY test due to problems with mac
+- ci: add action to release wheels to PyPi
+- ci: drop AppVeyor
+- ci: don't fail fast
+- ci: stop testing on Travis
+- test: add generic way to check for a CI
+- test: relax check
+- test: try to avoid spurious CI failures
+- ci: test all platforms on GH actions
+- ci: build wheels on GH Actions
+- build: fix build error on macOS
+- ci: explicitly set Python versions to build wheels for
+- ci: update cibuildwheel
+- ci: re-add IDNA test
+
 Version 3.1.1
 =============
 - ffi: new style callbacks

@@ -1,16 +1,15 @@
+Looking for new maintainers
+===========================
+
+https://github.com/saghul/pycares/issues/139
+
 pycares: Python interface for c-ares
 ====================================
 
 .. image:: https://badge.fury.io/py/pycares.png
     :target: http://badge.fury.io/py/pycares
 
-.. image:: https://secure.travis-ci.org/saghul/pycares.png?branch=master
-    :target: http://travis-ci.org/saghul/pycares
-
-.. image:: https://ci.appveyor.com/api/projects/status/vx1wbkfq3l7nm1m8?svg=true
-    :target: https://ci.appveyor.com/project/saghul/pycares
-
-.. image:: https://github.com/saghul/pycares/workflows/Test%20macOS/badge.svg
+.. image:: https://github.com/saghul/pycares/workflows/Test/badge.svg
     :target: https://github.com/saghul/pycares/actions)
 
 pycares is a Python module which provides an interface to c-ares.
@@ -65,7 +64,7 @@ You can force this at installation time as follows:
 Running the test suite
 ----------------------
 
-There are several ways of running the test ruite:
+There are several ways of running the test suite:
 
 - Run the test with the current Python interpreter:
 
@@ -73,8 +72,8 @@ There are several ways of running the test ruite:
 
 - Use Tox to run the test suite in several virtualenvs with several interpreters
 
-  From the toplevel directory, run: ``tox -e py35,py36,py37`` this will run the test suite
-  on Python 3.5, 3.6 and 3.7 (you'll need to have them installed beforehand)
+  From the toplevel directory, run: ``tox -e py36,py37,py38,py39`` this will run the test suite
+  on Python 3.6 through 3.9 (you'll need to have them installed beforehand)
 
 
 Using it from the cli, a la dig
@@ -118,7 +117,7 @@ Unless stated otherwise on-file pycares uses the MIT license, check LICENSE file
 Supported Python versions
 -------------------------
 
-Python >= 3.5 are supported. Both CPython and PyPy are supported.
+Python >= 3.6 are supported. Both CPython and PyPy are supported.
 
 
 Contributing
