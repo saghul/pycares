@@ -19,6 +19,9 @@ jobs:
         uses: joerick/cibuildwheel@v1.11.0
         env:
           CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
 
   build_sdist:
     name: Build source distribution
