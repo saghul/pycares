@@ -525,7 +525,6 @@ INCLUDES = """
 # include <netinet/in.h> /* struct sockaddr_in/sockaddr_in6 */
 #endif
 #include <ares_nameser.h>
-#define CARES_STATICLIB 1 /* static link it */
 #include <ares.h>
 """
 
