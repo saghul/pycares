@@ -130,7 +130,6 @@ class DNSTest(unittest.TestCase):
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_a_result)
             self.assertNotEqual(r.host, None)
-            self.assertTrue(r.ttl >= 0)
 
     def test_query_a_bad(self):
         self.result, self.errorno = None, None
@@ -167,7 +166,6 @@ class DNSTest(unittest.TestCase):
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_aaaa_result)
             self.assertNotEqual(r.host, None)
-            self.assertTrue(r.ttl >= 0)
 
     def test_query_cname(self):
         self.result, self.errorno = None, None
@@ -187,7 +185,6 @@ class DNSTest(unittest.TestCase):
         self.assertNoError(self.errorno)
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_mx_result)
-            self.assertTrue(r.ttl >= 0)
 
     def test_query_ns(self):
         self.result, self.errorno = None, None
@@ -208,7 +205,6 @@ class DNSTest(unittest.TestCase):
         self.assertNoError(self.errorno)
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_txt_result)
-            self.assertTrue(r.ttl >= 0)
 
     def test_query_txt_chunked(self):
         self.result, self.errorno = None, None
@@ -251,7 +247,6 @@ class DNSTest(unittest.TestCase):
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_txt_result)
             self.assertIsInstance(r.text, str)  # it's ASCII
-            self.assertTrue(r.ttl >= 0)
 
     def test_query_txt_bytes2(self):
         self.result, self.errorno = None, None
@@ -263,7 +258,6 @@ class DNSTest(unittest.TestCase):
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_txt_result)
             self.assertIsInstance(r.text, bytes)
-            self.assertTrue(r.ttl >= 0)
 
     def test_query_txt_multiple_chunked_with_non_ascii_content(self):
         self.result, self.errorno = None, None
@@ -278,7 +272,6 @@ class DNSTest(unittest.TestCase):
         r = self.result[0]
         self.assertEqual(type(r), pycares.ares_query_txt_result)
         self.assertIsInstance(r.text, bytes)
-        self.assertTrue(r.ttl >= 0)
 
     def test_query_class_chaos(self):
         self.result, self.errorno = None, None
@@ -295,7 +288,6 @@ class DNSTest(unittest.TestCase):
         r = self.result[0]
         self.assertEqual(type(r), pycares.ares_query_txt_result)
         self.assertIsInstance(r.text, str)
-        self.assertTrue(r.ttl >= 0)
 
     def test_query_class_invalid(self):
         self.assertRaises(ValueError, self.channel.query, 'google.com', pycares.QUERY_TYPE_A, lambda *x: None, "INVALIDTYPE")
@@ -309,7 +301,6 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.ares_query_soa_result)
-        self.assertTrue(self.result.ttl >= 0)
 
     def test_query_srv(self):
         self.result, self.errorno = None, None
@@ -320,7 +311,6 @@ class DNSTest(unittest.TestCase):
         self.assertNoError(self.errorno)
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_srv_result)
-            self.assertTrue(r.ttl >= 0)
 
     def test_query_naptr(self):
         self.result, self.errorno = None, None
@@ -331,7 +321,6 @@ class DNSTest(unittest.TestCase):
         self.assertNoError(self.errorno)
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_naptr_result)
-            self.assertTrue(r.ttl >= 0)
 
     def test_query_ptr(self):
         self.result, self.errorno = None, None
@@ -342,9 +331,6 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
-        self.assertIsInstance(self.result.ttl, int)
-        self.assertGreaterEqual(self.result.ttl, 0)
-        self.assertLessEqual(self.result.ttl, 2**31-1)
         self.assertEqual(type(self.result.aliases), list)
 
     def test_query_ptr_ipv6(self):
@@ -356,9 +342,6 @@ class DNSTest(unittest.TestCase):
         self.wait()
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.ares_query_ptr_result)
-        self.assertIsInstance(self.result.ttl, int)
-        self.assertGreaterEqual(self.result.ttl, 0)
-        self.assertLessEqual(self.result.ttl, 2**31-1)
         self.assertEqual(type(self.result.aliases), list)
 
     @unittest.skip("ANY type does not work on Mac.")
@@ -478,7 +461,6 @@ class DNSTest(unittest.TestCase):
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.ares_query_soa_result)
         self.assertIsInstance(self.result.hostmaster, bytes)  # it's not ASCII
-        self.assertTrue(self.result.ttl >= 0)
 
     def test_idna_encoding(self):
         host = 'españa.icom.museum'
@@ -590,7 +572,6 @@ class DNSTest(unittest.TestCase):
                 self.assertEqual(type(r), pycares.ares_query_a_result)
                 self.assertNotEqual(r.host, None)
                 self.assertTrue(r.type == 'A')
-                self.assertTrue(r.ttl >= 0)
 
     def test_strerror_str(self):
         for key in pycares.errno.errorcode:
