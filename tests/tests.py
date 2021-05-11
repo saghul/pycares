@@ -15,7 +15,7 @@ FIXTURES_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'fixtur
 class DNSTest(unittest.TestCase):
 
     def setUp(self):
-        self.channel = pycares.Channel(timeout=5.0, tries=1)
+        self.channel = pycares.Channel(timeout=10.0, tries=1, servers=['8.8.8.8', '8.8.4.4'])
 
     def tearDown(self):
         self.channel = None
