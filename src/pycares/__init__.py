@@ -183,7 +183,7 @@ def parse_result(query_type, abuf, alen):
             status = None
     elif query_type == _lib.T_MX:
         mx_reply = _ffi.new("struct ares_mx_reply **")
-        parse_status = _lib.ares_parse_mx_reply(abuf, alen, mx_reply);
+        parse_status = _lib.ares_parse_mx_reply(abuf, alen, mx_reply)
         if parse_status != _lib.ARES_SUCCESS:
             result = None
             status = parse_status
@@ -197,7 +197,7 @@ def parse_result(query_type, abuf, alen):
             status = None
     elif query_type == _lib.T_NAPTR:
         naptr_reply = _ffi.new("struct ares_naptr_reply **")
-        parse_status = _lib.ares_parse_naptr_reply(abuf, alen, naptr_reply);
+        parse_status = _lib.ares_parse_naptr_reply(abuf, alen, naptr_reply)
         if parse_status != _lib.ARES_SUCCESS:
             result = None
             status = parse_status
@@ -211,7 +211,7 @@ def parse_result(query_type, abuf, alen):
             status = None
     elif query_type == _lib.T_NS:
         hostent = _ffi.new("struct hostent **")
-        parse_status = _lib.ares_parse_ns_reply(abuf, alen, hostent);
+        parse_status = _lib.ares_parse_ns_reply(abuf, alen, hostent)
         if parse_status != _lib.ARES_SUCCESS:
             result = None
             status = parse_status
@@ -226,8 +226,7 @@ def parse_result(query_type, abuf, alen):
             status = None
     elif query_type == _lib.T_PTR:
         hostent = _ffi.new("struct hostent **")
-        hostttl = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
-        parse_status = _lib.ares_parse_ptr_reply(abuf, alen, _ffi.NULL, 0, socket.AF_UNSPEC, hostent, hostttl);
+        parse_status = _lib.ares_parse_ptr_reply(abuf, alen, _ffi.NULL, 0, socket.AF_UNSPEC, hostent)
         if parse_status != _lib.ARES_SUCCESS:
             result = None
             status = parse_status
@@ -238,12 +237,12 @@ def parse_result(query_type, abuf, alen):
             while host.h_aliases[i] != _ffi.NULL:
                 aliases.append(maybe_str(_ffi.string(host.h_aliases[i])))
                 i += 1
-            result = ares_query_ptr_result(host, hostttl[0], aliases)
+            result = ares_query_ptr_result(host, aliases)
             _lib.ares_free_hostent(host)
             status = None
     elif query_type == _lib.T_SOA:
         soa_reply = _ffi.new("struct ares_soa_reply **")
-        parse_status = _lib.ares_parse_soa_reply(abuf, alen, soa_reply);
+        parse_status = _lib.ares_parse_soa_reply(abuf, alen, soa_reply)
         if parse_status != _lib.ARES_SUCCESS:
             result = None
             status = parse_status
@@ -253,7 +252,7 @@ def parse_result(query_type, abuf, alen):
             status = None
     elif query_type == _lib.T_SRV:
         srv_reply = _ffi.new("struct ares_srv_reply **")
-        parse_status = _lib.ares_parse_srv_reply(abuf, alen, srv_reply);
+        parse_status = _lib.ares_parse_srv_reply(abuf, alen, srv_reply)
         if parse_status != _lib.ARES_SUCCESS:
             result = None
             status = parse_status
@@ -267,7 +266,7 @@ def parse_result(query_type, abuf, alen):
             status = None
     elif query_type == _lib.T_TXT:
         txt_reply = _ffi.new("struct ares_txt_ext **")
-        parse_status = _lib.ares_parse_txt_reply_ext(abuf, alen, txt_reply);
+        parse_status = _lib.ares_parse_txt_reply_ext(abuf, alen, txt_reply)
         if parse_status != _lib.ARES_SUCCESS:
             result = None
             status = parse_status
@@ -624,7 +623,7 @@ class ares_query_mx_result(AresResult):
     def __init__(self, mx):
         self.host = maybe_str(_ffi.string(mx.host))
         self.priority = mx.priority
-        self.ttl = mx.ttl
+        self.ttl = -1
 
 
 class ares_query_naptr_result(AresResult):
@@ -638,7 +637,7 @@ class ares_query_naptr_result(AresResult):
         self.service = maybe_str(_ffi.string(naptr.service))
         self.regex = maybe_str(_ffi.string(naptr.regexp))
         self.replacement = maybe_str(_ffi.string(naptr.replacement))
-        self.ttl = naptr.ttl
+        self.ttl = -1
 
 
 class ares_query_ns_result(AresResult):
@@ -654,10 +653,10 @@ class ares_query_ptr_result(AresResult):
     __slots__ = ('name', 'ttl', 'aliases')
     type = 'PTR'
 
-    def __init__(self, hostent, ttl, aliases):
+    def __init__(self, hostent, aliases):
         self.name = maybe_str(_ffi.string(hostent.h_name))
-        self.ttl = ttl
         self.aliases = aliases
+        self.ttl = -1
 
 
 class ares_query_soa_result(AresResult):
@@ -672,7 +671,7 @@ class ares_query_soa_result(AresResult):
         self.retry = soa.retry
         self.expires = soa.expire
         self.minttl = soa.minttl
-        self.ttl = soa.ttl
+        self.ttl = -1
 
 
 class  ares_query_srv_result(AresResult):
@@ -684,7 +683,7 @@ class  ares_query_srv_result(AresResult):
         self.port = srv.port
         self.priority = srv.priority
         self.weight = srv.weight
-        self.ttl = srv.ttl
+        self.ttl = -1
 
 
 class ares_query_txt_result(AresResult):
@@ -693,7 +692,7 @@ class ares_query_txt_result(AresResult):
 
     def __init__(self, txt_chunk):
         self.text = maybe_str(txt_chunk.text)
-        self.ttl = txt_chunk.ttl
+        self.ttl = -1
 
 
 class ares_query_txt_result_chunk(AresResult):
@@ -702,7 +701,7 @@ class ares_query_txt_result_chunk(AresResult):
 
     def __init__(self, txt):
         self.text = _ffi.string(txt.txt)
-        self.ttl = txt.ttl
+        self.ttl = -1
 
 
 # Other result types
