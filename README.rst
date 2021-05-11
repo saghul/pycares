@@ -26,10 +26,12 @@ http://readthedocs.org/docs/pycares/
 Bundled c-ares
 --------------
 
-pycares currently bundles c-ares and as of pycares 1.0.0 this is a strong requirement. Upstream
-c-ares is not willing to apply `a patch adding TTL support <http://c-ares.haxx.se/mail/c-ares-archive-2013-07/0005.shtml>`_.
-I did apply the patch to the bundled c-ares, but unfortunately it breaks the ABI, so attempting
-to use a system provided c-ares is not possible.
+pycares currently bundles c-ares as a submodule for ease of building. Using the system
+provided c-ares is possible if the ``PYCARES_USE_SYSTEM_LIB`` environment variable is
+set to ``1`` when building.
+
+NOTE: Versions prior to 4.0.0 used to embed a modified c-ares with extended TTL support.
+That is no longer the case and as a result only A and AAAA records will have TTL information.
 
 
 Installation
