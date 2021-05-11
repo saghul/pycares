@@ -4,6 +4,7 @@ import sys
 
 from distutils.command.build_ext import build_ext
 
+use_system_lib = bool(int(os.environ.get('PYCARES_USE_SYSTEM_LIB', 0)))
 
 cares_sources = [
     'deps/c-ares/src/lib/ares__close_sockets.c',
@@ -71,14 +72,16 @@ class cares_build_ext(build_ext):
     cares_dir = os.path.join('deps', 'c-ares')
     build_config_dir = os.path.join('deps', 'build-config')
 
-    def add_include_dir(self, dir):
+    def add_include_dir(self, dir, force=False):
+        if use_system_lib and not force:
+            return
         dirs = self.compiler.include_dirs
         dirs.insert(0, dir)
         self.compiler.set_include_dirs(dirs)
 
     def build_extensions(self):
         self.add_include_dir(os.path.join(self.cares_dir, 'include'))
-        self.add_include_dir(os.path.join(self.build_config_dir, 'include'))
+        self.add_include_dir(os.path.join(self.build_config_dir, 'include'), True)
         if sys.platform != 'win32':
             self.compiler.define_macro('HAVE_CONFIG_H', 1)
             self.compiler.define_macro('_LARGEFILE_SOURCE', 1)
@@ -119,5 +122,10 @@ class cares_build_ext(build_ext):
             self.compiler.add_library('ws2_32')
             self.compiler.define_macro('CARES_PULL_WS2TCPIP_H', 1)
 
-        self.extensions[0].sources += cares_sources
+        if use_system_lib:
+            self.compiler.add_library('cares')
+        else:
+            self.compiler.define_macro('CARES_STATICLIB', 1)
+            self.extensions[0].sources += cares_sources
+
         build_ext.build_extensions(self)
