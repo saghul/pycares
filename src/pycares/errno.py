@@ -30,6 +30,7 @@ exported_pycares_symbols = [
     'ARES_ELOADIPHLPAPI',
     'ARES_EADDRGETNETWORKPARAMS',
     'ARES_ECANCELLED',
+    'ARES_ESERVICE'
 ]
 
 errorcode = {}

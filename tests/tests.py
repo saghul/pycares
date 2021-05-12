@@ -42,6 +42,69 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(errorno, None)
 
     @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    def test_getaddrinfo(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.getaddrinfo('localhost', 80, cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
+        self.assertTrue(len(self.result.nodes) > 0)
+        for node in self.result.nodes:
+            self.assertEqual(node.addr[1], 80)
+
+    @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    def test_getaddrinfo2(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.getaddrinfo('localhost', 'http', cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
+        self.assertTrue(len(self.result.nodes) > 0)
+        for node in self.result.nodes:
+            self.assertEqual(node.addr[1], 80)
+
+    @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    def test_getaddrinfo3(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.getaddrinfo('localhost', None, cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
+        self.assertTrue(len(self.result.nodes) > 0)
+        for node in self.result.nodes:
+            self.assertEqual(node.addr[1], 0)
+
+    @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    def test_getaddrinfo4(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.getaddrinfo('localhost', 'http', cb, family=socket.AF_INET)
+        self.wait()
+        self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
+        self.assertEqual(len(self.result.nodes), 1)
+        node = self.result.nodes[0]
+        self.assertEqual(node.addr[0], b'127.0.0.1')
+        self.assertEqual(node.addr[1], 80)
+
+    def test_getaddrinfo5(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.getaddrinfo('google.com', 'http', cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
+        self.assertTrue(len(self.result.nodes) > 0)
+
+    @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
     def test_gethostbyaddr(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
