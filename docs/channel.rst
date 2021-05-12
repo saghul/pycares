@@ -55,6 +55,24 @@
 
     The c-ares ``Channel`` provides asynchronous DNS operations.
 
+    .. py:method:: getaddrinfo(host, port, callback, family=0, type=0, proto=0, flags=0)
+
+        :param string host: Hostname to resolve.
+
+        :param string port: Service to resolve. Can be a string, int or None.
+
+        :param callable callback: Callback to be called with the result of the query.
+
+        The ``family``, ``type`` and ``proto`` arguments can be optionally specified in order to narrow the list of
+        addresses returned. Passing zero as a value for each of these arguments selects the full range of results.
+        The ``flags`` argument can be one or several of the ``AI_*`` constants, and will influence how results are
+        computed and returned. For example, ``AI_NUMERICHOST`` will disable domain name resolution.
+
+        Translate the host/port argument into a sequence of 5-tuples that contain all the necessary arguments for
+        creating a socket connected to that service.
+
+        Callback signature: ``callback(result, errorno)``
+
 
     .. py:method:: gethostbyname(name, family, callback)
 
