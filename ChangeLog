@@ -1,3 +1,16 @@
+Version 4.0.0
+=============
+- doc: uppdate README
+- core: add support for CAA queries
+- core: add support for getaddrinfo()
+- doc: update README
+- core: add ability to use the system installed c-ares
+- misc: set version to 4.0.0
+- test: remove TTL tests
+- core: update c-ares and use a submodule
+- core: drop bundled c-ares version
+- misc: drop tasks.py
+
 Version 3.2.0
 =============
 - misc: add Python 3.9 classifier
