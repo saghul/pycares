@@ -77,6 +77,7 @@ struct sockaddr_in6 {
 #define T_A  ...
 #define T_AAAA  ...
 #define T_ANY  ...
+#define T_CAA ...
 #define T_CNAME ...
 #define T_MX  ...
 #define T_NAPTR ...
@@ -250,6 +251,15 @@ struct ares_addrttl {
 struct ares_addr6ttl {
   struct ares_in6_addr ip6addr;
   int             ttl;
+};
+
+struct ares_caa_reply {
+  struct ares_caa_reply  *next;
+  int                     critical;
+  unsigned char          *property;
+  size_t                  plength;
+  unsigned char          *value;
+  size_t                  length;
 };
 
 struct ares_srv_reply {
@@ -492,6 +502,10 @@ int ares_parse_aaaa_reply(const unsigned char *abuf,
                                        struct ares_addr6ttl *addrttls,
                                        int *naddrttls);
 
+int ares_parse_caa_reply(const unsigned char* abuf,
+                         int alen,
+                         struct ares_caa_reply** caa_out);
+
 int ares_parse_ptr_reply(const unsigned char *abuf,
                                       int alen,
                                       const void *addr,
@@ -589,4 +603,3 @@ INCLUDES = """
 ffi = cffi.FFI()
 ffi.cdef(PLATFORM_TYPES + TYPES + FUNCTIONS + CALLBACKS)
 ffi.set_source('_cares', INCLUDES)
-

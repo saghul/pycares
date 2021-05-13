@@ -40,6 +40,8 @@ def cb(result, error):
             txt = '%s\t\t%d\tIN\t%s' % (hostname, r.ttl, r.type)
             if r.type in ('A', 'AAAA'):
                 parts.append('%s\t%s' % (txt, r.host))
+            elif r.type == 'CAA':
+                parts.append('%s\t%d %s "%s"' % (txt, r.critical, r.property, r.value))
             elif r.type == 'CNAME':
                 parts.append('%s\t%s' % (txt, r.cname))
             elif r.type == 'MX':
