@@ -54,24 +54,25 @@ for symbol in exported_pycares_symbols:
 
 exported_pycares_symbols_map = {
     # Query types
-    "QUERY_TYPE_A" : "T_A",
-    "QUERY_TYPE_AAAA" : "T_AAAA",
-    "QUERY_TYPE_ANY" : "T_ANY",
+    "QUERY_TYPE_A"     : "T_A",
+    "QUERY_TYPE_AAAA"  : "T_AAAA",
+    "QUERY_TYPE_ANY"   : "T_ANY",
+    "QUERY_TYPE_CAA"   : "T_CAA",
     "QUERY_TYPE_CNAME" : "T_CNAME",
-    "QUERY_TYPE_MX" : "T_MX",
+    "QUERY_TYPE_MX"    : "T_MX",
     "QUERY_TYPE_NAPTR" : "T_NAPTR",
-    "QUERY_TYPE_NS" : "T_NS",
-    "QUERY_TYPE_PTR" : "T_PTR",
-    "QUERY_TYPE_SOA" : "T_SOA",
-    "QUERY_TYPE_SRV" : "T_SRV",
-    "QUERY_TYPE_TXT" : "T_TXT",
+    "QUERY_TYPE_NS"    : "T_NS",
+    "QUERY_TYPE_PTR"   : "T_PTR",
+    "QUERY_TYPE_SOA"   : "T_SOA",
+    "QUERY_TYPE_SRV"   : "T_SRV",
+    "QUERY_TYPE_TXT"   : "T_TXT",
 
     # Query classes
-    "QUERY_CLASS_IN": "C_IN",
+    "QUERY_CLASS_IN"   : "C_IN",
     "QUERY_CLASS_CHAOS": "C_CHAOS",
-    "QUERY_CLASS_HS": "C_HS",
-    "QUERY_CLASS_NONE":"C_NONE",
-    "QUERY_CLASS_ANY": "C_ANY",
+    "QUERY_CLASS_HS"   : "C_HS",
+    "QUERY_CLASS_NONE" :"C_NONE",
+    "QUERY_CLASS_ANY"  : "C_ANY",
 }
 
 for k, v in exported_pycares_symbols_map.items():
@@ -131,7 +132,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
     if status == _lib.ARES_SUCCESS:
         if query_type == _lib.T_ANY:
             result = []
-            for qtype in (_lib.T_A, _lib.T_AAAA, _lib.T_CNAME, _lib.T_MX, _lib.T_NAPTR, _lib.T_NS, _lib.T_PTR, _lib.T_SOA, _lib.T_SRV, _lib.T_TXT):
+            for qtype in (_lib.T_A, _lib.T_AAAA, _lib.T_CAA, _lib.T_CNAME, _lib.T_MX, _lib.T_NAPTR, _lib.T_NS, _lib.T_PTR, _lib.T_SOA, _lib.T_SRV, _lib.T_TXT):
                 r, status = parse_result(qtype, abuf, alen)
                 if status not in (None, _lib.ARES_ENODATA, _lib.ARES_EBADRESP):
                     result = None
@@ -183,6 +184,20 @@ def parse_result(query_type, abuf, alen):
             status = parse_status
         else:
             result = [ares_query_aaaa_result(addrttls[i]) for i in range(naddrttls[0])]
+            status = None
+    elif query_type == _lib.T_CAA:
+        caa_reply = _ffi.new("struct ares_caa_reply **")
+        parse_status = _lib.ares_parse_caa_reply(abuf, alen, caa_reply)
+        if parse_status != _lib.ARES_SUCCESS:
+            result = None
+            status = parse_status
+        else:
+            result = []
+            caa_reply_ptr = caa_reply[0]
+            while caa_reply_ptr != _ffi.NULL:
+                result.append(ares_query_caa_result(caa_reply_ptr))
+                caa_reply_ptr = caa_reply_ptr.next
+            _lib.ares_free_data(caa_reply[0])
             status = None
     elif query_type == _lib.T_CNAME:
         host = _ffi.new("struct hostent **")
@@ -309,7 +324,7 @@ def parse_result(query_type, abuf, alen):
 
 
 class Channel:
-    __qtypes__ = (_lib.T_A, _lib.T_AAAA, _lib.T_ANY, _lib.T_CNAME, _lib.T_MX, _lib.T_NAPTR, _lib.T_NS, _lib.T_PTR, _lib.T_SOA, _lib.T_SRV, _lib.T_TXT)
+    __qtypes__ = (_lib.T_A, _lib.T_AAAA, _lib.T_ANY, _lib.T_CAA, _lib.T_CNAME, _lib.T_MX, _lib.T_NAPTR, _lib.T_NS, _lib.T_PTR, _lib.T_SOA, _lib.T_SRV, _lib.T_TXT)
     __qclasses__ = (_lib.C_IN, _lib.C_CHAOS, _lib.C_HS, _lib.C_NONE, _lib.C_ANY)
 
     def __init__(self,
@@ -641,6 +656,17 @@ class ares_query_aaaa_result(AresResult):
         self.ttl = ares_addrttl.ttl
 
 
+class  ares_query_caa_result(AresResult):
+    __slots__ = ('critical', 'property', 'value', 'ttl')
+    type = 'CAA'
+
+    def __init__(self, caa):
+        self.critical = caa.critical
+        self.property = maybe_str(_ffi.string(caa.property, caa.plength))
+        self.value = maybe_str(_ffi.string(caa.value, caa.length))
+        self.ttl = -1
+
+
 class ares_query_cname_result(AresResult):
     __slots__ = ('cname', 'ttl')
     type = 'CNAME'
@@ -827,4 +853,3 @@ class ares_addrinfo_result(AresResult):
 __all__ = exported_pycares_symbols + list(exported_pycares_symbols_map.keys()) + ['AresError', 'Channel', 'errno', '__version__']
 
 del exported_pycares_symbols, exported_pycares_symbols_map
-

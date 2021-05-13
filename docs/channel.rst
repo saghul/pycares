@@ -127,6 +127,7 @@
             - ``QUERY_TYPE_A``
             - ``QUERY_TYPE_AAAA``
             - ``QUERY_TYPE_ANY``
+            - ``QUERY_TYPE_CAA``
             - ``QUERY_TYPE_CNAME``
             - ``QUERY_TYPE_MX``
             - ``QUERY_TYPE_NAPTR``
@@ -147,6 +148,13 @@
             - AAAA: (list of) ``ares_query_aaaa_result``, fields:
 
               - host
+              - ttl
+
+            - CAA: (list of) ``ares_query_caa_result``, fields:
+
+              - critical
+              - property
+              - value
               - ttl
 
             - CNAME: ``ares_query_cname_result``, fields:

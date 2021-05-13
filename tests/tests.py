@@ -230,6 +230,17 @@ class DNSTest(unittest.TestCase):
             self.assertEqual(type(r), pycares.ares_query_aaaa_result)
             self.assertNotEqual(r.host, None)
 
+    def test_query_caa(self):
+        self.result, self.errorno = None, None
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+        self.channel.query('wikipedia.org', pycares.QUERY_TYPE_CAA, cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        self.assertTrue(len(self.result) > 0)
+        for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_caa_result)
+
     def test_query_cname(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
