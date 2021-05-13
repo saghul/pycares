@@ -32,6 +32,7 @@ set to ``1`` when building.
 
 NOTE: Versions prior to 4.0.0 used to embed a modified c-ares with extended TTL support.
 That is no longer the case and as a result only A and AAAA records will have TTL information.
+Follow this PR in uppstream c-ares, looks like TTLs will be added: https://github.com/c-ares/c-ares/pull/393
 
 
 Installation
