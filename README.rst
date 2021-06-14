@@ -54,7 +54,7 @@ FreeBSD:
 IDNA 2008 support
 ^^^^^^^^^^^^^^^^^
 
-If the ``idna`` package is installed, pycares will support IDNA 2008 encodingm otherwise the builtin idna codec will be used,
+If the ``idna`` package is installed, pycares will support IDNA 2008 encoding otherwise the builtin idna codec will be used,
 which provides IDNA 2003 support.
 
 You can force this at installation time as follows:
