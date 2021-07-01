@@ -22,4 +22,4 @@ jobs:
     - name: Build package
       run: python setup.py install
     - name: Run tests
-      run: python tests/tests.py
+      run: python -munittest -v tests.tests
