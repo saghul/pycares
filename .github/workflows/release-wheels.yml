@@ -23,10 +23,14 @@ jobs:
         with:
           platforms: all
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.11.0
+        uses: pypa/cibuildwheel@v2.0.1
+        with:
+          output-dir: ./wheelhouse
         env:
-          CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"
+          CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-* cp310-*"
           CIBW_ARCHS_LINUX: auto aarch64
+          CIBW_PRERELEASE_PYTHONS: True
+          CIBW_BEFORE_ALL_LINUX: yum install -y libffi-devel
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
