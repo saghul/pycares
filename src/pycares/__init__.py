@@ -760,7 +760,7 @@ class ares_query_txt_result_chunk(AresResult):
     type = 'TXT'
 
     def __init__(self, txt):
-        self.text = _ffi.string(txt.txt)
+        self.text = bytes(_ffi.buffer(txt.txt, txt.length))
         self.ttl = -1
 
 
