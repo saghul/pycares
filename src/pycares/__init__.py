@@ -751,7 +751,7 @@ class ares_query_txt_result(AresResult):
     type = 'TXT'
 
     def __init__(self, txt_chunk):
-        self.text = maybe_str(txt_chunk.text)
+        self.text = txt_chunk.text
         self.ttl = -1
 
 
