@@ -176,10 +176,10 @@ def parse_result(query_type, abuf, alen):
         else:
             if host[0].h_aliases[0] != _ffi.NULL:
                 result = ares_query_cname_result(host[0])
-                _lib.ares_free_hostent(host[0])
             else:
                 result = [ares_query_a_result(addrttls[i]) for i in range(naddrttls[0])]
             status = None
+            _lib.ares_free_hostent(host[0])
     elif query_type == _lib.T_AAAA:
         addrttls = _ffi.new("struct ares_addr6ttl[]", PYCARES_ADDRTTL_SIZE)
         naddrttls = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
