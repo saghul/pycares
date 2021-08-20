@@ -166,14 +166,19 @@ def _addrinfo_cb(arg, status, timeouts, res):
 
 def parse_result(query_type, abuf, alen):
     if query_type == _lib.T_A:
+        host = _ffi.new("struct hostent **")
         addrttls = _ffi.new("struct ares_addrttl[]", PYCARES_ADDRTTL_SIZE)
         naddrttls = _ffi.new("int*", PYCARES_ADDRTTL_SIZE)
-        parse_status = _lib.ares_parse_a_reply(abuf, alen, _ffi.NULL, addrttls, naddrttls)
+        parse_status = _lib.ares_parse_a_reply(abuf, alen, host, addrttls, naddrttls)
         if parse_status != _lib.ARES_SUCCESS:
             result = None
             status = parse_status
         else:
-            result = [ares_query_a_result(addrttls[i]) for i in range(naddrttls[0])]
+            if host[0].h_aliases[0] != _ffi.NULL:
+                result = ares_query_cname_result(host[0])
+            else:
+                result = [ares_query_a_result(addrttls[i]) for i in range(naddrttls[0])]
+            _lib.ares_free_hostent(host[0])
             status = None
     elif query_type == _lib.T_AAAA:
         addrttls = _ffi.new("struct ares_addr6ttl[]", PYCARES_ADDRTTL_SIZE)
@@ -751,7 +756,7 @@ class ares_query_txt_result(AresResult):
     type = 'TXT'
 
     def __init__(self, txt_chunk):
-        self.text = maybe_str(txt_chunk.text)
+        self.text = txt_chunk.text
         self.ttl = -1
 
 
@@ -760,7 +765,7 @@ class ares_query_txt_result_chunk(AresResult):
     type = 'TXT'
 
     def __init__(self, txt):
-        self.text = _ffi.string(txt.txt)
+        self.text = bytes(_ffi.buffer(txt.txt, txt.length))
         self.ttl = -1
 
 
