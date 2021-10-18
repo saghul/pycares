@@ -13,7 +13,7 @@ pycares: Python interface for c-ares
     :target: https://github.com/saghul/pycares/actions
 
 pycares is a Python module which provides an interface to c-ares.
-`c-ares <http://c-ares.haxx.se>`_ is a C library that performs
+`c-ares <https://c-ares.org>`_ is a C library that performs
 DNS requests and name resolutions asynchronously.
 
 
