@@ -20,7 +20,7 @@ setup(name             = 'pycares',
       license          = 'MIT',
       url              = 'http://github.com/saghul/pycares',
       description      = 'Python interface for c-ares',
-      long_description = codecs.open('README.rst', encoding='utf-8').read(),
+      long_description = codecs.open('PYPIREADME.rst', encoding='utf-8').read(),
       long_description_content_type = 'text/x-rst',
       platforms        = ['POSIX', 'Microsoft Windows'],
       classifiers      = [
