@@ -324,6 +324,11 @@ class DNSTest(unittest.TestCase):
             self.assertEqual(type(r), pycares.ares_query_txt_result)
             self.assertIsInstance(r.text, str)  # it's ASCII
 
+    # The 2 tests below hit a dead end thus fail. Commenting for now as I couldn't find a live server
+    # that satisfies what the tests are looking for
+
+    # FIXME: wide.com.es is a dead end!
+    @unittest.expectedFailure
     def test_query_txt_bytes2(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
@@ -335,6 +340,8 @@ class DNSTest(unittest.TestCase):
             self.assertEqual(type(r), pycares.ares_query_txt_result)
             self.assertIsInstance(r.text, bytes)
 
+    # FIXME: "txt-non-ascii.dns-test.hmnid.ru" is a dead end!
+    @unittest.expectedFailure
     def test_query_txt_multiple_chunked_with_non_ascii_content(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
