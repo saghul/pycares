@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel", "cffi>=1.5.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
-build = "cp36-* cp37-* cp38-* cp39-* cp310-*"
+build = "cp36-* cp37-* cp38-* cp39-* cp310-* cp311-*"
 
 [tool.cibuildwheel.linux]
 archs = ["auto", "aarch64"]
