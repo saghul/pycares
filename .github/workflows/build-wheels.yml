@@ -28,4 +28,5 @@ jobs:
           CIBW_ARCHS_LINUX: auto aarch64
           CIBW_ARCHS_MACOS: x86_64 universal2
           CIBW_PRERELEASE_PYTHONS: True
-          CIBW_BEFORE_ALL_LINUX: yum install -y libffi-devel
+          CIBW_BEFORE_ALL_LINUX: |-
+            command -v yum && yum install -y libffi-devel || apk add libffi-dev
