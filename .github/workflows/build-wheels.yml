@@ -23,10 +23,3 @@ jobs:
         uses: pypa/cibuildwheel@v2.8.1
         with:
           output-dir: ./wheelhouse
-        env:
-          CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-* cp310-*"
-          CIBW_ARCHS_LINUX: auto aarch64
-          CIBW_ARCHS_MACOS: x86_64 universal2
-          CIBW_PRERELEASE_PYTHONS: True
-          CIBW_BEFORE_ALL_LINUX: |-
-            command -v yum && yum install -y libffi-devel || apk add libffi-dev
