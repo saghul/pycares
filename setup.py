@@ -2,7 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import codecs
+import os
 import re
+import sys
+
+# we have to import setup_cares.py which is in project's root folder
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 from setuptools import setup
 
@@ -40,7 +45,6 @@ setup(name             = 'pycares',
           'Programming Language :: Python :: Implementation :: PyPy',
       ],
       cmdclass         = {'build_ext': cares_build_ext},
-      setup_requires   = ['cffi>=1.5.0'],
       install_requires = ['cffi>=1.5.0'],
       extras_require   = {'idna': ['idna >= 2.1']},
       cffi_modules     = ['src/_cffi_src/build_cares.py:ffi'],
