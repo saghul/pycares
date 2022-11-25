@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools", "wheel", "cffi>=1.5.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.cibuildwheel]
+build = "cp3*"
+
+[tool.cibuildwheel.linux]
+archs = ["auto", "aarch64"]
+before-all = """
+set -eux
+# musllinux_*
+if command -v apk; then
+    apk add libffi-dev
+fi
+# manylinux_2_24
+if command -v apt; then
+    apt install libffi-dev
+fi
+# manylinux_*
+if command -v yum; then
+    yum install -y libffi-devel
+fi
+"""
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "universal2"]

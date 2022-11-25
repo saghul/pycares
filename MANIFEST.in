@@ -1,4 +1,4 @@
-include README.rst LICENSE ChangeLog
+include README.rst PYPIREADME.rst LICENSE ChangeLog
 include setup.py setup_cares.py tox.ini
 graft docs
 graft examples
@@ -10,4 +10,3 @@ recursive-exclude * *.py[co]
 recursive-exclude * *.[ao]
 recursive-exclude * *.so
 prune docs/_build
-

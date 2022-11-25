@@ -2,7 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import codecs
+import os
 import re
+import sys
+
+# we have to import setup_cares.py which is in project's root folder
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 from setuptools import setup
 
@@ -20,7 +25,7 @@ setup(name             = 'pycares',
       license          = 'MIT',
       url              = 'http://github.com/saghul/pycares',
       description      = 'Python interface for c-ares',
-      long_description = codecs.open('README.rst', encoding='utf-8').read(),
+      long_description = codecs.open('PYPIREADME.rst', encoding='utf-8').read(),
       long_description_content_type = 'text/x-rst',
       platforms        = ['POSIX', 'Microsoft Windows'],
       classifiers      = [
@@ -35,11 +40,11 @@ setup(name             = 'pycares',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: 3.9',
+          'Programming Language :: Python :: 3.10',
           'Programming Language :: Python :: Implementation :: CPython',
           'Programming Language :: Python :: Implementation :: PyPy',
       ],
       cmdclass         = {'build_ext': cares_build_ext},
-      setup_requires   = ['cffi>=1.5.0'],
       install_requires = ['cffi>=1.5.0'],
       extras_require   = {'idna': ['idna >= 2.1']},
       cffi_modules     = ['src/_cffi_src/build_cares.py:ffi'],

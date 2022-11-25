@@ -1,0 +1,65 @@
+on:
+  workflow_call:
+    inputs:
+      fail-fast:
+        description: Whether the wheel build should stop and fail as soon as any job fails.
+        required: false
+        default: false
+        type: boolean
+      prerelease-pythons:
+        description: Whether the wheels should be built for pre-release Pythons that are not ABI stable yet.
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build_wheels:
+    name: Build wheels for ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: ${{ inputs.fail-fast }}
+      matrix:
+        include:
+          - name: Windows AMD64 & x86
+            os: windows-2019
+          - name: macOS x86_64 & universal2
+            os: macos-11
+          - name: manylinux and musllinux x86_64 & i686
+            os: ubuntu-20.04
+            cibw_build: cp3*-{manylinux,musllinux}_*
+            cibw_archs: auto
+          - name: manylinux aarch64
+            os: ubuntu-20.04
+            cibw_build: cp3*-manylinux_*
+            cibw_archs: aarch64
+          - name: musllinux aarch64
+            os: ubuntu-20.04
+            cibw_build: cp3*-musllinux_*
+            cibw_archs: aarch64
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Set up QEMU
+        if: runner.os == 'Linux' && matrix.cibw_archs == 'aarch64'
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+      - name: Set CIBW_BUILD
+        if: ${{ matrix.cibw_build }}
+        run: echo "CIBW_BUILD=${{ matrix.cibw_build }}" >> $GITHUB_ENV
+        shell: bash
+      - name: Set CIBW_ARCHS
+        if: ${{ matrix.cibw_archs }}
+        run: echo "CIBW_ARCHS=${{ matrix.cibw_archs }}" >> $GITHUB_ENV
+        shell: bash
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.9.0
+        with:
+          output-dir: ./wheelhouse
+        env:
+          CIBW_PRERELEASE_PYTHONS: ${{ inputs.prerelease-pythons }}
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
