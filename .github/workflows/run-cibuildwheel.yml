@@ -38,12 +38,12 @@ jobs:
             cibw_archs: aarch64
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
       - name: Set up QEMU
         if: runner.os == 'Linux' && matrix.cibw_archs == 'aarch64'
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
         with:
           platforms: all
       - name: Set CIBW_BUILD
@@ -57,11 +57,11 @@ jobs:
       - name: Set CIBW_SKIP
         run: echo "CIBW_SKIP=cp36-*" >> $GITHUB_ENV
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.9.0
+        uses: pypa/cibuildwheel@v2.11.3
         with:
           output-dir: ./wheelhouse
         env:
           CIBW_PRERELEASE_PYTHONS: ${{ inputs.prerelease-pythons }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
