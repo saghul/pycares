@@ -24,4 +24,4 @@ jobs:
     - name: Build package
       run: python -m pip install .
     - name: Run tests
-      run: python tests/tests.py
+      run: python -m unittest -v
