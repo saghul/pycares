@@ -67,16 +67,11 @@ You can force this at installation time as follows:
 Running the test suite
 ----------------------
 
-There are several ways of running the test suite:
+From the top level directory, run: ``python tests/tests.py``
 
-- Run the test with the current Python interpreter:
-
-  From the top level directory, run: ``python tests/tests.py``
-
-- Use Tox to run the test suite in several virtualenvs with several interpreters
-
-  From the top level directory, run: ``tox -e py37,py38,py39`` this will run the test suite
-  on Python 3.7 through 3.9 (you'll need to have them installed beforehand)
+NOTE: Running the tests requires internet access and are somewhat environment sensitive because real DNS quesries
+are made, there is no mocking. If you observe a failure that the CI cannot reproduce, please try to setup an
+environment as close as the current CI.
 
 
 Using it from the cli, a la dig
