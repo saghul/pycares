@@ -71,12 +71,12 @@ There are several ways of running the test suite:
 
 - Run the test with the current Python interpreter:
 
-  From the toplevel directory, run: ``python tests/tests.py``
+  From the top level directory, run: ``python tests/tests.py``
 
 - Use Tox to run the test suite in several virtualenvs with several interpreters
 
-  From the toplevel directory, run: ``tox -e py36,py37,py38,py39`` this will run the test suite
-  on Python 3.6 through 3.9 (you'll need to have them installed beforehand)
+  From the top level directory, run: ``tox -e py37,py38,py39`` this will run the test suite
+  on Python 3.7 through 3.9 (you'll need to have them installed beforehand)
 
 
 Using it from the cli, a la dig
@@ -120,7 +120,7 @@ Unless stated otherwise on-file pycares uses the MIT license, check LICENSE file
 Supported Python versions
 -------------------------
 
-Python >= 3.6 are supported. Both CPython and PyPy are supported.
+Python >= 3.7 are supported. Both CPython and PyPy are supported.
 
 
 Contributing
