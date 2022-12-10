@@ -311,7 +311,7 @@ class DNSTest(unittest.TestCase):
         # google.com.		3270	IN	TXT	"v=spf1 include:_spf.google.com ~all"
         # google.com.		3270	IN	TXT	"globalsign-smime-dv=CDYX+XFHUw2wml6/Gb8+59BsH31KzUr6c1l2BPvqKX8="
         # google.com.		3270	IN	TXT	"docusign=1b0a6754-49b1-4db5-8540-d2c12664b289"
-        self.assertEqual(len(self.result), 11)
+        self.assertGreater(len(self.result), 10)
 
     def test_query_txt_bytes1(self):
         self.result, self.errorno = None, None
@@ -389,7 +389,7 @@ class DNSTest(unittest.TestCase):
         self.result, self.errorno = None, None
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
-        self.channel.query('_xmpp-server._tcp.google.com', pycares.QUERY_TYPE_SRV, cb)
+        self.channel.query('_xmpp-server._tcp.jabber.org', pycares.QUERY_TYPE_SRV, cb)
         self.wait()
         self.assertNoError(self.errorno)
         for r in self.result:
