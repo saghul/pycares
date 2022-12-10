@@ -7,6 +7,8 @@ from distutils.command.build_ext import build_ext
 use_system_lib = bool(int(os.environ.get('PYCARES_USE_SYSTEM_LIB', 0)))
 
 cares_sources = [
+    'deps/c-ares/src/lib/ares__addrinfo2hostent.c',
+    'deps/c-ares/src/lib/ares__addrinfo_localhost.c',
     'deps/c-ares/src/lib/ares__close_sockets.c',
     'deps/c-ares/src/lib/ares__get_hostent.c',
     'deps/c-ares/src/lib/ares__parse_into_addrinfo.c',
