@@ -67,7 +67,7 @@ You can force this at installation time as follows:
 Running the test suite
 ----------------------
 
-From the top level directory, run: ``python tests/tests.py``
+From the top level directory, run: ``python -m unittest -v``
 
 NOTE: Running the tests requires internet access and are somewhat environment sensitive because real DNS quesries
 are made, there is no mocking. If you observe a failure that the CI cannot reproduce, please try to setup an
