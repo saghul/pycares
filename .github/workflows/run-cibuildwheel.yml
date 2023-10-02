@@ -54,8 +54,6 @@ jobs:
         if: ${{ matrix.cibw_archs }}
         run: echo "CIBW_ARCHS=${{ matrix.cibw_archs }}" >> $GITHUB_ENV
         shell: bash
-      - name: Set CIBW_SKIP
-        run: echo "CIBW_SKIP=cp36-*" >> $GITHUB_ENV
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.1
         with:
