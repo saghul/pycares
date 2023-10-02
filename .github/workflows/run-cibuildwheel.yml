@@ -38,12 +38,12 @@ jobs:
             cibw_archs: aarch64
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - name: Set up QEMU
         if: runner.os == 'Linux' && matrix.cibw_archs == 'aarch64'
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: all
       - name: Set CIBW_BUILD
