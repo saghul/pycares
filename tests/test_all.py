@@ -409,7 +409,7 @@ class DNSTest(unittest.TestCase):
         self.result, self.errorno = None, None
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
-        ip = '8.8.8.8'
+        ip = '172.253.122.26'
         self.channel.query(ipaddress.ip_address(ip).reverse_pointer, pycares.QUERY_TYPE_PTR, cb)
         self.wait()
         self.assertNoError(self.errorno)
