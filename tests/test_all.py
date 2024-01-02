@@ -569,8 +569,8 @@ class DNSTest(unittest.TestCase):
         # try encoding it as utf-8
         self.channel.query(host.encode(), pycares.QUERY_TYPE_A, cb)
         self.wait()
-        # ARES_EBADNAME correct for c-ares 1.24 and ARES_ETIMEOUT for 1.18
-        if self.errorno == pycares.errno.ARES_ETIMEOUT:
+        # ARES_EBADNAME correct for c-ares 1.24 and ARES_ENOTFOUND for 1.18
+        if self.errorno == pycares.errno.ARES_ENOTFOUND:
             self.errorno = pycares.errno.ARES_EBADNAME
         self.assertEqual(self.errorno, pycares.errno.ARES_EBADNAME)
         self.assertEqual(self.result, None)
