@@ -569,7 +569,7 @@ class DNSTest(unittest.TestCase):
         # try encoding it as utf-8
         self.channel.query(host.encode(), pycares.QUERY_TYPE_A, cb)
         self.wait()
-        self.assertEqual(self.errorno, pycares.errno.ARES_ENOTFOUND)
+        self.assertEqual(self.errorno, pycares.errno.ARES_EBADNAME)
         self.assertEqual(self.result, None)
         # use it as is (it's IDNA encoded internally)
         self.channel.query(host, pycares.QUERY_TYPE_A, cb)
