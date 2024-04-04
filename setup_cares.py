@@ -2,7 +2,7 @@
 import os
 import sys
 
-from distutils.command.build_ext import build_ext
+from setuptools.command.build_ext import build_ext
 
 use_system_lib = bool(int(os.environ.get('PYCARES_USE_SYSTEM_LIB', 0)))
 
