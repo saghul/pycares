@@ -24,6 +24,8 @@ jobs:
             os: windows-2019
           - name: macOS x86_64 & universal2
             os: macos-13
+          - name: macOS M1
+            os: macos-15
           - name: manylinux and musllinux x86_64 & i686
             os: ubuntu-20.04
             cibw_build: cp3*-{manylinux,musllinux}_*
