@@ -23,7 +23,9 @@ jobs:
           - name: Windows AMD64 & x86
             os: windows-2019
           - name: macOS x86_64 & universal2
-            os: macos-11
+            os: macos-13
+          - name: macOS M1
+            os: macos-15
           - name: manylinux and musllinux x86_64 & i686
             os: ubuntu-20.04
             cibw_build: cp3*-{manylinux,musllinux}_*
@@ -55,7 +57,7 @@ jobs:
         run: echo "CIBW_ARCHS=${{ matrix.cibw_archs }}" >> $GITHUB_ENV
         shell: bash
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.21.2
         with:
           output-dir: ./wheelhouse
         env:
