@@ -24,6 +24,8 @@ jobs:
         with:
           check-latest: true
           python-version: '3.13'
+      - name: Install setuptools
+        run: python -m pip install -U setuptools
       - name: Build sdist
         run: python setup.py sdist
       - uses: actions/upload-artifact@v4
