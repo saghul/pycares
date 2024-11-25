@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 build = "cp3*"
 
 [tool.cibuildwheel.linux]
-archs = ["auto", "aarch64"]
+archs = ["auto", "aarch64", "ppc64le", "s390x"]
 before-all = """
 set -eux
 # musllinux_*
@@ -22,6 +22,3 @@ if command -v yum; then
     yum install -y libffi-devel
 fi
 """
-
-[tool.cibuildwheel.macos]
-archs = ["x86_64", "universal2"]
