@@ -37,12 +37,13 @@ jobs:
         uses: docker/setup-qemu-action@v3
         with:
           platforms: all
+      - name: Enable CPython prerelease
+        if: ${{ inputs.prerelease-pythons }}
+        run: echo "CIBW_ENABLE=cpython-prerelease" >> $GITHUB_ENV
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
         with:
           output-dir: dist
-        env:
-          CIBW_PRERELEASE_PYTHONS: ${{ inputs.prerelease-pythons }}
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}
