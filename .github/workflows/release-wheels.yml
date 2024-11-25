@@ -1,6 +1,7 @@
 name: Release Wheels
 
 on:
+  pull_request:
   release:
     types:
       - published
@@ -33,11 +34,12 @@ jobs:
   upload_pypi:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
-    # upload to PyPI when a GitHub Release is created
-    if: github.event_name == 'release' && github.event.action == 'published'
     steps:
       - uses: actions/download-artifact@v4
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - run: ls -lR dist
+      - name: Upload to PyPI
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.pypi_password }}
