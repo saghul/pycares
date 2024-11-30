@@ -1,4 +1,6 @@
 
+from typing import Union
+
 try:
     import idna as idna2008
 except ImportError:
@@ -24,25 +26,20 @@ def maybe_str(data):
     raise TypeError('only str (ascii encoding) and bytes are supported')
 
 
-def is_all_ascii(text):
-    for c in text:
-        if ord(c) > 0x7f:
-            return False
-    return True
-
-def parse_name_idna2008(name):
+def parse_name_idna2008(name: str) -> str:
     parts = name.split('.')
     r = []
     for part in parts:
-        if is_all_ascii(part):
+        if part.isascii():
             r.append(part.encode('ascii'))
         else:
             r.append(idna2008.encode(part))
     return b'.'.join(r)
 
-def parse_name(name):
+
+def parse_name(name: Union[str, bytes]) -> bytes:
     if isinstance(name, str):
-        if is_all_ascii(name):
+        if name.isascii():
             return name.encode('ascii')
         if idna2008 is not None:
             return parse_name_idna2008(name)
