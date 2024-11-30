@@ -109,7 +109,7 @@ Unless stated otherwise on-file pycares uses the MIT license, check LICENSE file
 Supported Python versions
 -------------------------
 
-Python >= 3.8 are supported. Both CPython and PyPy are supported.
+Python >= 3.9 are supported. Both CPython and PyPy are supported.
 
 
 Contributing

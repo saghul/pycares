@@ -20,46 +20,31 @@ jobs:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
         include:
-          - name: Windows AMD64 & x86
-            os: windows-2019
-          - name: macOS x86_64 & universal2
-            os: macos-11
-          - name: manylinux and musllinux x86_64 & i686
-            os: ubuntu-20.04
-            cibw_build: cp3*-{manylinux,musllinux}_*
-            cibw_archs: auto
-          - name: manylinux aarch64
-            os: ubuntu-20.04
-            cibw_build: cp3*-manylinux_*
-            cibw_archs: aarch64
-          - name: musllinux aarch64
-            os: ubuntu-20.04
-            cibw_build: cp3*-musllinux_*
-            cibw_archs: aarch64
-
+          - name: Windows
+            os: windows-latest
+          - name: macOS x86_64
+            os: macos-13
+          - name: macOS arm64
+            os: macos-latest
+          - name: Linux
+            os: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
       - name: Set up QEMU
-        if: runner.os == 'Linux' && matrix.cibw_archs == 'aarch64'
+        if: runner.os == 'Linux'
         uses: docker/setup-qemu-action@v3
         with:
           platforms: all
-      - name: Set CIBW_BUILD
-        if: ${{ matrix.cibw_build }}
-        run: echo "CIBW_BUILD=${{ matrix.cibw_build }}" >> $GITHUB_ENV
-        shell: bash
-      - name: Set CIBW_ARCHS
-        if: ${{ matrix.cibw_archs }}
-        run: echo "CIBW_ARCHS=${{ matrix.cibw_archs }}" >> $GITHUB_ENV
-        shell: bash
+      - name: Enable CPython prerelease
+        if: ${{ inputs.prerelease-pythons }}
+        run: echo "CIBW_ENABLE=cpython-prerelease" >> $GITHUB_ENV
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.22.0
         with:
-          output-dir: ./wheelhouse
-        env:
-          CIBW_PRERELEASE_PYTHONS: ${{ inputs.prerelease-pythons }}
-      - uses: actions/upload-artifact@v3
+          output-dir: dist
+      - uses: actions/upload-artifact@v4
         with:
-          path: ./wheelhouse/*.whl
+          name: wheels-${{ matrix.os }}
+          path: dist/*.whl
