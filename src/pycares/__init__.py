@@ -9,12 +9,12 @@ from . import errno
 from .utils import ascii_bytes, maybe_str, parse_name
 from ._version import __version__
 
-import collections.abc
 import socket
 import math
 import functools
 import sys
-from typing import Iterable, Optional, Union
+from collections.abc import Callable, Iterable
+from typing import Any, Optional, Union
 
 IP4 = tuple[str, int]
 IP6 = tuple[str, int, int, int]
@@ -142,7 +142,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                     result = None
                     break
                 if r is not None:
-                    if isinstance(r, collections.abc.Iterable):
+                    if isinstance(r, Iterable):
                         result.extend(r)
                     else:
                         result.append(r)
