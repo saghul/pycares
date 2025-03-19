@@ -438,7 +438,7 @@ class Channel:
         _lib.ares_cancel(self._channel[0])
 
     @property
-    def servers(self): list[str]:
+    def servers(self) -> list[str]:
         servers = _ffi.new("struct ares_addr_node **")
 
         r = _lib.ares_get_servers(self._channel[0], servers)
