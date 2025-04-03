@@ -289,7 +289,7 @@ class DNSTest(unittest.TestCase):
         self.assertNoError(self.errorno)
         # If the chunks are aggregated, only one TXT record should be visible. Three would show if they are not properly merged.
         # jobscoutdaily.com.    21600   IN  TXT "v=spf1 A MX " " ~all"
-        self.assertEqual(self.result[0].text, 'v=spf1 A MX ~all')
+        self.assertEqual(self.result[0].text, 'v=spf1 A MX  ~all')
 
     def test_query_txt_multiple_chunked(self):
         self.result, self.errorno = None, None
