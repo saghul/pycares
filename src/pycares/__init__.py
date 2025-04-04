@@ -19,73 +19,58 @@ from typing import Any, Optional, Union
 IP4 = tuple[str, int]
 IP6 = tuple[str, int, int, int]
 
+# Flag values
+ARES_FLAG_USEVC = _lib.ARES_FLAG_USEVC
+ARES_FLAG_PRIMARY = _lib.ARES_FLAG_PRIMARY
+ARES_FLAG_IGNTC = _lib.ARES_FLAG_IGNTC
+ARES_FLAG_NORECURSE = _lib.ARES_FLAG_NORECURSE
+ARES_FLAG_STAYOPEN = _lib.ARES_FLAG_STAYOPEN
+ARES_FLAG_NOSEARCH = _lib.ARES_FLAG_NOSEARCH
+ARES_FLAG_NOALIASES = _lib.ARES_FLAG_NOALIASES
+ARES_FLAG_NOCHECKRESP = _lib.ARES_FLAG_NOCHECKRESP
 
-exported_pycares_symbols = [
-    # Flag values
-    'ARES_FLAG_USEVC',
-    'ARES_FLAG_PRIMARY',
-    'ARES_FLAG_IGNTC',
-    'ARES_FLAG_NORECURSE',
-    'ARES_FLAG_STAYOPEN',
-    'ARES_FLAG_NOSEARCH',
-    'ARES_FLAG_NOALIASES',
-    'ARES_FLAG_NOCHECKRESP',
+# Nameinfo flag values
+ARES_NI_NOFQDN = _lib.ARES_NI_NOFQDN
+ARES_NI_NUMERICHOST = _lib.ARES_NI_NUMERICHOST
+ARES_NI_NAMEREQD = _lib.ARES_NI_NAMEREQD
+ARES_NI_NUMERICSERV = _lib.ARES_NI_NUMERICSERV
+ARES_NI_DGRAM = _lib.ARES_NI_DGRAM
+ARES_NI_TCP = _lib.ARES_NI_TCP
+ARES_NI_UDP = _lib.ARES_NI_UDP
+ARES_NI_SCTP = _lib.ARES_NI_SCTP
+ARES_NI_DCCP = _lib.ARES_NI_DCCP
+ARES_NI_NUMERICSCOPE = _lib.ARES_NI_NUMERICSCOPE
+ARES_NI_LOOKUPHOST = _lib.ARES_NI_LOOKUPHOST
+ARES_NI_LOOKUPSERVICE = _lib.ARES_NI_LOOKUPSERVICE
+ARES_NI_IDN = _lib.ARES_NI_IDN
+ARES_NI_IDN_ALLOW_UNASSIGNED = _lib.ARES_NI_IDN_ALLOW_UNASSIGNED
+ARES_NI_IDN_USE_STD3_ASCII_RULES = _lib.ARES_NI_IDN_USE_STD3_ASCII_RULES
 
-    # Nameinfo flag values
-    'ARES_NI_NOFQDN',
-    'ARES_NI_NUMERICHOST',
-    'ARES_NI_NAMEREQD',
-    'ARES_NI_NUMERICSERV',
-    'ARES_NI_DGRAM',
-    'ARES_NI_TCP',
-    'ARES_NI_UDP',
-    'ARES_NI_SCTP',
-    'ARES_NI_DCCP',
-    'ARES_NI_NUMERICSCOPE',
-    'ARES_NI_LOOKUPHOST',
-    'ARES_NI_LOOKUPSERVICE',
-    'ARES_NI_IDN',
-    'ARES_NI_IDN_ALLOW_UNASSIGNED',
-    'ARES_NI_IDN_USE_STD3_ASCII_RULES',
+# Bad socket
+ARES_SOCKET_BAD = _lib.ARES_SOCKET_BAD
 
-    # Bad socket
-    'ARES_SOCKET_BAD',
-]
+# Query types
+QUERY_TYPE_A = _lib.T_A
+QUERY_TYPE_AAAA = _lib.T_AAAA
+QUERY_TYPE_ANY = _lib.T_ANY
+QUERY_TYPE_CAA = _lib.T_CAA
+QUERY_TYPE_CNAME = _lib.T_CNAME
+QUERY_TYPE_MX = _lib.T_MX
+QUERY_TYPE_NAPTR = _lib.T_NAPTR
+QUERY_TYPE_NS = _lib.T_NS
+QUERY_TYPE_PTR = _lib.T_PTR
+QUERY_TYPE_SOA = _lib.T_SOA
+QUERY_TYPE_SRV = _lib.T_SRV
+QUERY_TYPE_TXT = _lib.T_TXT
 
-for symbol in exported_pycares_symbols:
-    globals()[symbol] = getattr(_lib, symbol)
+# Query classes
+QUERY_CLASS_IN = _lib.C_IN
+QUERY_CLASS_CHAOS = _lib.C_CHAOS
+QUERY_CLASS_HS = _lib.C_HS
+QUERY_CLASS_NONE = _lib.C_NONE
+QUERY_CLASS_ANY = _lib.C_ANY
 
-
-exported_pycares_symbols_map = {
-    # Query types
-    "QUERY_TYPE_A"     : "T_A",
-    "QUERY_TYPE_AAAA"  : "T_AAAA",
-    "QUERY_TYPE_ANY"   : "T_ANY",
-    "QUERY_TYPE_CAA"   : "T_CAA",
-    "QUERY_TYPE_CNAME" : "T_CNAME",
-    "QUERY_TYPE_MX"    : "T_MX",
-    "QUERY_TYPE_NAPTR" : "T_NAPTR",
-    "QUERY_TYPE_NS"    : "T_NS",
-    "QUERY_TYPE_PTR"   : "T_PTR",
-    "QUERY_TYPE_SOA"   : "T_SOA",
-    "QUERY_TYPE_SRV"   : "T_SRV",
-    "QUERY_TYPE_TXT"   : "T_TXT",
-
-    # Query classes
-    "QUERY_CLASS_IN"   : "C_IN",
-    "QUERY_CLASS_CHAOS": "C_CHAOS",
-    "QUERY_CLASS_HS"   : "C_HS",
-    "QUERY_CLASS_NONE" :"C_NONE",
-    "QUERY_CLASS_ANY"  : "C_ANY",
-}
-
-for k, v in exported_pycares_symbols_map.items():
-    globals()[k] = getattr(_lib, v)
-
-
-globals()['ARES_VERSION'] = maybe_str(_ffi.string(_lib.ares_version(_ffi.NULL)))
-
-
+ARES_VERSION = maybe_str(_ffi.string(_lib.ares_version(_ffi.NULL)))
 PYCARES_ADDRTTL_SIZE = 256
 
 
@@ -862,7 +847,62 @@ class ares_addrinfo_result(AresResult):
         _lib.ares_freeaddrinfo(ares_addrinfo)
 
 
+__all__ = (
+    "ARES_FLAG_USEVC",
+    "ARES_FLAG_PRIMARY",
+    "ARES_FLAG_IGNTC",
+    "ARES_FLAG_NORECURSE",
+    "ARES_FLAG_STAYOPEN",
+    "ARES_FLAG_NOSEARCH",
+    "ARES_FLAG_NOALIASES",
+    "ARES_FLAG_NOCHECKRESP",
 
-__all__ = exported_pycares_symbols + list(exported_pycares_symbols_map.keys()) + ['AresError', 'Channel', 'errno', '__version__']
+    # Nameinfo flag values
+    "ARES_NI_NOFQDN",
+    "ARES_NI_NUMERICHOST",
+    "ARES_NI_NAMEREQD",
+    "ARES_NI_NUMERICSERV",
+    "ARES_NI_DGRAM",
+    "ARES_NI_TCP",
+    "ARES_NI_UDP",
+    "ARES_NI_SCTP",
+    "ARES_NI_DCCP",
+    "ARES_NI_NUMERICSCOPE",
+    "ARES_NI_LOOKUPHOST",
+    "ARES_NI_LOOKUPSERVICE",
+    "ARES_NI_IDN",
+    "ARES_NI_IDN_ALLOW_UNASSIGNED",
+    "ARES_NI_IDN_USE_STD3_ASCII_RULES",
 
-del exported_pycares_symbols, exported_pycares_symbols_map
+    # Bad socket
+    "ARES_SOCKET_BAD",
+
+
+    # Query types
+    "QUERY_TYPE_A",
+    "QUERY_TYPE_AAAA",
+    "QUERY_TYPE_ANY",
+    "QUERY_TYPE_CAA",
+    "QUERY_TYPE_CNAME",
+    "QUERY_TYPE_MX",
+    "QUERY_TYPE_NAPTR",
+    "QUERY_TYPE_NS",
+    "QUERY_TYPE_PTR",
+    "QUERY_TYPE_SOA",
+    "QUERY_TYPE_SRV",
+    "QUERY_TYPE_TXT",
+
+    # Query classes
+    "QUERY_CLASS_IN",
+    "QUERY_CLASS_CHAOS",
+    "QUERY_CLASS_HS",
+    "QUERY_CLASS_NONE",
+    "QUERY_CLASS_ANY",
+
+
+    "ARES_VERSION",
+    "AresError",
+    "Channel",
+    "errno",
+    "__version__"
+)
