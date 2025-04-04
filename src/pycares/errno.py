@@ -1,3 +1,4 @@
+from typing import Union
 
 from ._cares import ffi as _ffi, lib as _lib
 from .utils import maybe_str
@@ -41,7 +42,7 @@ for symbol in exported_pycares_symbols:
     globals()["errorcode"][value] = symbol
 
 
-def strerror(code):
+def strerror(code: int) -> Union[str, bytes]:
     return maybe_str(_ffi.string(_lib.ares_strerror(code)))
 
 

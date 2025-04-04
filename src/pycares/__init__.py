@@ -9,11 +9,15 @@ from . import errno
 from .utils import ascii_bytes, maybe_str, parse_name
 from ._version import __version__
 
-import collections.abc
 import socket
 import math
 import functools
 import sys
+from collections.abc import Callable, Iterable
+from typing import Any, Optional, Union
+
+IP4 = tuple[str, int]
+IP6 = tuple[str, int, int, int]
 
 
 exported_pycares_symbols = [
@@ -138,7 +142,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
                     result = None
                     break
                 if r is not None:
-                    if isinstance(r, collections.abc.Iterable):
+                    if isinstance(r, Iterable):
                         result.extend(r)
                     else:
                         result.append(r)
@@ -328,22 +332,22 @@ class Channel:
     __qclasses__ = (_lib.C_IN, _lib.C_CHAOS, _lib.C_HS, _lib.C_NONE, _lib.C_ANY)
 
     def __init__(self,
-                 flags = None,
-                 timeout = None,
-                 tries = None,
-                 ndots = None,
-                 tcp_port = None,
-                 udp_port = None,
-                 servers = None,
-                 domains = None,
-                 lookups = None,
-                 sock_state_cb = None,
-                 socket_send_buffer_size = None,
-                 socket_receive_buffer_size = None,
-                 rotate = False,
-                 local_ip = None,
-                 local_dev = None,
-                 resolvconf_path = None):
+                 flags: Optional[int] = None,
+                 timeout: Optional[float] = None,
+                 tries: Optional[int] = None,
+                 ndots: Optional[int] = None,
+                 tcp_port: Optional[int] = None,
+                 udp_port: Optional[int] = None,
+                 servers: Optional[Iterable[Union[str, bytes]]] = None,
+                 domains: Optional[Iterable[Union[str, bytes]]] = None,
+                 lookups: Union[str, bytes, None] = None,
+                 sock_state_cb: Optional[Callable[[int, bool, bool], None]] = None,
+                 socket_send_buffer_size: Optional[int] = None,
+                 socket_receive_buffer_size: Optional[int] = None,
+                 rotate: bool = False,
+                 local_ip: Union[str, bytes, None] = None,
+                 local_dev: Optional[str] = None,
+                 resolvconf_path: Union[str, bytes, None] = None):
 
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
@@ -430,11 +434,11 @@ class Channel:
         if local_dev:
             self.set_local_dev(local_dev)
 
-    def cancel(self):
+    def cancel(self) -> None:
         _lib.ares_cancel(self._channel[0])
 
     @property
-    def servers(self):
+    def servers(self) -> list[str]:
         servers = _ffi.new("struct ares_addr_node **")
 
         r = _lib.ares_get_servers(self._channel[0], servers)
@@ -457,7 +461,7 @@ class Channel:
         return server_list
 
     @servers.setter
-    def servers(self, servers):
+    def servers(self, servers: Iterable[Union[str, bytes]]) -> None:
         c = _ffi.new("struct ares_addr_node[%d]" % len(servers))
         for i, server in enumerate(servers):
             if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(server), _ffi.addressof(c[i].addr.addr4)) == 1:
@@ -487,7 +491,7 @@ class Channel:
 
         return rfds, wfds
 
-    def process_fd(self, read_fd, write_fd):
+    def process_fd(self, read_fd: int, write_fd: int) -> None:
         _lib.ares_process_fd(self._channel[0], _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", write_fd))
 
     def timeout(self, t = None):
@@ -509,7 +513,7 @@ class Channel:
 
         return (tv.tv_sec + tv.tv_usec / 1000000.0)
 
-    def gethostbyaddr(self, addr, callback):
+    def gethostbyaddr(self, addr: str, callback: Callable[[Any, int], None]) -> None:
         if not callable(callback):
             raise TypeError("a callable is required")
 
@@ -528,7 +532,7 @@ class Channel:
         _global_set.add(userdata)
         _lib.ares_gethostbyaddr(self._channel[0], address, _ffi.sizeof(address[0]), family, _lib._host_cb, userdata)
 
-    def gethostbyname(self, name, family, callback):
+    def gethostbyname(self, name: str, family: socket.AddressFamily, callback: Callable[[Any, int], None]) -> None:
         if not callable(callback):
             raise TypeError("a callable is required")
 
@@ -536,7 +540,16 @@ class Channel:
         _global_set.add(userdata)
         _lib.ares_gethostbyname(self._channel[0], parse_name(name), family, _lib._host_cb, userdata)
 
-    def getaddrinfo(self, host, port, callback, family=0, type=0, proto=0, flags=0):
+    def getaddrinfo(
+        self,
+        host: str,
+        port: Optional[int],
+        callback: Callable[[Any, int], None],
+        family: socket.AddressFamily = 0,
+        type: int = 0,
+        proto: int = 0,
+        flags: int = 0
+    ) -> None:
         if not callable(callback):
             raise TypeError("a callable is required")
 
@@ -557,7 +570,7 @@ class Channel:
         hints.ai_protocol = proto
         _lib.ares_getaddrinfo(self._channel[0], parse_name(host), service, hints, _lib._addrinfo_cb, userdata)
 
-    def query(self, name, query_type, callback, query_class=None):
+    def query(self, name: str, query_type: str, callback: Callable[[Any, int], None], query_class: Optional[str] = None) -> None:
         self._do_query(_lib.ares_query, name, query_type, callback, query_class=query_class)
 
     def search(self, name, query_type, callback, query_class=None):
@@ -590,7 +603,7 @@ class Channel:
         else:
             raise ValueError("invalid IP address")
 
-    def getnameinfo(self, address, flags, callback):
+    def getnameinfo(self, address: Union[IP4, IP6], flags: int, callback: Callable[[Any, int], None]) -> None:
         if not callable(callback):
             raise TypeError("a callable is required")
 
