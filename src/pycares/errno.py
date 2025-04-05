@@ -66,4 +66,4 @@ def strerror(code: int) -> Union[str, bytes]:
     return maybe_str(_ffi.string(_lib.ares_strerror(code)))
 
 
-__all__ = ("errorcode", "strerror", *errorcode.keys())
+__all__ = ("errorcode", "strerror", *errorcode.values())
