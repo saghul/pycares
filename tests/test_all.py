@@ -604,6 +604,7 @@ class DNSTest(unittest.TestCase):
         self.assertTrue('81.169.145.78' in self.result.addresses)
 
     @unittest.skipIf(sys.platform == 'win32', 'skipped on Windows')
+    @unittest.skipIf(sys.platform == 'darwin', 'skipped on MacOS since resolver may work even if resolv.conf is broken')
     def test_custom_resolvconf(self):
         self.result, self.errorno = None, None
         def cb(result, errorno):
