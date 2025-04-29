@@ -423,7 +423,9 @@ class Channel:
         _lib.ares_cancel(self._channel[0])
 
     def reinit(self) -> None:
-        _lib.ares_reinit(self._channel[0])
+        r = _lib.ares_reinit(self._channel[0])
+        if r != _lib.ARES_SUCCESS:
+            raise AresError(r, errno.strerror(r))
 
     @property
     def servers(self) -> list[str]:
