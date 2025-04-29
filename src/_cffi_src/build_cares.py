@@ -371,6 +371,8 @@ int ares_init_options(ares_channel *channelptr,
                                    struct ares_options *options,
                                    int optmask);
 
+int ares_reinit(ares_channel_t *channel);
+
 int ares_save_options(ares_channel channel,
                                    struct ares_options *options,
                                    int *optmask);
