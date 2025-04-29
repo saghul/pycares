@@ -506,7 +506,8 @@ class DNSTest(unittest.TestCase):
         self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
         self.wait()
         self.assertEqual(self.result, None)
-        self.assertEqual(self.errorno, pycares.errno.ARES_ECONNREFUSED)
+        # May raise ECONNREFUSED or ETIMEDOUT depending on the platform
+        self.assertIn(self.errorno, (pycares.errno.ARES_ECONNREFUSED, pycares.errno.ARES_ETIMEOUT))
 
     def test_channel_local_ip2(self):
         self.result, self.errorno = None, None
@@ -517,7 +518,8 @@ class DNSTest(unittest.TestCase):
         self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
         self.wait()
         self.assertEqual(self.result, None)
-        self.assertEqual(self.errorno, pycares.errno.ARES_ECONNREFUSED)
+        # May raise ECONNREFUSED or ETIMEDOUT depending on the platform
+        self.assertIn(self.errorno, (pycares.errno.ARES_ECONNREFUSED, pycares.errno.ARES_ETIMEOUT))
         self.assertRaises(ValueError, self.channel.set_local_ip, 'an invalid ip')
 
     def test_channel_timeout(self):
