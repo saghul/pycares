@@ -423,7 +423,7 @@ class Channel:
         _lib.ares_cancel(self._channel[0])
 
     def reinit(self) -> None:
-        _lib.ares_reinit(self._channel[0])
+        _lib.ares_reinit(self._channel)
 
     @property
     def servers(self) -> list[str]:
