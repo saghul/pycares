@@ -447,7 +447,9 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(self.errorno, pycares.errno.ARES_ECANCELLED)
 
     def test_reinit(self):
+        servers = self.channel.servers
         self.channel.reinit()
+        self.assertEqual(servers, self.channel.servers)
 
     def test_query_bad_type(self):
         self.assertRaises(ValueError, self.channel.query, 'google.com', 667, lambda *x: None)
