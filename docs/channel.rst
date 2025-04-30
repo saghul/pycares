@@ -232,6 +232,12 @@
 
         Cancel any pending query on this channel. All pending callbacks will be called with ARES_ECANCELLED errorno.
 
+    .. py:method:: reinit()
+            
+        Reinitialize the channel.
+
+        For more details, see the `ares_reinit documentation <https://c-ares.org/docs/ares_reinit.html>`_.
+
     .. py:method:: process_fd(read_fd, write_fd)
 
         :param int read_fd: File descriptor ready to read from.
