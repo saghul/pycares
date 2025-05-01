@@ -168,7 +168,7 @@ class cares_build_ext(build_ext):
                 self.compiler.define_macro('HAVE_EPOLL', 1)
                 self.compiler.define_macro('HAVE_SYS_EPOLL_H', 1)
                 self.compiler.define_macro('HAVE_FCNTL_H', 1)
-            if hasattr(select, 'select'):
+            if hasattr(select, 'select') and sys.platform != 'win32':
                 self.compiler.define_macro('HAVE_PIPE', 1)
             self.extensions[0].sources += cares_sources
 
