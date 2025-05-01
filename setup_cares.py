@@ -152,6 +152,7 @@ class cares_build_ext(build_ext):
         if use_system_lib:
             self.compiler.add_library('cares')
         else:
+            self.compiler.define_macro('CARES_THREADS', 1)
             self.compiler.define_macro('CARES_STATICLIB', 1)
             self.extensions[0].sources += cares_sources
 

@@ -145,6 +145,7 @@ typedef int... ares_socklen_t;
 #define ARES_OPT_ROTATE         ...
 #define ARES_OPT_EDNSPSZ        ...
 #define ARES_OPT_RESOLVCONF     ...
+#define ARES_OPT_EVENT_THREAD   ...
 
 #define ARES_NI_NOFQDN                  ...
 #define ARES_NI_NUMERICHOST             ...
@@ -183,6 +184,11 @@ int ARES_GETSOCK_WRITABLE(int, int);
 
 #define ARES_SOCKET_BAD ...
 
+typedef enum {
+  ARES_FALSE = 0,
+  ARES_TRUE  = 1
+} ares_bool_t;
+
 typedef void (*ares_sock_state_cb)(void *data,
                                    ares_socket_t socket_fd,
                                    int readable,
@@ -217,23 +223,53 @@ typedef void (*ares_addrinfo_callback)(void *arg,
 struct ares_channeldata;
 typedef struct ares_channeldata *ares_channel;
 
+struct ares_server_failover_options {
+  unsigned short retry_chance;
+  size_t         retry_delay;
+};
+
+/*! Values for ARES_OPT_EVENT_THREAD */
+typedef enum {
+  /*! Default (best choice) event system */
+  ARES_EVSYS_DEFAULT = 0,
+  /*! Win32 IOCP/AFD_POLL event system */
+  ARES_EVSYS_WIN32 = 1,
+  /*! Linux epoll */
+  ARES_EVSYS_EPOLL = 2,
+  /*! BSD/MacOS kqueue */
+  ARES_EVSYS_KQUEUE = 3,
+  /*! POSIX poll() */
+  ARES_EVSYS_POLL = 4,
+  /*! last fallback on Unix-like systems, select() */
+  ARES_EVSYS_SELECT = 5
+} ares_evsys_t;
+
 struct ares_options {
-  int flags;
-  int timeout;
-  int tries;
-  int ndots;
-  unsigned short udp_port;
-  unsigned short tcp_port;
-  int socket_send_buffer_size;
-  int socket_receive_buffer_size;
-  struct in_addr *servers;
-  int nservers;
-  char **domains;
-  int ndomains;
-  char *lookups;
+  int            flags;
+  int            timeout; /* in seconds or milliseconds, depending on options */
+  int            tries;
+  int            ndots;
+  unsigned short udp_port; /* host byte order */
+  unsigned short tcp_port; /* host byte order */
+  int            socket_send_buffer_size;
+  int            socket_receive_buffer_size;
+  struct in_addr    *servers;
+  int                nservers;
+  char             **domains;
+  int                ndomains;
+  char              *lookups;
   ares_sock_state_cb sock_state_cb;
-  void *sock_state_cb_data;
-  char *resolvconf_path;
+  void              *sock_state_cb_data;
+  struct apattern   *sortlist;
+  int                nsort;
+  int                ednspsz;
+  char              *resolvconf_path;
+  char              *hosts_path;
+  int                udp_max_queries;
+  int                maxtimeout; /* in milliseconds */
+  unsigned int qcache_max_ttl;   /* Maximum TTL for query cache, 0=disabled */
+  ares_evsys_t evsys;
+  struct ares_server_failover_options server_failover_opts;
   ...;
 };
 
@@ -558,6 +594,8 @@ const char *ares_inet_ntop(int af, const void *src, char *dst,
                                         ares_socklen_t size);
 
 int ares_inet_pton(int af, const char *src, void *dst);
+
+ares_bool_t ares_threadsafety(void);
 """
 
 CALLBACKS = """

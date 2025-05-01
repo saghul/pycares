@@ -332,7 +332,8 @@ class Channel:
                  rotate: bool = False,
                  local_ip: Union[str, bytes, None] = None,
                  local_dev: Optional[str] = None,
-                 resolvconf_path: Union[str, bytes, None] = None):
+                 resolvconf_path: Union[str, bytes, None] = None,
+                 event_thread: bool = False) -> None:
 
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
@@ -382,6 +383,12 @@ class Channel:
             options.sock_state_cb = _lib._sock_state_cb
             options.sock_state_cb_data = userdata
             optmask = optmask |  _lib.ARES_OPT_SOCK_STATE_CB
+
+        if event_thread:
+            if not ares_threadsafety():
+                raise RuntimeError("c-ares is not built with thread safety")
+            optmask = optmask |  _lib.ARES_OPT_EVENT_THREAD
+            options.evsys = _lib.ARES_EVSYS_DEFAULT
 
         if lookups:
             options.lookups = _ffi.new('char[]', ascii_bytes(lookups))
@@ -852,6 +859,10 @@ class ares_addrinfo_result(AresResult):
         _lib.ares_freeaddrinfo(ares_addrinfo)
 
 
+def ares_threadsafety() -> bool:
+    """Check if c-ares is thread safe."""
+    return bool(_lib.ares_threadsafety())
+
 __all__ = (
     "ARES_FLAG_USEVC",
     "ARES_FLAG_PRIMARY",
@@ -908,6 +919,7 @@ __all__ = (
     "ARES_VERSION",
     "AresError",
     "Channel",
+    "ares_threadsafety",
     "errno",
     "__version__"
 )
