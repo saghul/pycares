@@ -1,6 +1,7 @@
 
 import os
 import sys
+import select
 
 from setuptools.command.build_ext import build_ext
 
@@ -154,6 +155,21 @@ class cares_build_ext(build_ext):
         else:
             self.compiler.define_macro('CARES_THREADS', 1)
             self.compiler.define_macro('CARES_STATICLIB', 1)
+            if hasattr(select, 'poll'):
+                self.compiler.define_macro('HAVE_POLL', 1)
+                self.compiler.define_macro('HAVE_POLL_H', 1)
+            if hasattr(select, 'kqueue'):
+                self.compiler.define_macro('HAVE_KQUEUE', 1)
+                self.compiler.define_macro('HAVE_SYS_TYPES_H', 1)
+                self.compiler.define_macro('HAVE_SYS_EVENT_H', 1)
+                self.compiler.define_macro('HAVE_SYS_TIME_H', 1)
+                self.compiler.define_macro('HAVE_FCNTL_H', 1)
+            if hasattr(select, 'epoll'):
+                self.compiler.define_macro('HAVE_EPOLL', 1)
+                self.compiler.define_macro('HAVE_SYS_EPOLL_H', 1)
+                self.compiler.define_macro('HAVE_FCNTL_H', 1)
+            if hasattr(select, 'select'):
+                self.compiler.define_macro('HAVE_PIPE', 1)
             self.extensions[0].sources += cares_sources
 
         build_ext.build_extensions(self)
