@@ -374,6 +374,8 @@ class Channel:
         if sock_state_cb:
             if not callable(sock_state_cb):
                 raise TypeError("sock_state_cb is not callable")
+            if event_thread:
+                raise RuntimeError("sock_state_cb and event_thread cannot be used together")
 
             userdata = _ffi.new_handle(sock_state_cb)
 
@@ -387,6 +389,8 @@ class Channel:
         if event_thread:
             if not ares_threadsafety():
                 raise RuntimeError("c-ares is not built with thread safety")
+            if sock_state_cb:
+                raise RuntimeError("sock_state_cb and event_thread cannot be used together")
             optmask = optmask |  _lib.ARES_OPT_EVENT_THREAD
             options.evsys = _lib.ARES_EVSYS_DEFAULT
 
