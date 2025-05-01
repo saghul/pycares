@@ -245,29 +245,29 @@ typedef enum {
 } ares_evsys_t;
 
 struct ares_options {
-  int            flags;
-  int            timeout; /* in seconds or milliseconds, depending on options */
-  int            tries;
-  int            ndots;
+  int flags;
+  int timeout; /* in seconds or milliseconds, depending on options */
+  int tries;
+  int ndots;
   unsigned short udp_port; /* host byte order */
   unsigned short tcp_port; /* host byte order */
-  int            socket_send_buffer_size;
-  int            socket_receive_buffer_size;
-  struct in_addr    *servers;
-  int                nservers;
-  char             **domains;
-  int                ndomains;
-  char              *lookups;
+  int socket_send_buffer_size;
+  int socket_receive_buffer_size;
+  struct in_addr *servers;
+  int nservers;
+  char **domains;
+  int ndomains;
+  char *lookups;
   ares_sock_state_cb sock_state_cb;
-  void              *sock_state_cb_data;
-  struct apattern   *sortlist;
-  int                nsort;
-  int                ednspsz;
-  char              *resolvconf_path;
-  char              *hosts_path;
-  int                udp_max_queries;
-  int                maxtimeout; /* in milliseconds */
-  unsigned int qcache_max_ttl;   /* Maximum TTL for query cache, 0=disabled */
+  void *sock_state_cb_data;
+  struct apattern *sortlist;
+  int nsort;
+  int ednspsz;
+  char *resolvconf_path;
+  char *hosts_path;
+  int udp_max_queries;
+  int maxtimeout; /* in milliseconds */
+  unsigned int qcache_max_ttl; /* Maximum TTL for query cache, 0=disabled */
   ares_evsys_t evsys;
   struct ares_server_failover_options server_failover_opts;
   ...;
