@@ -13,6 +13,16 @@
     `c-ares source code
     <http://github.com/bagder/c-ares>`_.
 
+ares_threadsafety
+=================
+
+.. py:function:: ares_threadsafety()
+
+    Check if c-ares was compiled with thread safety support.
+
+    :returns: True if thread-safe, False otherwise.
+    :rtype: bool
+
 
 Objects
 *******

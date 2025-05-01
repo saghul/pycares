@@ -6,7 +6,7 @@ import select
 import socket
 import sys
 import unittest
-
+import threading
 import pycares
 
 FIXTURES_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'fixtures'))
@@ -671,6 +671,33 @@ class DNSTest(unittest.TestCase):
         for key in pycares.errno.errorcode:
             self.assertTrue(type(pycares.errno.strerror(key)), str)
 
+
+class EventThreadTest(unittest.TestCase):
+
+    def setUp(self):
+        self.channel = pycares.Channel(timeout=10.0, tries=1, servers=['8.8.8.8', '8.8.4.4'], event_thread=True)
+        self.is_ci = os.environ.get('APPVEYOR') or os.environ.get('TRAVIS') or os.environ.get('GITHUB_ACTION')
+
+    def tearDown(self):
+        self.channel = None
+
+    def assertNoError(self, errorno):
+        if errorno == pycares.errno.ARES_ETIMEOUT and self.is_ci:
+            raise unittest.SkipTest('timeout')
+        self.assertEqual(errorno, None)
+
+    def test_query_a(self):
+        self.result, self.errorno = None, None
+        event = threading.Event()
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+            event.set()
+        self.channel.query('google.com', pycares.QUERY_TYPE_A, cb)
+        event.wait()
+        self.assertNoError(self.errorno)
+        for r in self.result:
+            self.assertEqual(type(r), pycares.ares_query_a_result)
+            self.assertNotEqual(r.host, None)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

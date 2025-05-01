@@ -41,6 +41,17 @@
     :param callable sock_state_cb: A callback function to be invoked when a
         socket changes state. Callback signature: ``sock_state_cb(self, fd, readable, writable)``
 
+        This option is mutually exclusive with the ``event_thread`` option.
+
+    :param bool event_thread: If set to True, c-ares will use its own thread
+        to process events. This is the recommended way to use c-ares, as it
+        allows for automatic reinitialization of the channel when the
+        system resolver configuration changes. Verify that c-ares was
+        compiled with thread-safety by calling :py:func:`ares_threadsafety`
+        before using this option.
+
+        This option is mutually exclusive with the ``sock_state_cb`` option.
+
     :param int socket_send_buffer_size: Size for the created socket's send buffer.
 
     :param int socket_receive_buffer_size: Size for the created socket's receive buffer.
