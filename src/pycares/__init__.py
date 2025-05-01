@@ -864,7 +864,12 @@ class ares_addrinfo_result(AresResult):
 
 
 def ares_threadsafety() -> bool:
-    """Check if c-ares is thread safe."""
+    """
+    Check if c-ares was compiled with thread safety support.
+
+    :return: True if thread-safe, False otherwise.
+    :rtype: bool
+    """
     return bool(_lib.ares_threadsafety())
 
 __all__ = (
