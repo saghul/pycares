@@ -576,7 +576,8 @@ class DNSTest(unittest.TestCase):
         self.channel.query(host.encode(), pycares.QUERY_TYPE_A, cb)
         self.wait()
         # ARES_EBADNAME correct for c-ares 1.24 and ARES_ENOTFOUND for 1.18
-        if self.errorno == pycares.errno.ARES_ENOTFOUND:
+        # in 1.32.0 it was changed to ARES_ENOMEM
+        if self.errorno in (pycares.errno.ARES_ENOTFOUND, pycares.errno.ARES_ENOMEM):
             self.errorno = pycares.errno.ARES_EBADNAME
         self.assertEqual(self.errorno, pycares.errno.ARES_EBADNAME)
         self.assertEqual(self.result, None)
