@@ -95,8 +95,7 @@ cares_sources = [
 ]
 
 if sys.platform == 'win32':
-    cares_sources += ['deps/c-ares/src/lib/config-win32.h',
-                      'deps/c-ares/src/lib/windows_port.c',
+    cares_sources += ['deps/c-ares/src/lib/windows_port.c',
                       'deps/c-ares/src/lib/ares_platform.c']
 
 
