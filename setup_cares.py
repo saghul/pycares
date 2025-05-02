@@ -84,8 +84,6 @@ cares_sources = [
     'deps/c-ares/src/lib/ares_strerror.c',
     'deps/c-ares/src/lib/ares_strsplit.c',
     'deps/c-ares/src/lib/ares_sysconfig_files.c',
-    'deps/c-ares/src/lib/ares_sysconfig_mac.c',
-    'deps/c-ares/src/lib/ares_sysconfig_win.c',
     'deps/c-ares/src/lib/ares_sysconfig.c',
     'deps/c-ares/src/lib/ares_timeout.c',
     'deps/c-ares/src/lib/ares_update_servers.c',
@@ -96,8 +94,11 @@ cares_sources = [
 
 if sys.platform == 'win32':
     cares_sources += ['deps/c-ares/src/lib/windows_port.c',
-                      'deps/c-ares/src/lib/ares_platform.c']
+                      'deps/c-ares/src/lib/ares_platform.c',
+                      'deps/c-ares/src/lib/ares_sysconfig_win.c']
 
+if sys.platform == 'darwin':
+    cares_sources += ['deps/c-ares/src/lib/ares_sysconfig_mac.c']
 
 class cares_build_ext(build_ext):
     cares_dir = os.path.join('deps', 'c-ares')
