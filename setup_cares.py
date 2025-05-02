@@ -95,7 +95,8 @@ cares_sources = [
 ]
 
 if sys.platform == 'win32':
-    cares_sources += ['deps/c-ares/src/lib/windows_port.c',
+    cares_sources += ['deps/c-ares/src/lib/config-win32.h',
+                      'deps/c-ares/src/lib/windows_port.c',
                       'deps/c-ares/src/lib/ares_platform.c']
 
 
@@ -114,7 +115,6 @@ class cares_build_ext(build_ext):
         self.add_include_dir(os.path.join(self.cares_dir, 'include'))
         self.add_include_dir(os.path.join(self.build_config_dir, 'include'), True)
         if sys.platform != 'win32':
-            self.compiler.define_macro('USE_WINSOCK', 1)
             self.compiler.define_macro('HAVE_CONFIG_H', 1)
             self.compiler.define_macro('_LARGEFILE_SOURCE', 1)
             self.compiler.define_macro('_FILE_OFFSET_BITS', 64)
