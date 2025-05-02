@@ -626,11 +626,7 @@ class DNSTest(unittest.TestCase):
         self.result, self.errorno = None, None
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
-        # Explicitly set ndots to 1 to avoid using the value in resolv.conf
-        # which may be 0 on some systems. This is needed because newer c-ares
-        # have fixed a bug where 0 was ignored in:
-        # https://github.com/c-ares/c-ares/commit/852a60a6adefaa012b1aa92fe27c8b1fe9585eaf
-        self.channel = pycares.Channel(timeout=5.0, tries=1, ndots=1, domains=['google.com'])
+        self.channel = pycares.Channel(timeout=5.0, tries=1, domains=['google.com'])
         self.channel.search('cloud', pycares.QUERY_TYPE_A, cb)
         self.wait()
         self.assertNoError(self.errorno)
