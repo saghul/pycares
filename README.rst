@@ -117,9 +117,16 @@ Supported Python versions
 
 Python >= 3.9 are supported. Both CPython and PyPy are supported.
 
-When using free-threading Python, the c-ares library must be built
-with thread-safety enabled. This is the default for the bundled version
-that comes with pycares on PyPI.
+.. note::
+
+   **Using Free-Threaded Python**
+
+   When using Python with free-threading enabled (e.g., built with ``--enable-free-threaded``),
+   the ``c-ares`` library must be built with thread-safety support.
+
+   This requirement is already satisfied by the bundled version of ``c-ares`` that comes
+   with ``pycares`` when installed from PyPI, so no additional configuration is necessary
+   in that case.
 
 
 Contributing
