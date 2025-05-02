@@ -8,45 +8,15 @@ from setuptools.command.build_ext import build_ext
 use_system_lib = bool(int(os.environ.get('PYCARES_USE_SYSTEM_LIB', 0)))
 
 cares_sources = [
-    'deps/c-ares/src/lib/ares__addrinfo_localhost.c',
-    'deps/c-ares/src/lib/ares__addrinfo2hostent.c',
-    'deps/c-ares/src/lib/ares__buf.c',
-    'deps/c-ares/src/lib/ares__close_sockets.c',
-    'deps/c-ares/src/lib/ares__hosts_file.c',
-    'deps/c-ares/src/lib/ares__htable_asvp.c',
-    'deps/c-ares/src/lib/ares__htable_strvp.c',
-    'deps/c-ares/src/lib/ares__htable_szvp.c',
-    'deps/c-ares/src/lib/ares__htable_vpvp.c',
-    'deps/c-ares/src/lib/ares__htable.c',
-    'deps/c-ares/src/lib/ares__iface_ips.c',
-    'deps/c-ares/src/lib/ares__llist.c',
-    'deps/c-ares/src/lib/ares__parse_into_addrinfo.c',
-    'deps/c-ares/src/lib/ares__slist.c',
-    'deps/c-ares/src/lib/ares__socket.c',
-    'deps/c-ares/src/lib/ares__sortaddrinfo.c',
-    'deps/c-ares/src/lib/ares__threads.c',
-    'deps/c-ares/src/lib/ares__timeval.c',
+    'deps/c-ares/src/lib/ares_addrinfo_localhost.c',
+    'deps/c-ares/src/lib/ares_addrinfo2hostent.c',
     'deps/c-ares/src/lib/ares_android.c',
     'deps/c-ares/src/lib/ares_cancel.c',
-    'deps/c-ares/src/lib/ares_create_query.c',
+    'deps/c-ares/src/lib/ares_close_sockets.c',
+    'deps/c-ares/src/lib/ares_conn.c',
+    'deps/c-ares/src/lib/ares_cookie.c',
     'deps/c-ares/src/lib/ares_data.c',
     'deps/c-ares/src/lib/ares_destroy.c',
-    'deps/c-ares/src/lib/ares_dns_mapping.c',
-    'deps/c-ares/src/lib/ares_dns_name.c',
-    'deps/c-ares/src/lib/ares_dns_parse.c',
-    'deps/c-ares/src/lib/ares_dns_record.c',
-    'deps/c-ares/src/lib/ares_dns_write.c',
-    'deps/c-ares/src/lib/ares_event_configchg.c',
-    'deps/c-ares/src/lib/ares_event_epoll.c',
-    'deps/c-ares/src/lib/ares_event_kqueue.c',
-    'deps/c-ares/src/lib/ares_event_poll.c',
-    'deps/c-ares/src/lib/ares_event_select.c',
-    'deps/c-ares/src/lib/ares_event_thread.c',
-    'deps/c-ares/src/lib/ares_event_wake_pipe.c',
-    'deps/c-ares/src/lib/ares_event_win32.c',
-    'deps/c-ares/src/lib/ares_expand_name.c',
-    'deps/c-ares/src/lib/ares_expand_string.c',
-    'deps/c-ares/src/lib/ares_fds.c',
     'deps/c-ares/src/lib/ares_free_hostent.c',
     'deps/c-ares/src/lib/ares_free_string.c',
     'deps/c-ares/src/lib/ares_freeaddrinfo.c',
@@ -55,46 +25,81 @@ cares_sources = [
     'deps/c-ares/src/lib/ares_gethostbyaddr.c',
     'deps/c-ares/src/lib/ares_gethostbyname.c',
     'deps/c-ares/src/lib/ares_getnameinfo.c',
-    'deps/c-ares/src/lib/ares_getsock.c',
+    'deps/c-ares/src/lib/ares_hosts_file.c',
     'deps/c-ares/src/lib/ares_init.c',
     'deps/c-ares/src/lib/ares_library_init.c',
-    'deps/c-ares/src/lib/ares_math.c',
+    'deps/c-ares/src/lib/ares_metrics.c',
     'deps/c-ares/src/lib/ares_options.c',
-    'deps/c-ares/src/lib/ares_parse_a_reply.c',
-    'deps/c-ares/src/lib/ares_parse_aaaa_reply.c',
-    'deps/c-ares/src/lib/ares_parse_caa_reply.c',
-    'deps/c-ares/src/lib/ares_parse_mx_reply.c',
-    'deps/c-ares/src/lib/ares_parse_naptr_reply.c',
-    'deps/c-ares/src/lib/ares_parse_ns_reply.c',
-    'deps/c-ares/src/lib/ares_parse_ptr_reply.c',
-    'deps/c-ares/src/lib/ares_parse_soa_reply.c',
-    'deps/c-ares/src/lib/ares_parse_srv_reply.c',
-    'deps/c-ares/src/lib/ares_parse_txt_reply.c',
-    'deps/c-ares/src/lib/ares_parse_uri_reply.c',
+    'deps/c-ares/src/lib/ares_parse_into_addrinfo.c',
     'deps/c-ares/src/lib/ares_process.c',
     'deps/c-ares/src/lib/ares_qcache.c',
     'deps/c-ares/src/lib/ares_query.c',
-    'deps/c-ares/src/lib/ares_rand.c',
     'deps/c-ares/src/lib/ares_search.c',
     'deps/c-ares/src/lib/ares_send.c',
-    'deps/c-ares/src/lib/ares_str.c',
-    'deps/c-ares/src/lib/ares_strcasecmp.c',
+    'deps/c-ares/src/lib/ares_set_socket_functions.c',
+    'deps/c-ares/src/lib/ares_socket.c',
+    'deps/c-ares/src/lib/ares_sortaddrinfo.c',
     'deps/c-ares/src/lib/ares_strerror.c',
-    'deps/c-ares/src/lib/ares_strsplit.c',
     'deps/c-ares/src/lib/ares_sysconfig_files.c',
-    'deps/c-ares/src/lib/ares_sysconfig_mac.c',
     'deps/c-ares/src/lib/ares_sysconfig.c',
     'deps/c-ares/src/lib/ares_timeout.c',
     'deps/c-ares/src/lib/ares_update_servers.c',
     'deps/c-ares/src/lib/ares_version.c',
+    'deps/c-ares/src/lib/dsa/ares_array.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_asvp.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_dict.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_strvp.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_szvp.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_vpstr.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_vpvp.c',
+    'deps/c-ares/src/lib/dsa/ares_htable.c',
+    'deps/c-ares/src/lib/dsa/ares_llist.c',
+    'deps/c-ares/src/lib/dsa/ares_slist.c',
+    'deps/c-ares/src/lib/event/ares_event_configchg.c',
+    'deps/c-ares/src/lib/event/ares_event_thread.c',
+    'deps/c-ares/src/lib/event/ares_event_wake_pipe.c',
     'deps/c-ares/src/lib/inet_net_pton.c',
     'deps/c-ares/src/lib/inet_ntop.c',
+    'deps/c-ares/src/lib/legacy/ares_create_query.c',
+    'deps/c-ares/src/lib/legacy/ares_expand_name.c',
+    'deps/c-ares/src/lib/legacy/ares_expand_string.c',
+    'deps/c-ares/src/lib/legacy/ares_fds.c',
+    'deps/c-ares/src/lib/legacy/ares_getsock.c',
+    'deps/c-ares/src/lib/legacy/ares_parse_a_reply.c',
+    'deps/c-ares/src/lib/legacy/ares_parse_aaaa_reply.c',
+    'deps/c-ares/src/lib/legacy/ares_parse_caa_reply.c',
+    'deps/c-ares/src/lib/legacy/ares_parse_mx_reply.c',
+    'deps/c-ares/src/lib/legacy/ares_parse_naptr_reply.c',
+    'deps/c-ares/src/lib/legacy/ares_parse_ns_reply.c',
+    'deps/c-ares/src/lib/legacy/ares_parse_ptr_reply.c',
+    'deps/c-ares/src/lib/legacy/ares_parse_soa_reply.c',
+    'deps/c-ares/src/lib/legacy/ares_parse_srv_reply.c',
+    'deps/c-ares/src/lib/legacy/ares_parse_txt_reply.c',
+    'deps/c-ares/src/lib/legacy/ares_parse_uri_reply.c',
+    'deps/c-ares/src/lib/record/ares_dns_mapping.c',
+    'deps/c-ares/src/lib/record/ares_dns_multistring.c',
+    'deps/c-ares/src/lib/record/ares_dns_name.c',
+    'deps/c-ares/src/lib/record/ares_dns_parse.c',
+    'deps/c-ares/src/lib/record/ares_dns_record.c',
+    'deps/c-ares/src/lib/record/ares_dns_write.c',
+    'deps/c-ares/src/lib/str/ares_buf.c',
+    'deps/c-ares/src/lib/str/ares_str.c',
+    'deps/c-ares/src/lib/str/ares_strsplit.c',
+    'deps/c-ares/src/lib/util/ares_iface_ips.c',
+    'deps/c-ares/src/lib/util/ares_math.c',
+    'deps/c-ares/src/lib/util/ares_rand.c',
+    'deps/c-ares/src/lib/util/ares_threads.c',
+    'deps/c-ares/src/lib/util/ares_timeval.c',
+    'deps/c-ares/src/lib/util/ares_uri.c',
 ]
 
 if sys.platform == 'win32':
-    cares_sources += ['deps/c-ares/src/lib/windows_port.c',
-                      'deps/c-ares/src/lib/ares_platform.c']
+    cares_sources += ['deps/c-ares/src/lib/ares_sysconfig_win.c',
+                      'deps/c-ares/src/lib/windows_port.c',
+                      'deps/c-ares/src/lib/event/ares_event_win32.c']
 
+if sys.platform == 'darwin':
+    cares_sources += ['deps/c-ares/src/lib/ares_sysconfig_mac.c']
 
 class cares_build_ext(build_ext):
     cares_dir = os.path.join('deps', 'c-ares')
@@ -109,6 +114,8 @@ class cares_build_ext(build_ext):
 
     def build_extensions(self):
         self.add_include_dir(os.path.join(self.cares_dir, 'include'))
+        self.add_include_dir(os.path.join(self.cares_dir, 'src', 'lib'))
+        self.add_include_dir(os.path.join(self.cares_dir, 'src', 'lib', 'include'))
         self.add_include_dir(os.path.join(self.build_config_dir, 'include'), True)
         if sys.platform != 'win32':
             self.compiler.define_macro('HAVE_CONFIG_H', 1)
@@ -148,28 +155,36 @@ class cares_build_ext(build_ext):
             self.compiler.add_library('iphlpapi')
             self.compiler.add_library('psapi')
             self.compiler.add_library('ws2_32')
-            self.compiler.define_macro('CARES_PULL_WS2TCPIP_H', 1)
+            self.compiler.define_macro("CARES_HAVE_WINSOCK2_H", 1)
+            self.compiler.define_macro("CARES_HAVE_WS2TCPIP_H", 1)
+            self.compiler.define_macro("CARES_HAVE_WINDOWS_H", 1)
+
 
         if use_system_lib:
             self.compiler.add_library('cares')
         else:
+            sources = cares_sources.copy()
             self.compiler.define_macro('CARES_THREADS', 1)
             self.compiler.define_macro('CARES_STATICLIB', 1)
             if hasattr(select, 'poll'):
+                sources += ['deps/c-ares/src/lib/event/ares_event_poll.c']
                 self.compiler.define_macro('HAVE_POLL', 1)
                 self.compiler.define_macro('HAVE_POLL_H', 1)
             if hasattr(select, 'kqueue'):
+                sources += ['deps/c-ares/src/lib/event/ares_event_kqueue.c']
                 self.compiler.define_macro('HAVE_KQUEUE', 1)
                 self.compiler.define_macro('HAVE_SYS_TYPES_H', 1)
                 self.compiler.define_macro('HAVE_SYS_EVENT_H', 1)
                 self.compiler.define_macro('HAVE_SYS_TIME_H', 1)
                 self.compiler.define_macro('HAVE_FCNTL_H', 1)
             if hasattr(select, 'epoll'):
+                sources += ['deps/c-ares/src/lib/event/ares_event_epoll.c']
                 self.compiler.define_macro('HAVE_EPOLL', 1)
                 self.compiler.define_macro('HAVE_SYS_EPOLL_H', 1)
                 self.compiler.define_macro('HAVE_FCNTL_H', 1)
             if hasattr(os, 'pipe') and sys.platform != 'win32':
+                sources += ['deps/c-ares/src/lib/event/ares_event_select.c']
                 self.compiler.define_macro('HAVE_PIPE', 1)
-            self.extensions[0].sources += cares_sources
+            self.extensions[0].sources += sources
 
         build_ext.build_extensions(self)
