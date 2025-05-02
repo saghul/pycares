@@ -87,9 +87,6 @@ cares_sources = [
     'deps/c-ares/src/lib/ares_version.c',
     'deps/c-ares/src/lib/inet_net_pton.c',
     'deps/c-ares/src/lib/inet_ntop.c',
-    'deps/c-ares/src/tools/adig.c',
-    'deps/c-ares/src/tools/ahost.c',
-    'deps/c-ares/src/tools/ares_getopt.c',
 ]
 
 if sys.platform == 'win32':
