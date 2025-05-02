@@ -148,7 +148,10 @@ class cares_build_ext(build_ext):
             self.compiler.add_library('iphlpapi')
             self.compiler.add_library('psapi')
             self.compiler.add_library('ws2_32')
-            self.compiler.define_macro('CARES_PULL_WS2TCPIP_H', 1)
+            self.compiler.define_macro("CARES_HAVE_WINSOCK2_H", 1)
+            self.compiler.define_macro("CARES_HAVE_WS2TCPIP_H", 1)
+            self.compiler.define_macro("CARES_HAVE_WINDOWS_H", 1)
+
 
         if use_system_lib:
             self.compiler.add_library('cares')
