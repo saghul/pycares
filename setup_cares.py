@@ -32,7 +32,7 @@ cares_sources = [
     'deps/c-ares/src/lib/ares_data.c',
     'deps/c-ares/src/lib/ares_destroy.c',
     'deps/c-ares/src/lib/ares_dns_mapping.c',
-    #'deps/c-ares/src/lib/ares_dns_multistring.c',
+    'deps/c-ares/src/lib/ares_dns_multistring.c',
     'deps/c-ares/src/lib/ares_dns_name.c',
     'deps/c-ares/src/lib/ares_dns_parse.c',
     'deps/c-ares/src/lib/ares_dns_record.c',
