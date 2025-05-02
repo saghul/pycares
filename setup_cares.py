@@ -32,7 +32,6 @@ cares_sources = [
     'deps/c-ares/src/lib/ares_data.c',
     'deps/c-ares/src/lib/ares_destroy.c',
     'deps/c-ares/src/lib/ares_dns_mapping.c',
-    'deps/c-ares/src/lib/ares_dns_multistring.c',
     'deps/c-ares/src/lib/ares_dns_name.c',
     'deps/c-ares/src/lib/ares_dns_parse.c',
     'deps/c-ares/src/lib/ares_dns_record.c',
@@ -44,7 +43,6 @@ cares_sources = [
     'deps/c-ares/src/lib/ares_event_select.c',
     'deps/c-ares/src/lib/ares_event_thread.c',
     'deps/c-ares/src/lib/ares_event_wake_pipe.c',
-    'deps/c-ares/src/lib/ares_event_win32.c',
     'deps/c-ares/src/lib/ares_expand_name.c',
     'deps/c-ares/src/lib/ares_expand_string.c',
     'deps/c-ares/src/lib/ares_fds.c',
@@ -60,7 +58,6 @@ cares_sources = [
     'deps/c-ares/src/lib/ares_init.c',
     'deps/c-ares/src/lib/ares_library_init.c',
     'deps/c-ares/src/lib/ares_math.c',
-    'deps/c-ares/src/lib/ares_metrics.c',
     'deps/c-ares/src/lib/ares_options.c',
     'deps/c-ares/src/lib/ares_parse_a_reply.c',
     'deps/c-ares/src/lib/ares_parse_aaaa_reply.c',
@@ -90,12 +87,16 @@ cares_sources = [
     'deps/c-ares/src/lib/ares_version.c',
     'deps/c-ares/src/lib/inet_net_pton.c',
     'deps/c-ares/src/lib/inet_ntop.c',
+    'deps/c-ares/src/tools/adig.c',
+    'deps/c-ares/src/tools/ahost.c',
+    'deps/c-ares/src/tools/ares_getopt.c',
 ]
 
 if sys.platform == 'win32':
     cares_sources += ['deps/c-ares/src/lib/windows_port.c',
                       'deps/c-ares/src/lib/ares_platform.c',
-                      'deps/c-ares/src/lib/ares_sysconfig_win.c']
+                      'deps/c-ares/src/lib/ares_sysconfig_win.c',
+                      'deps/c-ares/src/lib/ares_event_win32.c']
 
 if sys.platform == 'darwin':
     cares_sources += ['deps/c-ares/src/lib/ares_sysconfig_mac.c']
