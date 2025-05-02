@@ -8,15 +8,12 @@ from setuptools.command.build_ext import build_ext
 use_system_lib = bool(int(os.environ.get('PYCARES_USE_SYSTEM_LIB', 0)))
 
 cares_sources = [
-    'deps/c-ares/src/lib/ares__addrinfo_localhost.c',
-    'deps/c-ares/src/lib/ares__addrinfo2hostent.c',
-    'deps/c-ares/src/lib/ares__close_sockets.c',
-    'deps/c-ares/src/lib/ares__hosts_file.c',
-    'deps/c-ares/src/lib/ares__parse_into_addrinfo.c',
-    'deps/c-ares/src/lib/ares__socket.c',
-    'deps/c-ares/src/lib/ares__sortaddrinfo.c',
+    'deps/c-ares/src/lib/ares_addrinfo_localhost.c',
+    'deps/c-ares/src/lib/ares_addrinfo2hostent.c',
     'deps/c-ares/src/lib/ares_android.c',
     'deps/c-ares/src/lib/ares_cancel.c',
+    'deps/c-ares/src/lib/ares_close_sockets.c',
+    'deps/c-ares/src/lib/ares_conn.c',
     'deps/c-ares/src/lib/ares_cookie.c',
     'deps/c-ares/src/lib/ares_data.c',
     'deps/c-ares/src/lib/ares_destroy.c',
@@ -28,29 +25,36 @@ cares_sources = [
     'deps/c-ares/src/lib/ares_gethostbyaddr.c',
     'deps/c-ares/src/lib/ares_gethostbyname.c',
     'deps/c-ares/src/lib/ares_getnameinfo.c',
+    'deps/c-ares/src/lib/ares_hosts_file.c',
     'deps/c-ares/src/lib/ares_init.c',
     'deps/c-ares/src/lib/ares_library_init.c',
     'deps/c-ares/src/lib/ares_metrics.c',
     'deps/c-ares/src/lib/ares_options.c',
+    'deps/c-ares/src/lib/ares_parse_into_addrinfo.c',
     'deps/c-ares/src/lib/ares_process.c',
     'deps/c-ares/src/lib/ares_qcache.c',
     'deps/c-ares/src/lib/ares_query.c',
     'deps/c-ares/src/lib/ares_search.c',
     'deps/c-ares/src/lib/ares_send.c',
+    'deps/c-ares/src/lib/ares_set_socket_functions.c',
+    'deps/c-ares/src/lib/ares_socket.c',
+    'deps/c-ares/src/lib/ares_sortaddrinfo.c',
     'deps/c-ares/src/lib/ares_strerror.c',
     'deps/c-ares/src/lib/ares_sysconfig_files.c',
     'deps/c-ares/src/lib/ares_sysconfig.c',
     'deps/c-ares/src/lib/ares_timeout.c',
     'deps/c-ares/src/lib/ares_update_servers.c',
     'deps/c-ares/src/lib/ares_version.c',
-    'deps/c-ares/src/lib/dsa/ares__array.c',
-    'deps/c-ares/src/lib/dsa/ares__htable_asvp.c',
-    'deps/c-ares/src/lib/dsa/ares__htable_strvp.c',
-    'deps/c-ares/src/lib/dsa/ares__htable_szvp.c',
-    'deps/c-ares/src/lib/dsa/ares__htable_vpvp.c',
-    'deps/c-ares/src/lib/dsa/ares__htable.c',
-    'deps/c-ares/src/lib/dsa/ares__llist.c',
-    'deps/c-ares/src/lib/dsa/ares__slist.c',
+    'deps/c-ares/src/lib/dsa/ares_array.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_asvp.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_dict.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_strvp.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_szvp.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_vpstr.c',
+    'deps/c-ares/src/lib/dsa/ares_htable_vpvp.c',
+    'deps/c-ares/src/lib/dsa/ares_htable.c',
+    'deps/c-ares/src/lib/dsa/ares_llist.c',
+    'deps/c-ares/src/lib/dsa/ares_slist.c',
     'deps/c-ares/src/lib/event/ares_event_configchg.c',
     'deps/c-ares/src/lib/event/ares_event_thread.c',
     'deps/c-ares/src/lib/event/ares_event_wake_pipe.c',
@@ -78,21 +82,20 @@ cares_sources = [
     'deps/c-ares/src/lib/record/ares_dns_parse.c',
     'deps/c-ares/src/lib/record/ares_dns_record.c',
     'deps/c-ares/src/lib/record/ares_dns_write.c',
-    'deps/c-ares/src/lib/str/ares__buf.c',
+    'deps/c-ares/src/lib/str/ares_buf.c',
     'deps/c-ares/src/lib/str/ares_str.c',
-    'deps/c-ares/src/lib/str/ares_strcasecmp.c',
     'deps/c-ares/src/lib/str/ares_strsplit.c',
-    'deps/c-ares/src/lib/util/ares__iface_ips.c',
-    'deps/c-ares/src/lib/util/ares__threads.c',
-    'deps/c-ares/src/lib/util/ares__timeval.c',
+    'deps/c-ares/src/lib/util/ares_iface_ips.c',
     'deps/c-ares/src/lib/util/ares_math.c',
     'deps/c-ares/src/lib/util/ares_rand.c',
+    'deps/c-ares/src/lib/util/ares_threads.c',
+    'deps/c-ares/src/lib/util/ares_timeval.c',
+    'deps/c-ares/src/lib/util/ares_uri.c',
 ]
 
 if sys.platform == 'win32':
     cares_sources += ['deps/c-ares/src/lib/ares_sysconfig_win.c',
                       'deps/c-ares/src/lib/windows_port.c',
-                      'deps/c-ares/src/lib/ares_platform.c',
                       'deps/c-ares/src/lib/event/ares_event_win32.c']
 
 if sys.platform == 'darwin':
@@ -112,6 +115,7 @@ class cares_build_ext(build_ext):
     def build_extensions(self):
         self.add_include_dir(os.path.join(self.cares_dir, 'include'))
         self.add_include_dir(os.path.join(self.cares_dir, 'src', 'lib'))
+        self.add_include_dir(os.path.join(self.cares_dir, 'src', 'lib', 'include'))
         self.add_include_dir(os.path.join(self.build_config_dir, 'include'), True)
         if sys.platform != 'win32':
             self.compiler.define_macro('HAVE_CONFIG_H', 1)
