@@ -37,10 +37,6 @@ cares_sources = [
     'deps/c-ares/src/lib/ares_dns_record.c',
     'deps/c-ares/src/lib/ares_dns_write.c',
     'deps/c-ares/src/lib/ares_event_configchg.c',
-    'deps/c-ares/src/lib/ares_event_epoll.c',
-    'deps/c-ares/src/lib/ares_event_kqueue.c',
-    'deps/c-ares/src/lib/ares_event_poll.c',
-    'deps/c-ares/src/lib/ares_event_select.c',
     'deps/c-ares/src/lib/ares_event_thread.c',
     'deps/c-ares/src/lib/ares_event_wake_pipe.c',
     'deps/c-ares/src/lib/ares_expand_name.c',
@@ -157,19 +153,23 @@ class cares_build_ext(build_ext):
             self.compiler.define_macro('CARES_THREADS', 1)
             self.compiler.define_macro('CARES_STATICLIB', 1)
             if hasattr(select, 'poll'):
+                cares_sources += ['deps/c-ares/src/lib/ares_event_poll.c']
                 self.compiler.define_macro('HAVE_POLL', 1)
                 self.compiler.define_macro('HAVE_POLL_H', 1)
             if hasattr(select, 'kqueue'):
+                cares_sources += ['deps/c-ares/src/lib/ares_event_kqueue.c']
                 self.compiler.define_macro('HAVE_KQUEUE', 1)
                 self.compiler.define_macro('HAVE_SYS_TYPES_H', 1)
                 self.compiler.define_macro('HAVE_SYS_EVENT_H', 1)
                 self.compiler.define_macro('HAVE_SYS_TIME_H', 1)
                 self.compiler.define_macro('HAVE_FCNTL_H', 1)
             if hasattr(select, 'epoll'):
+                cares_sources += ['deps/c-ares/src/lib/ares_event_epoll.c']
                 self.compiler.define_macro('HAVE_EPOLL', 1)
                 self.compiler.define_macro('HAVE_SYS_EPOLL_H', 1)
                 self.compiler.define_macro('HAVE_FCNTL_H', 1)
             if hasattr(os, 'pipe') and sys.platform != 'win32':
+                cares_sources += ['deps/c-ares/src/lib/ares_event_select.c']
                 self.compiler.define_macro('HAVE_PIPE', 1)
             self.extensions[0].sources += cares_sources
 
