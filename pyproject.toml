@@ -3,6 +3,7 @@ requires = ["setuptools", "wheel", "cffi>=1.5.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
+enable = ["cpython-freethreading"]
 build = "cp3*"
 
 [tool.cibuildwheel.linux]
