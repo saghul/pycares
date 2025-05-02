@@ -337,7 +337,11 @@ class Channel:
 
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
-        optmask = 0
+        optmask = _lib.ARES_OPT_QUERY_CACHE
+        # Query cache was enabled by default in https://github.com/c-ares/c-ares/pull/786
+        # for version 1.31.0 and later.
+        # but it is disabled in pycares by default for backwards compatibility.
+        options.qcache_max_ttl = 0
 
         if flags is not None:
             options.flags = flags
