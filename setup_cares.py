@@ -92,7 +92,6 @@ cares_sources = [
 if sys.platform == 'win32':
     cares_sources += ['deps/c-ares/src/lib/windows_port.c',
                       'deps/c-ares/src/lib/ares_platform.c',
-                      'deps/c-ares/src/lib/ares_sysconfig_win.c',
                       'deps/c-ares/src/lib/ares_event_win32.c']
 
 if sys.platform == 'darwin':
