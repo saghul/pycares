@@ -5,6 +5,7 @@ import codecs
 import os
 import re
 import sys
+import sysconfig
 
 # we have to import setup_cares.py which is in project's root folder
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -17,6 +18,13 @@ from setup_cares import cares_build_ext
 def get_version():
     return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""", open('src/pycares/_version.py').read()).group('version')
 
+
+def is_free_threaded_python():
+    cflags = sysconfig.get_config_var("CFLAGS") or ""
+    cppflags = sysconfig.get_config_var("CPPFLAGS") or ""
+    return "--disable-gil" in cflags or "--disable-gil" in cppflags
+
+cffi = "cffi @ git+https://github.com/quansight-labs/cffi" if is_free_threaded_python() else "cffi>=1.5.0"
 
 setup(name             = 'pycares',
       version          = get_version(),
@@ -45,7 +53,7 @@ setup(name             = 'pycares',
           'Programming Language :: Python :: Implementation :: PyPy',
       ],
       cmdclass         = {'build_ext': cares_build_ext},
-      install_requires = ['cffi>=1.5.0'],
+      install_requires = [cffi],
       extras_require   = {'idna': ['idna >= 2.1']},
       python_requires  = '>=3.9',
       cffi_modules     = ['src/_cffi_src/build_cares.py:ffi'],
