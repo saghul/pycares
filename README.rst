@@ -1,8 +1,3 @@
-Looking for new maintainers
-===========================
-
-https://github.com/saghul/pycares/issues/139
-
 pycares: Python interface for c-ares
 ====================================
 
@@ -20,7 +15,7 @@ DNS requests and name resolutions asynchronously.
 Documentation
 -------------
 
-http://readthedocs.org/docs/pycares/
+https://pycares.readthedocs.io/latest/
 
 
 Bundled c-ares
