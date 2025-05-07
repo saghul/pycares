@@ -16,6 +16,12 @@ jobs:
 
   upload_pypi:
     needs: [build_wheels, build_sdist]
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing & sigstore
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/aiodns
     if: github.event_name == 'release' && github.event.action == 'published'
     runs-on: ubuntu-latest
     steps:
