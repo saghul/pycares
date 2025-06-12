@@ -47,6 +47,14 @@ class DNSResolver(object):
     def gethostbyname(self, name, cb):
         self._channel.gethostbyname(name, socket.AF_INET, cb)
 
+    def close(self):
+        """Close the resolver and cleanup resources."""
+        for fd in list(self._fd_map):
+            self.poll.unregister(fd)
+        self._fd_map.clear()
+        self.poll.close()
+        self._channel.close()
+
 
 if __name__ == '__main__':
     def query_cb(result, error):
@@ -56,10 +64,13 @@ if __name__ == '__main__':
         print(result)
         print(error)
     resolver = DNSResolver()
-    resolver.query('google.com', pycares.QUERY_TYPE_A, query_cb)
-    resolver.query('google.com', pycares.QUERY_TYPE_AAAA, query_cb)
-    resolver.query('facebook.com', pycares.QUERY_TYPE_A, query_cb)
-    resolver.query('sip2sip.info', pycares.QUERY_TYPE_SOA, query_cb)
-    resolver.gethostbyname('apple.com', gethostbyname_cb)
-    resolver.wait_channel()
+    try:
+        resolver.query('google.com', pycares.QUERY_TYPE_A, query_cb)
+        resolver.query('google.com', pycares.QUERY_TYPE_AAAA, query_cb)
+        resolver.query('facebook.com', pycares.QUERY_TYPE_A, query_cb)
+        resolver.query('sip2sip.info', pycares.QUERY_TYPE_SOA, query_cb)
+        resolver.gethostbyname('apple.com', gethostbyname_cb)
+        resolver.wait_channel()
+    finally:
+        resolver.close()
 

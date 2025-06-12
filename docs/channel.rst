@@ -66,6 +66,36 @@
 
     The c-ares ``Channel`` provides asynchronous DNS operations.
 
+    The Channel object is designed to handle an unlimited number of DNS queries efficiently.
+    Creating and destroying resolver instances repeatedly is resource-intensive and not
+    recommended. Instead, create a single resolver instance and reuse it throughout your
+    application's lifetime.
+
+    .. important::
+        It is recommended to explicitly close channels when done for predictable resource
+        cleanup. Use :py:meth:`close` which can be called from any thread.
+        While channels will attempt automatic cleanup during garbage collection, explicit
+        closing is safer as it gives you control over when resources are released.
+
+    .. warning::
+        The channel destruction mechanism has a limited throughput of 60 channels per minute
+        (one channel per second) to ensure thread safety and prevent use-after-free errors
+        in c-ares. This means:
+
+        - Avoid creating transient channels for individual queries
+        - Reuse channel instances whenever possible
+        - For applications with high query volume, use a single long-lived channel
+        - If you must create multiple channels, consider pooling them
+
+        Creating and destroying channels rapidly will result in a backlog as the destruction
+        queue processes channels sequentially with a 1-second delay between each.
+
+    The Channel class supports the context manager protocol for automatic cleanup::
+
+        with pycares.Channel() as channel:
+            channel.query('example.com', pycares.QUERY_TYPE_A, callback)
+        # Channel is automatically closed when exiting the context
+
     .. py:method:: getaddrinfo(host, port, callback, family=0, type=0, proto=0, flags=0)
 
         :param string host: Hostname to resolve.
@@ -243,8 +273,33 @@
 
         Cancel any pending query on this channel. All pending callbacks will be called with ARES_ECANCELLED errorno.
 
+    .. py:method:: close()
+
+        Close the channel as soon as it's safe to do so.
+
+        This method can be called from any thread. The channel will be destroyed
+        safely using a background thread with a 1-second delay to ensure c-ares
+        has completed its cleanup.
+
+        Once close() is called, no new queries can be started. Any pending
+        queries will be cancelled and their callbacks will receive ARES_ECANCELLED.
+
+        .. note::
+            It is recommended to explicitly call :py:meth:`close` rather than
+            relying on garbage collection. Explicit closing provides:
+
+            - Control over when resources are released
+            - Predictable shutdown timing
+            - Proper cleanup of all resources
+
+            While the channel will attempt cleanup during garbage collection,
+            explicit closing is safer and more predictable.
+
+        .. versionadded:: 4.9.0
+
+
     .. py:method:: reinit()
-            
+
         Reinitialize the channel.
 
         For more details, see the `ares_reinit documentation <https://c-ares.org/docs/ares_reinit.html>`_.
@@ -284,4 +339,3 @@
     .. py:attribute:: servers
 
         List of nameservers to use for DNS queries.
-

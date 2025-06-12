@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import functools
+import gc
 import ipaddress
 import os
 import select
@@ -7,6 +9,8 @@ import socket
 import sys
 import unittest
 import threading
+import time
+import weakref
 import pycares
 
 FIXTURES_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'fixtures'))
@@ -671,6 +675,337 @@ class DNSTest(unittest.TestCase):
     def test_strerror_str(self):
         for key in pycares.errno.errorcode:
             self.assertTrue(type(pycares.errno.strerror(key)), str)
+
+
+class ChannelCloseTest(unittest.TestCase):
+
+    def test_close_from_same_thread(self):
+        # Test that close() works when called from the same thread
+        channel = pycares.Channel()
+
+        # Start a query
+        result = []
+        def cb(res, err):
+            result.append((res, err))
+
+        channel.query('google.com', pycares.QUERY_TYPE_A, cb)
+
+        # Close should work fine from same thread
+        channel.close()
+
+        # Channel should be closed, no more operations allowed
+        with self.assertRaises(Exception):
+            channel.query('google.com', pycares.QUERY_TYPE_A, cb)
+
+    def test_close_from_different_thread_safe(self):
+        # Test that close() can be safely called from different thread
+        channel = pycares.Channel()
+        close_complete = threading.Event()
+
+        def close_in_thread():
+            channel.close()
+            close_complete.set()
+
+        thread = threading.Thread(target=close_in_thread)
+        thread.start()
+        thread.join()
+
+        # Should complete without errors
+        self.assertTrue(close_complete.is_set())
+        # Channel should be destroyed
+        self.assertIsNone(channel._channel)
+
+    def test_close_idempotent(self):
+        # Test that close() can be called multiple times
+        channel = pycares.Channel()
+        channel.close()
+        channel.close()  # Should not raise
+
+    def test_threadsafe_close(self):
+        # Test that close() can be called from any thread
+        channel = pycares.Channel()
+        close_complete = threading.Event()
+
+        # Close from another thread
+        def close_in_thread():
+            channel.close()
+            close_complete.set()
+
+        thread = threading.Thread(target=close_in_thread)
+        thread.start()
+        thread.join()
+
+        self.assertTrue(close_complete.is_set())
+        self.assertIsNone(channel._channel)
+
+    def test_threadsafe_close_with_pending_queries(self):
+        # Test close with queries in flight
+        channel = pycares.Channel()
+        query_completed = threading.Event()
+        cancelled_count = 0
+
+        def cb(result, error):
+            nonlocal cancelled_count
+            if error == pycares.errno.ARES_ECANCELLED:
+                cancelled_count += 1
+            if cancelled_count >= 3:  # All queries cancelled
+                query_completed.set()
+
+        # Start several queries
+        channel.query('google.com', pycares.QUERY_TYPE_A, cb)
+        channel.query('github.com', pycares.QUERY_TYPE_A, cb)
+        channel.query('python.org', pycares.QUERY_TYPE_A, cb)
+
+        # Close immediately - this should cancel pending queries
+        channel.close()
+
+        # Wait for cancellation callbacks
+        self.assertTrue(query_completed.wait(timeout=2.0))
+        self.assertEqual(cancelled_count, 3)  # All 3 queries should be cancelled
+
+    def test_query_after_close_raises(self):
+        # Test that queries raise after close()
+        channel = pycares.Channel()
+        channel.close()
+
+        def cb(result, error):
+            pass
+
+        with self.assertRaises(RuntimeError) as cm:
+            channel.query('example.com', pycares.QUERY_TYPE_A, cb)
+
+        self.assertIn("destroyed", str(cm.exception))
+
+    def test_close_from_different_thread(self):
+        # Test that close works from different thread
+        channel = pycares.Channel()
+        close_complete = threading.Event()
+
+        def close_in_thread():
+            channel.close()
+            close_complete.set()
+
+        thread = threading.Thread(target=close_in_thread)
+        thread.start()
+        thread.join()
+
+        self.assertTrue(close_complete.is_set())
+        self.assertIsNone(channel._channel)
+
+    def test_automatic_cleanup_same_thread(self):
+        # Test that __del__ cleans up automatically when in same thread
+        # Create a channel and weak reference to track its lifecycle
+        channel = pycares.Channel()
+        weak_ref = weakref.ref(channel)
+
+        # Verify channel exists
+        self.assertIsNotNone(weak_ref())
+
+        # Delete the channel reference
+        del channel
+
+        # Force garbage collection
+        gc.collect()
+        gc.collect()  # Sometimes needs multiple passes
+
+        # Channel should be gone now (cleaned up by __del__)
+        self.assertIsNone(weak_ref())
+
+    def test_automatic_cleanup_different_thread_with_shutdown_thread(self):
+        # Test that __del__ now safely cleans up using shutdown thread
+        # when channel is deleted from a different thread
+        channel_container = []
+        weak_ref_container = []
+
+        def create_channel_in_thread():
+            channel = pycares.Channel()
+            weak_ref = weakref.ref(channel)
+            channel_container.append(channel)
+            weak_ref_container.append(weak_ref)
+
+        # Create channel in different thread
+        thread = threading.Thread(target=create_channel_in_thread)
+        thread.start()
+        thread.join()
+
+        # Get the weak reference
+        weak_ref = weak_ref_container[0]
+
+        # Verify channel exists
+        self.assertIsNotNone(weak_ref())
+
+        # Delete the channel reference from main thread
+        channel_container.clear()
+
+        # Force garbage collection
+        gc.collect()
+        gc.collect()
+
+        # Give the shutdown thread time to run
+        time.sleep(0.1)
+
+        # Channel should be cleaned up via the shutdown thread
+        self.assertIsNone(weak_ref())
+
+        # Note: The shutdown thread mechanism ensures safe cleanup
+        # even when deleted from a different thread
+
+    def test_no_crash_on_interpreter_shutdown(self):
+        # Test that channels with pending queries don't crash during interpreter shutdown
+        import subprocess
+
+        # Path to the shutdown test script
+        script_path = os.path.join(os.path.dirname(__file__), 'shutdown_at_exit_script.py')
+
+        # Run the script in a subprocess
+        result = subprocess.run(
+            [sys.executable, script_path],
+            capture_output=True,
+            text=True
+        )
+
+        # Should exit cleanly without errors
+        self.assertEqual(result.returncode, 0)
+        # Should not have PythonFinalizationError in stderr
+        self.assertNotIn('PythonFinalizationError', result.stderr)
+        self.assertNotIn('can\'t create new thread at interpreter shutdown', result.stderr)
+
+    def test_context_manager(self):
+        # Test that Channel works as a context manager
+        result_container = []
+
+        def cb(result, error):
+            result_container.append((result, error))
+
+        # Test normal usage
+        with pycares.Channel() as channel:
+            self.assertIsNotNone(channel._channel)
+            # Can make queries while in context
+            channel.query('example.com', pycares.QUERY_TYPE_A, cb)
+
+        # Channel should be destroyed after exiting context
+        self.assertIsNone(channel._channel)
+
+        # Test with exception
+        try:
+            with pycares.Channel() as channel2:
+                self.assertIsNotNone(channel2._channel)
+                raise ValueError("Test exception")
+        except ValueError:
+            pass
+
+        # Channel should still be destroyed even with exception
+        self.assertIsNone(channel2._channel)
+
+    def test_concurrent_close_multiple_channels(self):
+        # Test multiple channels being closed concurrently
+        channels = []
+        for _ in range(10):
+            channels.append(pycares.Channel())
+
+        close_events = []
+        threads = []
+
+        def close_channel(ch, event):
+            ch.close()
+            event.set()
+
+        # Start threads to close all channels concurrently
+        for ch in channels:
+            event = threading.Event()
+            close_events.append(event)
+            thread = threading.Thread(target=close_channel, args=(ch, event))
+            threads.append(thread)
+            thread.start()
+
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+
+        # Verify all channels were closed
+        for event in close_events:
+            self.assertTrue(event.is_set())
+
+        for ch in channels:
+            self.assertTrue(ch._channel is None)
+
+    def test_rapid_channel_creation_and_close(self):
+        # Test rapid creation and closing of channels
+        for i in range(20):
+            channel = pycares.Channel()
+
+            # Alternate between same-thread and cross-thread closes
+            if i % 2 == 0:
+                channel.close()
+            else:
+                def close_in_thread(channel):
+                    channel.close()
+
+                thread = threading.Thread(target=functools.partial(close_in_thread, channel))
+                thread.start()
+                thread.join()
+
+            # Verify channel is closed
+            self.assertTrue(channel._channel is None)
+
+    def test_close_with_active_queries_from_different_thread(self):
+        # Test closing a channel with active queries from a different thread
+        channel = pycares.Channel()
+        query_started = threading.Event()
+        query_cancelled = threading.Event()
+
+        def query_cb(result, error):
+            if error == pycares.errno.ARES_ECANCELLED:
+                query_cancelled.set()
+
+        # Start queries in one thread
+        def start_queries():
+            # Use a non-responsive server to ensure queries stay pending
+            channel.servers = ['192.0.2.1']  # TEST-NET-1, should not respond
+            for i in range(5):
+                channel.query(f'test{i}.example.com', pycares.QUERY_TYPE_A, query_cb)
+            query_started.set()
+
+        query_thread = threading.Thread(target=start_queries)
+        query_thread.start()
+
+        # Wait for queries to start
+        self.assertTrue(query_started.wait(timeout=2.0))
+
+        # Close from main thread
+        channel.close()
+
+        # Verify channel is closed
+        self.assertTrue(channel._channel is None)
+
+        query_thread.join()
+
+    def test_multiple_closes_from_different_threads(self):
+        # Test that multiple threads can call close() safely
+        channel = pycares.Channel()
+        close_count = 0
+        close_lock = threading.Lock()
+
+        def close_and_count():
+            channel.close()
+            with close_lock:
+                nonlocal close_count
+                close_count += 1
+
+        # Start multiple threads trying to close the same channel
+        threads = []
+        for _ in range(5):
+            thread = threading.Thread(target=close_and_count)
+            threads.append(thread)
+            thread.start()
+
+        # Wait for all threads
+        for thread in threads:
+            thread.join()
+
+        # All threads should complete successfully
+        self.assertEqual(close_count, 5)
+        self.assertTrue(channel._channel is None)
 
 
 class EventThreadTest(unittest.TestCase):
