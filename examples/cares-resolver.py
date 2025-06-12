@@ -52,6 +52,14 @@ class DNSResolver(object):
     def gethostbyname(self, name, cb):
         self._channel.gethostbyname(name, socket.AF_INET, cb)
 
+    def close(self):
+        """Close the resolver and cleanup resources."""
+        self._timer.stop()
+        for handle in self._fd_map.values():
+            handle.close()
+        self._fd_map.clear()
+        self._channel.close()
+
 
 if __name__ == '__main__':
     def query_cb(result, error):
@@ -62,8 +70,11 @@ if __name__ == '__main__':
         print(error)
     loop = pyuv.Loop.default_loop()
     resolver = DNSResolver(loop)
-    resolver.query('google.com', pycares.QUERY_TYPE_A, query_cb)
-    resolver.query('sip2sip.info', pycares.QUERY_TYPE_SOA, query_cb)
-    resolver.gethostbyname('apple.com', gethostbyname_cb)
-    loop.run()
+    try:
+        resolver.query('google.com', pycares.QUERY_TYPE_A, query_cb)
+        resolver.query('sip2sip.info', pycares.QUERY_TYPE_SOA, query_cb)
+        resolver.gethostbyname('apple.com', gethostbyname_cb)
+        loop.run()
+    finally:
+        resolver.close()
 

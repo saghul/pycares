@@ -25,9 +25,12 @@ if __name__ == '__main__':
         print(result)
         print(error)
     channel = pycares.Channel()
-    channel.gethostbyname('google.com', socket.AF_INET, cb)
-    channel.query('google.com', pycares.QUERY_TYPE_A, cb)
-    channel.query('sip2sip.info', pycares.QUERY_TYPE_SOA, cb)
-    wait_channel(channel)
+    try:
+        channel.gethostbyname('google.com', socket.AF_INET, cb)
+        channel.query('google.com', pycares.QUERY_TYPE_A, cb)
+        channel.query('sip2sip.info', pycares.QUERY_TYPE_SOA, cb)
+        wait_channel(channel)
+    finally:
+        channel.close()
     print('Done!')
 

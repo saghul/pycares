@@ -52,18 +52,38 @@ class DNSResolver(object):
     def gethostbyname(self, name, cb):
         self._channel.gethostbyname(name, socket.AF_INET, cb)
 
+    def close(self):
+        """Close the resolver and cleanup resources."""
+        if self._timer:
+            self._timer.cancel()
+            self._timer = None
+        for fd in self._fds:
+            self.loop.remove_reader(fd)
+            self.loop.remove_writer(fd)
+        self._fds.clear()
+        # Note: The channel will be destroyed safely in a background thread
+        # with a 1-second delay to ensure c-ares has completed its cleanup.
+        self._channel.close()
 
-def main():
+
+async def main():
     def cb(result, error):
         print("Result: {}, Error: {}".format(result, error))
-    loop = asyncio.get_event_loop()
+
+    loop = asyncio.get_running_loop()
     resolver = DNSResolver(loop)
-    resolver.query('google.com', pycares.QUERY_TYPE_A, cb)
-    resolver.query('sip2sip.info', pycares.QUERY_TYPE_SOA, cb)
-    resolver.gethostbyname('apple.com', cb)
-    loop.run_forever()
+
+    try:
+        resolver.query('google.com', pycares.QUERY_TYPE_A, cb)
+        resolver.query('sip2sip.info', pycares.QUERY_TYPE_SOA, cb)
+        resolver.gethostbyname('apple.com', cb)
+
+        # Give some time for queries to complete
+        await asyncio.sleep(2)
+    finally:
+        resolver.close()
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
 

@@ -11,10 +11,13 @@ from ._version import __version__
 
 import socket
 import math
-import functools
-import sys
+import threading
+import time
+import weakref
 from collections.abc import Callable, Iterable
-from typing import Any, Optional, Union
+from contextlib import suppress
+from typing import Any, Callable, Optional, Dict, Union
+from queue import SimpleQueue
 
 IP4 = tuple[str, int]
 IP6 = tuple[str, int, int, int]
@@ -82,17 +85,25 @@ class AresError(Exception):
 
 # callback helpers
 
-_global_set = set()
+_handle_to_channel: Dict[Any, "Channel"] = {}  # Maps handle to channel to prevent use-after-free
+
 
 @_ffi.def_extern()
 def _sock_state_cb(data, socket_fd, readable, writable):
+    # Note: sock_state_cb handle is not tracked in _handle_to_channel
+    # because it has a different lifecycle (tied to the channel, not individual queries)
+    if _ffi is None:
+        return
     sock_state_cb = _ffi.from_handle(data)
     sock_state_cb(socket_fd, readable, writable)
 
 @_ffi.def_extern()
 def _host_cb(arg, status, timeouts, hostent):
+    # Get callback data without removing the reference yet
+    if _ffi is None or arg not in _handle_to_channel:
+        return
+
     callback = _ffi.from_handle(arg)
-    _global_set.discard(arg)
 
     if status != _lib.ARES_SUCCESS:
         result = None
@@ -101,11 +112,15 @@ def _host_cb(arg, status, timeouts, hostent):
         status = None
 
     callback(result, status)
+    _handle_to_channel.pop(arg, None)
 
 @_ffi.def_extern()
 def _nameinfo_cb(arg, status, timeouts, node, service):
+    # Get callback data without removing the reference yet
+    if _ffi is None or arg not in _handle_to_channel:
+        return
+
     callback = _ffi.from_handle(arg)
-    _global_set.discard(arg)
 
     if status != _lib.ARES_SUCCESS:
         result = None
@@ -114,11 +129,15 @@ def _nameinfo_cb(arg, status, timeouts, node, service):
         status = None
 
     callback(result, status)
+    _handle_to_channel.pop(arg, None)
 
 @_ffi.def_extern()
 def _query_cb(arg, status, timeouts, abuf, alen):
+    # Get callback data without removing the reference yet
+    if _ffi is None or arg not in _handle_to_channel:
+        return
+
     callback, query_type = _ffi.from_handle(arg)
-    _global_set.discard(arg)
 
     if status == _lib.ARES_SUCCESS:
         if query_type == _lib.T_ANY:
@@ -141,11 +160,15 @@ def _query_cb(arg, status, timeouts, abuf, alen):
         result = None
 
     callback(result, status)
+    _handle_to_channel.pop(arg, None)
 
 @_ffi.def_extern()
 def _addrinfo_cb(arg, status, timeouts, res):
+    # Get callback data without removing the reference yet
+    if _ffi is None or arg not in _handle_to_channel:
+        return
+
     callback = _ffi.from_handle(arg)
-    _global_set.discard(arg)
 
     if status != _lib.ARES_SUCCESS:
         result = None
@@ -154,6 +177,7 @@ def _addrinfo_cb(arg, status, timeouts, res):
         status = None
 
     callback(result, status)
+    _handle_to_channel.pop(arg, None)
 
 def parse_result(query_type, abuf, alen):
     if query_type == _lib.T_A:
@@ -314,6 +338,53 @@ def parse_result(query_type, abuf, alen):
     return result, status
 
 
+class _ChannelShutdownManager:
+    """Manages channel destruction in a single background thread using SimpleQueue."""
+
+    def __init__(self) -> None:
+        self._queue: SimpleQueue = SimpleQueue()
+        self._thread: Optional[threading.Thread] = None
+        self._thread_started = False
+
+    def _run_safe_shutdown_loop(self) -> None:
+        """Process channel destruction requests from the queue."""
+        while True:
+            # Block forever until we get a channel to destroy
+            channel = self._queue.get()
+
+            # Sleep for 1 second to ensure c-ares has finished processing
+            # Its important that c-ares is past this critcial section
+            # so we use a delay to ensure it has time to finish processing
+            # https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
+            time.sleep(1.0)
+
+            # Destroy the channel
+            if _lib is not None and channel is not None:
+                _lib.ares_destroy(channel[0])
+
+    def destroy_channel(self, channel) -> None:
+        """
+        Schedule channel destruction on the background thread with a safety delay.
+
+        Thread Safety and Synchronization:
+        This method uses SimpleQueue which is thread-safe for putting items
+        from multiple threads. The background thread processes channels
+        sequentially with a 1-second delay before each destruction.
+        """
+        # Put the channel in the queue
+        self._queue.put(channel)
+
+        # Start the background thread if not already started
+        if not self._thread_started:
+            self._thread_started = True
+            self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)
+            self._thread.start()
+
+
+# Global shutdown manager instance
+_shutdown_manager = _ChannelShutdownManager()
+
+
 class Channel:
     __qtypes__ = (_lib.T_A, _lib.T_AAAA, _lib.T_ANY, _lib.T_CAA, _lib.T_CNAME, _lib.T_MX, _lib.T_NAPTR, _lib.T_NS, _lib.T_PTR, _lib.T_SOA, _lib.T_SRV, _lib.T_TXT)
     __qclasses__ = (_lib.C_IN, _lib.C_CHAOS, _lib.C_HS, _lib.C_NONE, _lib.C_ANY)
@@ -336,6 +407,9 @@ class Channel:
                  local_dev: Optional[str] = None,
                  resolvconf_path: Union[str, bytes, None] = None,
                  event_thread: bool = False) -> None:
+
+        # Initialize _channel to None first to ensure __del__ doesn't fail
+        self._channel = None
 
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
@@ -421,8 +495,9 @@ class Channel:
         if r != _lib.ARES_SUCCESS:
             raise AresError('Failed to initialize c-ares channel')
 
-        self._channel = _ffi.gc(channel, lambda x: _lib.ares_destroy(x[0]))
-
+        # Initialize all attributes for consistency
+        self._event_thread = event_thread
+        self._channel = channel
         if servers:
             self.servers = servers
 
@@ -431,6 +506,46 @@ class Channel:
 
         if local_dev:
             self.set_local_dev(local_dev)
+
+    def __enter__(self):
+        """Enter the context manager."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the context manager and close the channel."""
+        self.close()
+        return False
+
+    def __del__(self) -> None:
+        """Ensure the channel is destroyed when the object is deleted."""
+        if self._channel is not None:
+            # Schedule channel destruction using the global shutdown manager
+            self._schedule_destruction()
+
+    def _create_callback_handle(self, callback_data):
+        """
+        Create a callback handle and register it for tracking.
+
+        This ensures that:
+        1. The callback data is wrapped in a CFFI handle
+        2. The handle is mapped to this channel to keep it alive
+
+        Args:
+            callback_data: The data to pass to the callback (usually a callable or tuple)
+
+        Returns:
+            The CFFI handle that can be passed to C functions
+
+        Raises:
+            RuntimeError: If the channel is destroyed
+
+        """
+        if self._channel is None:
+            raise RuntimeError("Channel is destroyed, no new queries allowed")
+
+        userdata = _ffi.new_handle(callback_data)
+        _handle_to_channel[userdata] = self
+        return userdata
 
     def cancel(self) -> None:
         _lib.ares_cancel(self._channel[0])
@@ -531,16 +646,14 @@ class Channel:
         else:
             raise ValueError("invalid IP address")
 
-        userdata = _ffi.new_handle(callback)
-        _global_set.add(userdata)
+        userdata = self._create_callback_handle(callback)
         _lib.ares_gethostbyaddr(self._channel[0], address, _ffi.sizeof(address[0]), family, _lib._host_cb, userdata)
 
     def gethostbyname(self, name: str, family: socket.AddressFamily, callback: Callable[[Any, int], None]) -> None:
         if not callable(callback):
             raise TypeError("a callable is required")
 
-        userdata = _ffi.new_handle(callback)
-        _global_set.add(userdata)
+        userdata = self._create_callback_handle(callback)
         _lib.ares_gethostbyname(self._channel[0], parse_name(name), family, _lib._host_cb, userdata)
 
     def getaddrinfo(
@@ -563,8 +676,7 @@ class Channel:
         else:
             service = ascii_bytes(port)
 
-        userdata = _ffi.new_handle(callback)
-        _global_set.add(userdata)
+        userdata = self._create_callback_handle(callback)
 
         hints = _ffi.new('struct ares_addrinfo_hints*')
         hints.ai_flags = flags
@@ -592,8 +704,7 @@ class Channel:
         if query_class not in self.__qclasses__:
             raise ValueError('invalid query class specified')
 
-        userdata = _ffi.new_handle((callback, query_type))
-        _global_set.add(userdata)
+        userdata = self._create_callback_handle((callback, query_type))
         func(self._channel[0], parse_name(name), query_class, query_type, _lib._query_cb, userdata)
 
     def set_local_ip(self, ip):
@@ -631,12 +742,46 @@ class Channel:
         else:
             raise ValueError("Invalid address argument")
 
-        userdata = _ffi.new_handle(callback)
-        _global_set.add(userdata)
+        userdata = self._create_callback_handle(callback)
         _lib.ares_getnameinfo(self._channel[0], _ffi.cast("struct sockaddr*", sa), _ffi.sizeof(sa[0]), flags, _lib._nameinfo_cb, userdata)
 
     def set_local_dev(self, dev):
         _lib.ares_set_local_dev(self._channel[0], dev)
+
+    def close(self) -> None:
+        """
+        Close the channel as soon as it's safe to do so.
+
+        This method can be called from any thread. The channel will be destroyed
+        safely using a background thread with a 1-second delay to ensure c-ares
+        has completed its cleanup.
+
+        Note: Once close() is called, no new queries can be started. Any pending
+        queries will be cancelled and their callbacks will receive ARES_ECANCELLED.
+
+        """
+        if self._channel is None:
+            # Already destroyed
+            return
+
+        # Cancel all pending queries - this will trigger callbacks with ARES_ECANCELLED
+        self.cancel()
+
+        # Schedule channel destruction
+        self._schedule_destruction()
+
+    def _schedule_destruction(self) -> None:
+        """Schedule channel destruction using the global shutdown manager."""
+        if self._channel is None:
+            return
+        channel = self._channel
+        self._channel = None
+        # Can't start threads during interpreter shutdown
+        # The channel will be cleaned up by the OS
+        # TODO: Change to PythonFinalizationError when Python 3.12 support is dropped
+        with suppress(RuntimeError):
+            _shutdown_manager.destroy_channel(channel)
+
 
 
 class AresResult:
