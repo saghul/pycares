@@ -9,11 +9,10 @@ from . import errno
 from .utils import ascii_bytes, maybe_str, parse_name
 from ._version import __version__
 
-import socket
 import math
+import socket
 import threading
 import time
-import weakref
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from typing import Any, Callable, Optional, Dict, Union
