@@ -2,7 +2,7 @@
 from ._cares import ffi as _ffi, lib as _lib
 import _cffi_backend  # hint for bundler tools
 
-if _lib.ARES_SUCCESS != _lib.ares_library_init(_lib.ARES_LIB_INIT_ALL):
+if _lib.ARES_SUCCESS != _lib.ares_library_init(_lib.ARES_LIB_INIT_ALL) or _ffi is None:
     raise RuntimeError('Could not initialize c-ares')
 
 from . import errno
@@ -92,15 +92,13 @@ _handle_to_channel: Dict[Any, "Channel"] = {}  # Maps handle to channel to preve
 def _sock_state_cb(data, socket_fd, readable, writable):
     # Note: sock_state_cb handle is not tracked in _handle_to_channel
     # because it has a different lifecycle (tied to the channel, not individual queries)
-    if _ffi is None:
-        return
     sock_state_cb = _ffi.from_handle(data)
     sock_state_cb(socket_fd, readable, writable)
 
 @_ffi.def_extern()
 def _host_cb(arg, status, timeouts, hostent):
     # Get callback data without removing the reference yet
-    if _ffi is None or arg not in _handle_to_channel:
+    if arg not in _handle_to_channel:
         return
 
     callback = _ffi.from_handle(arg)
@@ -117,7 +115,7 @@ def _host_cb(arg, status, timeouts, hostent):
 @_ffi.def_extern()
 def _nameinfo_cb(arg, status, timeouts, node, service):
     # Get callback data without removing the reference yet
-    if _ffi is None or arg not in _handle_to_channel:
+    if arg not in _handle_to_channel:
         return
 
     callback = _ffi.from_handle(arg)
@@ -134,7 +132,7 @@ def _nameinfo_cb(arg, status, timeouts, node, service):
 @_ffi.def_extern()
 def _query_cb(arg, status, timeouts, abuf, alen):
     # Get callback data without removing the reference yet
-    if _ffi is None or arg not in _handle_to_channel:
+    if arg not in _handle_to_channel:
         return
 
     callback, query_type = _ffi.from_handle(arg)
@@ -165,7 +163,7 @@ def _query_cb(arg, status, timeouts, abuf, alen):
 @_ffi.def_extern()
 def _addrinfo_cb(arg, status, timeouts, res):
     # Get callback data without removing the reference yet
-    if _ffi is None or arg not in _handle_to_channel:
+    if arg not in _handle_to_channel:
         return
 
     callback = _ffi.from_handle(arg)
@@ -359,7 +357,7 @@ class _ChannelShutdownManager:
             time.sleep(1.0)
 
             # Destroy the channel
-            if _lib is not None and channel is not None:
+            if channel is not None:
                 _lib.ares_destroy(channel[0])
 
     def destroy_channel(self, channel) -> None:
