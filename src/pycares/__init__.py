@@ -609,6 +609,12 @@ class Channel:
     def process_fd(self, read_fd: int, write_fd: int) -> None:
         _lib.ares_process_fd(self._channel[0], _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", write_fd))
 
+    def process_read_fd(self, read_fd:int) -> None:
+        _lib.ares_process_fd(self._channel[0], _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", ARES_SOCKET_BAD))
+
+    def process_write_fd(self, write_fd:int) -> None:
+        _lib.ares_process_fd(self._channel[0], _ffi.cast("ares_socket_t", ARES_SOCKET_BAD), _ffi.cast("ares_socket_t", write_fd))
+
     def timeout(self, t = None):
         maxtv = _ffi.NULL
         tv = _ffi.new("struct timeval*")
