@@ -36,9 +36,9 @@ class DNSTest(unittest.TestCase):
                 continue
             rlist, wlist, xlist = select.select(read_fds, write_fds, [], timeout)
             for fd in rlist:
-                self.channel.process_fd(fd, pycares.ARES_SOCKET_BAD)
+                self.channel.process_read_fd(fd)
             for fd in wlist:
-                self.channel.process_fd(pycares.ARES_SOCKET_BAD, fd)
+                self.channel.process_write_fd(fd)
 
     def assertNoError(self, errorno):
         if errorno == pycares.errno.ARES_ETIMEOUT and self.is_ci:
