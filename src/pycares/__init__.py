@@ -15,7 +15,7 @@ import threading
 import time
 from collections.abc import Callable, Iterable
 from contextlib import suppress
-from typing import Any, Callable, Optional, Dict, Union
+from typing import Any, Callable, Final, Optional, Dict, Union
 from queue import SimpleQueue
 
 IP4 = tuple[str, int]
@@ -794,7 +794,7 @@ class AresResult:
 
 class ares_query_a_result(AresResult):
     __slots__ = ('host', 'ttl')
-    type = 'A'
+    type: Final = 'A'
 
     def __init__(self, ares_addrttl):
         buf = _ffi.new("char[]", _lib.INET6_ADDRSTRLEN)
@@ -805,7 +805,7 @@ class ares_query_a_result(AresResult):
 
 class ares_query_aaaa_result(AresResult):
     __slots__ = ('host', 'ttl')
-    type = 'AAAA'
+    type: Final = 'AAAA'
 
     def __init__(self, ares_addrttl):
         buf = _ffi.new("char[]", _lib.INET6_ADDRSTRLEN)
@@ -816,7 +816,7 @@ class ares_query_aaaa_result(AresResult):
 
 class  ares_query_caa_result(AresResult):
     __slots__ = ('critical', 'property', 'value', 'ttl')
-    type = 'CAA'
+    type: Final = 'CAA'
 
     def __init__(self, caa):
         self.critical = caa.critical
@@ -827,7 +827,7 @@ class  ares_query_caa_result(AresResult):
 
 class ares_query_cname_result(AresResult):
     __slots__ = ('cname', 'ttl')
-    type = 'CNAME'
+    type: Final = 'CNAME'
 
     def __init__(self, host):
         self.cname = maybe_str(_ffi.string(host.h_name))
@@ -836,7 +836,7 @@ class ares_query_cname_result(AresResult):
 
 class ares_query_mx_result(AresResult):
     __slots__ = ('host', 'priority', 'ttl')
-    type = 'MX'
+    type: Final = 'MX'
 
     def __init__(self, mx):
         self.host = maybe_str(_ffi.string(mx.host))
@@ -846,7 +846,7 @@ class ares_query_mx_result(AresResult):
 
 class ares_query_naptr_result(AresResult):
     __slots__ = ('order', 'preference', 'flags', 'service', 'regex', 'replacement', 'ttl')
-    type = 'NAPTR'
+    type: Final = 'NAPTR'
 
     def __init__(self, naptr):
         self.order = naptr.order
@@ -860,7 +860,7 @@ class ares_query_naptr_result(AresResult):
 
 class ares_query_ns_result(AresResult):
     __slots__ = ('host', 'ttl')
-    type = 'NS'
+    type: Final = 'NS'
 
     def __init__(self, ns):
         self.host = maybe_str(_ffi.string(ns))
@@ -869,7 +869,7 @@ class ares_query_ns_result(AresResult):
 
 class ares_query_ptr_result(AresResult):
     __slots__ = ('name', 'ttl', 'aliases')
-    type = 'PTR'
+    type: Final = 'PTR'
 
     def __init__(self, hostent, aliases):
         self.name = maybe_str(_ffi.string(hostent.h_name))
@@ -879,7 +879,7 @@ class ares_query_ptr_result(AresResult):
 
 class ares_query_soa_result(AresResult):
     __slots__ = ('nsname', 'hostmaster', 'serial', 'refresh', 'retry', 'expires', 'minttl', 'ttl')
-    type = 'SOA'
+    type: Final = 'SOA'
 
     def __init__(self, soa):
         self.nsname = maybe_str(_ffi.string(soa.nsname))
@@ -894,7 +894,7 @@ class ares_query_soa_result(AresResult):
 
 class  ares_query_srv_result(AresResult):
     __slots__ = ('host', 'port', 'priority', 'weight', 'ttl')
-    type = 'SRV'
+    type: Final = 'SRV'
 
     def __init__(self, srv):
         self.host = maybe_str(_ffi.string(srv.host))
@@ -906,7 +906,7 @@ class  ares_query_srv_result(AresResult):
 
 class ares_query_txt_result(AresResult):
     __slots__ = ('text', 'ttl')
-    type = 'TXT'
+    type: Final = 'TXT'
 
     def __init__(self, txt_chunk):
         self.text = maybe_str(txt_chunk.text)
@@ -915,7 +915,7 @@ class ares_query_txt_result(AresResult):
 
 class ares_query_txt_result_chunk(AresResult):
     __slots__ = ('text', 'ttl')
-    type = 'TXT'
+    type: Final = 'TXT'
 
     def __init__(self, txt):
         self.text = _ffi.string(txt.txt)
