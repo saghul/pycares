@@ -1171,8 +1171,8 @@ class ChannelCloseTest(unittest.TestCase):
         def noop(xx):
             pass
 
-        # RuntimeError if idna is installed otherwise it should be a UnicodeDecodeError
-        with self.assertRaises((RuntimeError, UnicodeDecodeError)):
+        # RuntimeError if idna is installed otherwise it should be a UnicodeError
+        with self.assertRaises((RuntimeError, UnicodeError)):
             channel.query(large_domain_attack, pycares.QUERY_TYPE_A, noop)
 
 
