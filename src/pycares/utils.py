@@ -27,15 +27,15 @@ def maybe_str(data):
 
 
 def parse_name_idna2008(name: str) -> str:
-    if len(name) > 255:
-        raise RuntimeError(
-            f"domains can only be 253 characters in length not {len(name)}"
-        )
     parts = name.split('.')
     r = []
     for part in parts:
         if part.isascii():
             r.append(part.encode('ascii'))
+        elif len(part) > 253:
+            raise RuntimeError(
+                f"domains can only be 253 characters in length not {len(name)}"
+            )
         else:
             r.append(idna2008.encode(part))
     return b'.'.join(r)
