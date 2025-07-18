@@ -12,6 +12,8 @@ import threading
 import time
 import weakref
 import pycares
+import random
+import string
 
 FIXTURES_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'fixtures'))
 
@@ -1008,6 +1010,19 @@ class ChannelCloseTest(unittest.TestCase):
         self.assertEqual(close_count, 5)
         self.assertTrue(channel._channel is None)
 
+    def test_stops_large_domain_name_attack(self):
+        # go over 253 characters that do not include periods
+        channel = pycares.Channel()
+        large_domain_attack = "Ⅰ" + ''.join(random.choices(string.ascii_letters + string.digits, k=255))
+        
+        def noop(xx):
+            pass 
+        # RuntimeError if idna is installed otherwise it should be a UnicodeDecodeError
+        with self.assertRaises((RuntimeError, UnicodeDecodeError)):
+            channel.query(large_domain_attack, pycares.QUERY_TYPE_A, noop)
+
+
+        
 
 class EventThreadTest(unittest.TestCase):
 
