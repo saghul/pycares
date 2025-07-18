@@ -34,7 +34,7 @@ def parse_name_idna2008(name: str) -> str:
             r.append(part.encode('ascii'))
         elif len(part) > 253:
             raise RuntimeError(
-                f"domains can only be 253 characters in length not {len(name)}"
+                f"domains can only be less than 253 characters in length not {len(name)}"
             )
         else:
             r.append(idna2008.encode(part))
