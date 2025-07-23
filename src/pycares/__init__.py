@@ -405,7 +405,7 @@ class _ChannelShutdownManager:
 
         # Queue it for processing when thread starts
         self._pending_channels.append(channel)
-        if self._thread:
+        if self._thread is not None:
             # Thread has started, but loop is not ready yet
             return
         with self._thread_start_lock:
