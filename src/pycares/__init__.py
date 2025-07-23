@@ -369,7 +369,7 @@ class _ChannelShutdownManager:
 
         self._loop.run_forever()
 
-    def _schedule_destroy(self, channel) -> None:
+    def _schedule_destroy(self, channel, callback=None) -> None:
         """Schedule the destruction of a channel safely."""
         # First, cancel all pending queries immediately
         if channel is not None and _lib is not None:
@@ -378,6 +378,8 @@ class _ChannelShutdownManager:
         def _destroy():
             if channel is not None and _lib is not None:
                 _lib.ares_destroy(channel[0])
+            if callback:
+                callback()
         
         def _try_destroy():
             if channel is not None and _lib is not None:
@@ -845,7 +847,9 @@ class Channel:
         if self._channel is None:
             return
         channel = self._channel
-        self._channel = None
+        # Don't clear self._channel here - keep the reference alive
+        # until the channel is actually destroyed to prevent callbacks
+        # from accessing freed Python objects
         # Can't start threads during interpreter shutdown
         # The channel will be cleaned up by the OS
         # TODO: Change to PythonFinalizationError when Python 3.12 support is dropped
