@@ -376,12 +376,11 @@ class _ChannelShutdownManager:
 
         Thread Safety and Synchronization:
         This method uses a carefully designed synchronization approach to handle
-        concurrent calls from multiple threads without using locks:
+        concurrent calls from multiple threads:
 
-        1. We check if self._loop is not None (not _thread_started) because the
-           event loop might not be created yet even if the thread has started.
-           This avoids race conditions where _thread_started is True but _loop
-           is still None.
+        1. We check if self._loop is not None because the event loop might not
+           be created yet even if the thread has started. This avoids race
+           conditions where the thread exists but _loop is still None.
 
         2. If the loop exists, we use call_soon_threadsafe() which is thread-safe
            and can be called from any thread.
@@ -390,10 +389,9 @@ class _ChannelShutdownManager:
            This queue acts as a buffer for channels that need destruction before
            the event loop is ready.
 
-        4. The _thread_started flag is set to True immediately after checking it's
-           False, preventing multiple threads from creating the shutdown thread.
-           Any subsequent calls will either use the loop (once ready) or queue
-           their channels.
+        4. We use a threading.Lock (_thread_start_lock) to prevent race conditions
+           when creating the shutdown thread. This ensures only one thread can
+           create the background thread, preventing duplicate threads.
 
         5. The background thread processes all pending channels once the loop
            starts, ensuring no channels are lost during the startup phase.
