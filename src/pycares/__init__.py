@@ -342,7 +342,7 @@ class _ChannelShutdownManager:
     def __init__(self) -> None:
         self._thread: Optional[threading.Thread] = None
         self._loop: Optional[asyncio.AbstractEventLoop] = None
-        self._thread_started = False
+        self._thread_start_lock = threading.Lock()
         self._pending_channels: list = []
 
     def _run_safe_shutdown_loop(self) -> None:
@@ -405,10 +405,13 @@ class _ChannelShutdownManager:
 
         # Queue it for processing when thread starts
         self._pending_channels.append(channel)
-        if not self._thread_started:
-            self._thread_started = True
-            self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)
-            self._thread.start()
+        if self._thread:
+            # Thread has started, but loop is not ready yet
+            return
+        with self._thread_start_lock:
+            if self._thread is None:
+                self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)
+                self._thread.start()
 
 
 # Global shutdown manager instance
