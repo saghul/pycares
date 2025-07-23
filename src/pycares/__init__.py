@@ -374,16 +374,17 @@ class _ChannelShutdownManager:
         def _try_destroy():
             if channel is not None and _lib is not None:
                 # Check if queue is empty with 0ms timeout (non-blocking)
-                # This prevents race conditions at:
-                # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1421
-                #   (callback invocation in end_query)
-                # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
-                #   (query freeing in end_query)
-                # By ensuring the event thread has no active queries before destruction
                 status = _lib.ares_queue_wait_empty(channel[0], 0)
                 if status == _lib.ARES_SUCCESS:
-                    # Queue is empty, safe to destroy
-                    _lib.ares_destroy(channel[0])
+                    # Queue is empty, but we need a small delay to ensure the event
+                    # thread gets past critical sections where it might still access
+                    # the channel after removing queries from the queue.
+                    # This prevents race conditions at:
+                    # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1421
+                    #   (callback invocation in end_query)
+                    # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
+                    #   (query freeing in end_query)
+                    self._loop.call_later(0.1, lambda: _lib.ares_destroy(channel[0]) if _lib is not None and channel is not None else None)
                 else:
                     # Queue not empty yet, reschedule check
                     self._loop.call_later(0.1, _try_destroy)
