@@ -369,7 +369,7 @@ class _ChannelShutdownManager:
 
         self._loop.run_forever()
 
-    def _schedule_destroy(self, channel, callback=None) -> None:
+    def _schedule_destroy(self, channel) -> None:
         """Schedule the destruction of a channel safely."""
         # First, cancel all pending queries immediately
         if channel is not None and _lib is not None:
@@ -378,8 +378,6 @@ class _ChannelShutdownManager:
         def _destroy():
             if channel is not None and _lib is not None:
                 _lib.ares_destroy(channel[0])
-            if callback:
-                callback()
         
         def _try_destroy():
             if channel is not None and _lib is not None:
@@ -476,6 +474,7 @@ class Channel:
 
         # Initialize _channel to None first to ensure __del__ doesn't fail
         self._channel = None
+        self._destruction_scheduled = False
 
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
@@ -846,6 +845,11 @@ class Channel:
         """Schedule channel destruction using the global shutdown manager."""
         if self._channel is None:
             return
+        # Prevent double destruction
+        if self._destruction_scheduled:
+            return
+        self._destruction_scheduled = True
+        
         channel = self._channel
         # Don't clear self._channel here - keep the reference alive
         # until the channel is actually destroyed to prevent callbacks
