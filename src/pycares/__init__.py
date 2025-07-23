@@ -376,8 +376,13 @@ class _ChannelShutdownManager:
             return
         channel = channel_obj._channel
         
-        # First, cancel all pending queries immediately
+        # Check if there are queries before cancelling
+        had_queries = False
         if _lib is not None:
+            # Check if queue has queries
+            status = _lib.ares_queue_wait_empty(channel[0], 0)
+            had_queries = (status != _lib.ARES_SUCCESS)
+            # Cancel all pending queries
             _lib.ares_cancel(channel[0])
         
         def _destroy():
@@ -398,7 +403,11 @@ class _ChannelShutdownManager:
                     #   (callback invocation in end_query)
                     # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
                     #   (query freeing in end_query)
-                    self._loop.call_later(0.1, _destroy)
+                    # Use longer delay if we had queries that were cancelled
+                    # With event_thread=True, we need more time for the event thread
+                    # to finish processing after the queue is empty
+                    delay = 2.0 if had_queries else 0.5
+                    self._loop.call_later(delay, _destroy)
                 else:
                     # Cancelled queries still being processed, check again
                     self._loop.call_later(0.1, _try_destroy)
