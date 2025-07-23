@@ -362,7 +362,7 @@ class _ChannelShutdownManager:
     def _schedule_destroy(self, channel) -> None:
         """Schedule the destruction of a channel with a 1 second delay."""
         def _destroy():
-            if _lib is not None and channel is not None:
+            if channel is not None:
                 _lib.ares_destroy(channel[0])
 
         # Its important that c-ares is past this critcial section
