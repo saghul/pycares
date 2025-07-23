@@ -369,18 +369,25 @@ class _ChannelShutdownManager:
 
         self._loop.run_forever()
 
-    def _schedule_destroy(self, channel) -> None:
+    def _schedule_destroy(self, channel_obj) -> None:
         """Schedule the destruction of a channel safely."""
+        # Extract the c-ares channel from the Channel object
+        if channel_obj is None or channel_obj._channel is None:
+            return
+        channel = channel_obj._channel
+        
         # First, cancel all pending queries immediately
-        if channel is not None and _lib is not None:
+        if _lib is not None:
             _lib.ares_cancel(channel[0])
         
         def _destroy():
-            if channel is not None and _lib is not None:
+            if _lib is not None and channel_obj._channel is not None:
                 _lib.ares_destroy(channel[0])
+                # Now clear the reference
+                channel_obj._channel = None
         
         def _try_destroy():
-            if channel is not None and _lib is not None:
+            if _lib is not None and channel_obj._channel is not None:
                 # Check if queue is empty with 0ms timeout (non-blocking)
                 status = _lib.ares_queue_wait_empty(channel[0], 0)
                 if status == _lib.ARES_SUCCESS:
@@ -391,7 +398,7 @@ class _ChannelShutdownManager:
                     #   (callback invocation in end_query)
                     # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
                     #   (query freeing in end_query)
-                    self._loop.call_later(1.0, _destroy)
+                    self._loop.call_later(0.1, _destroy)
                 else:
                     # Cancelled queries still being processed, check again
                     self._loop.call_later(0.1, _try_destroy)
@@ -399,7 +406,7 @@ class _ChannelShutdownManager:
         # Start checking if cancelled queries have finished
         self._loop.call_soon(_try_destroy)
 
-    def destroy_channel(self, channel) -> None:
+    def destroy_channel(self, channel_obj) -> None:
         """
         Schedule channel destruction on the background thread.
 
@@ -431,11 +438,11 @@ class _ChannelShutdownManager:
         """
         if self._loop is not None:
             # Loop is running, use call_soon_threadsafe
-            self._loop.call_soon_threadsafe(self._schedule_destroy, channel)
+            self._loop.call_soon_threadsafe(self._schedule_destroy, channel_obj)
             return
 
         # Queue it for processing when thread starts
-        self._pending_channels.append(channel)
+        self._pending_channels.append(channel_obj)
         if self._thread is not None:
             # Thread has started, but loop is not ready yet
             return
@@ -850,15 +857,12 @@ class Channel:
             return
         self._destruction_scheduled = True
         
-        channel = self._channel
-        # Don't clear self._channel here - keep the reference alive
-        # until the channel is actually destroyed to prevent callbacks
-        # from accessing freed Python objects
+        # Pass self (the Channel object) to keep it alive during destruction
         # Can't start threads during interpreter shutdown
         # The channel will be cleaned up by the OS
         # TODO: Change to PythonFinalizationError when Python 3.12 support is dropped
         with suppress(RuntimeError):
-            _shutdown_manager.destroy_channel(channel)
+            _shutdown_manager.destroy_channel(self)
 
 
 
