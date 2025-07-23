@@ -371,6 +371,10 @@ class _ChannelShutdownManager:
 
     def _schedule_destroy(self, channel) -> None:
         """Schedule the destruction of a channel safely."""
+        # First, cancel all pending queries immediately
+        if channel is not None and _lib is not None:
+            _lib.ares_cancel(channel[0])
+        
         def _destroy():
             if channel is not None and _lib is not None:
                 _lib.ares_destroy(channel[0])
@@ -380,20 +384,19 @@ class _ChannelShutdownManager:
                 # Check if queue is empty with 0ms timeout (non-blocking)
                 status = _lib.ares_queue_wait_empty(channel[0], 0)
                 if status == _lib.ARES_SUCCESS:
-                    # Queue is empty, but we need a small delay to ensure the event
-                    # thread gets past critical sections where it might still access
-                    # the channel after removing queries from the queue.
-                    # This prevents race conditions at:
+                    # Queue is empty (cancelled queries have finished), but we still
+                    # need a delay to ensure the event thread gets past critical
+                    # sections. This prevents race conditions at:
                     # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1421
                     #   (callback invocation in end_query)
                     # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
                     #   (query freeing in end_query)
-                    self._loop.call_later(0.25, _destroy)
+                    self._loop.call_later(0.1, _destroy)
                 else:
-                    # Queue not empty yet, reschedule check
+                    # Cancelled queries still being processed, check again
                     self._loop.call_later(0.1, _try_destroy)
-
-        # Schedule the destruction attempt on the next event loop iteration
+        
+        # Start checking if cancelled queries have finished
         self._loop.call_soon(_try_destroy)
 
     def destroy_channel(self, channel) -> None:
