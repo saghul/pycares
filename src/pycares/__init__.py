@@ -373,7 +373,7 @@ class _ChannelShutdownManager:
         # c-ares can't get past the critical section. In practice, call_soon
         # seems to be enough but to be extra safe we use a small delay
         # of 0.1 seconds.
-        self._loop.call_soon(0.1, _destroy)
+        self._loop.call_later(0.1, _destroy)
 
     def destroy_channel(self, channel) -> None:
         """
