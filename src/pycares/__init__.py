@@ -335,7 +335,19 @@ def parse_result(query_type, abuf, alen):
 
 
 class _ChannelShutdownManager:
-    """Manages channel destruction in a single background thread with asyncio event loop."""
+    """Manages channel destruction in a single background thread with asyncio event loop.
+    
+    This class prevents race conditions that can occur when destroying c-ares channels
+    while the event thread is still processing queries. Specifically, it prevents
+    crashes at:
+    - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1421
+      (callback invocation in end_query)
+    - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
+      (query freeing in end_query)
+    
+    The manager uses ares_queue_wait_empty() to ensure channels are only destroyed
+    when c-ares confirms no queries are active.
+    """
 
     def __init__(self) -> None:
         self._thread: Optional[threading.Thread] = None
@@ -358,24 +370,30 @@ class _ChannelShutdownManager:
         self._loop.run_forever()
 
     def _schedule_destroy(self, channel) -> None:
-        """Schedule the destruction of a channel with a 1 second delay."""
-        def _destroy():
-            if channel is not None:
-                _lib.ares_destroy(channel[0])
+        """Schedule the destruction of a channel safely."""
+        def _try_destroy():
+            if channel is not None and _lib is not None:
+                # Check if queue is empty with 0ms timeout (non-blocking)
+                # This prevents race conditions at:
+                # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1421
+                #   (callback invocation in end_query)
+                # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
+                #   (query freeing in end_query)
+                # By ensuring the event thread has no active queries before destruction
+                status = _lib.ares_queue_wait_empty(channel[0], 0)
+                if status == _lib.ARES_SUCCESS:
+                    # Queue is empty, safe to destroy
+                    _lib.ares_destroy(channel[0])
+                else:
+                    # Queue not empty yet, reschedule check
+                    self._loop.call_later(0.1, _try_destroy)
 
-        # Its important that c-ares is past this critcial section
-        # so we use a delayed call to ensure it has time to finish processing
-        # https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
-        # We want this number to be as low as possible to allow for rapid
-        # channel creation and destruction without it being so low that it
-        # c-ares can't get past the critical section. In practice, call_soon
-        # seems to be enough but to be extra safe we use a small delay
-        # of 0.1 seconds.
-        self._loop.call_later(0.1, _destroy)
+        # Schedule the destruction attempt on the next event loop iteration
+        self._loop.call_soon(_try_destroy)
 
     def destroy_channel(self, channel) -> None:
         """
-        Schedule channel destruction on the background thread with a safety delay.
+        Schedule channel destruction on the background thread.
 
         Thread Safety and Synchronization:
         This method uses a carefully designed synchronization approach to handle
@@ -398,6 +416,10 @@ class _ChannelShutdownManager:
 
         5. The background thread processes all pending channels once the loop
            starts, ensuring no channels are lost during the startup phase.
+
+        6. Before destroying a channel, we use ares_queue_wait_empty() with a 0ms
+           timeout to check if all queries are complete. If not, we reschedule
+           the check until it's safe to destroy, preventing use-after-free errors.
         """
         if self._loop is not None:
             # Loop is running, use call_soon_threadsafe
