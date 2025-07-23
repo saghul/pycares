@@ -388,7 +388,7 @@ class _ChannelShutdownManager:
                     #   (callback invocation in end_query)
                     # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
                     #   (query freeing in end_query)
-                    self._loop.call_later(0.5, _destroy)
+                    self._loop.call_later(0.25, _destroy)
                 else:
                     # Queue not empty yet, reschedule check
                     self._loop.call_later(0.1, _try_destroy)
