@@ -13,11 +13,9 @@ import asyncio
 import math
 import socket
 import threading
-import time
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from typing import Any, Callable, Final, Optional, Dict, Union
-from queue import SimpleQueue
 
 IP4 = tuple[str, int]
 IP6 = tuple[str, int, int, int]
