@@ -371,6 +371,10 @@ class _ChannelShutdownManager:
 
     def _schedule_destroy(self, channel) -> None:
         """Schedule the destruction of a channel safely."""
+        def _destroy():
+            if channel is not None and _lib is not None:
+                _lib.ares_destroy(channel[0])
+        
         def _try_destroy():
             if channel is not None and _lib is not None:
                 # Check if queue is empty with 0ms timeout (non-blocking)
@@ -384,7 +388,7 @@ class _ChannelShutdownManager:
                     #   (callback invocation in end_query)
                     # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
                     #   (query freeing in end_query)
-                    self._loop.call_later(0.1, lambda: _lib.ares_destroy(channel[0]) if _lib is not None and channel is not None else None)
+                    self._loop.call_later(0.1, _destroy)
                 else:
                     # Queue not empty yet, reschedule check
                     self._loop.call_later(0.1, _try_destroy)
