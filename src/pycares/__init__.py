@@ -366,14 +366,11 @@ class _ChannelShutdownManager:
                 _lib.ares_destroy(channel[0])
 
         # Its important that c-ares is past this critcial section
-        # so we use a delayed call to ensure it has time to finish processing
+        # so we use a call_soon to ensure it has time to finish processing
         # https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
-        # We want this number to be as low as possible to allow for rapid
-        # channel creation and destruction without it being so low that it
-        # c-ares can't get past the critical section. In practice, call_soon
-        # seems to be enough but to be extra safe we use a small delay
-        # of 0.1 seconds.
-        self._loop.call_later(0.1, _destroy)
+        # This ensures that all threads have had a chance to run
+        # before we destroy the channel.
+        self._loop.call_soon(_destroy)
 
     def destroy_channel(self, channel) -> None:
         """
