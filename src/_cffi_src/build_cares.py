@@ -423,6 +423,8 @@ void ares_destroy(ares_channel channel);
 
 void ares_cancel(ares_channel channel);
 
+int ares_queue_wait_empty(ares_channel channel, int timeout_ms);
+
 void ares_set_local_ip4(ares_channel channel, unsigned int local_ip);
 
 void ares_set_local_ip6(ares_channel channel,

@@ -9,14 +9,13 @@ from . import errno
 from .utils import ascii_bytes, maybe_str, parse_name
 from ._version import __version__
 
+import asyncio
 import math
 import socket
 import threading
-import time
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from typing import Any, Callable, Final, Optional, Dict, Union
-from queue import SimpleQueue
 
 IP4 = tuple[str, int]
 IP6 = tuple[str, int, int, int]
@@ -336,46 +335,130 @@ def parse_result(query_type, abuf, alen):
 
 
 class _ChannelShutdownManager:
-    """Manages channel destruction in a single background thread using SimpleQueue."""
+    """Manages channel destruction in a single background thread with asyncio event loop.
+    
+    This class prevents race conditions that can occur when destroying c-ares channels
+    while the event thread is still processing queries. Specifically, it prevents
+    crashes at:
+    - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1421
+      (callback invocation in end_query)
+    - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
+      (query freeing in end_query)
+    
+    The manager uses ares_queue_wait_empty() to ensure channels are only destroyed
+    when c-ares confirms no queries are active.
+    """
 
     def __init__(self) -> None:
-        self._queue: SimpleQueue = SimpleQueue()
         self._thread: Optional[threading.Thread] = None
-        self._thread_started = False
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
+        self._thread_start_lock = threading.Lock()
+        self._pending_channels: list = []
 
     def _run_safe_shutdown_loop(self) -> None:
-        """Process channel destruction requests from the queue."""
-        while True:
-            # Block forever until we get a channel to destroy
-            channel = self._queue.get()
+        """Run the asyncio event loop in the background thread."""
+        self._loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._loop)
 
-            # Sleep for 1 second to ensure c-ares has finished processing
-            # Its important that c-ares is past this critcial section
-            # so we use a delay to ensure it has time to finish processing
-            # https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
-            time.sleep(1.0)
+        # Process any channels that were queued before thread started
+        pending = self._pending_channels
+        self._pending_channels = []
 
-            # Destroy the channel
-            if channel is not None:
+        for channel in pending:
+            self._schedule_destroy(channel)
+
+        self._loop.run_forever()
+
+    def _schedule_destroy(self, channel_obj) -> None:
+        """Schedule the destruction of a channel safely."""
+        # Extract the c-ares channel from the Channel object
+        if channel_obj is None or channel_obj._channel is None:
+            return
+        channel = channel_obj._channel
+        
+        # Check if there are queries before cancelling
+        had_queries = False
+        if _lib is not None:
+            # Check if queue has queries
+            status = _lib.ares_queue_wait_empty(channel[0], 0)
+            had_queries = (status != _lib.ARES_SUCCESS)
+            # Cancel all pending queries
+            _lib.ares_cancel(channel[0])
+        
+        def _destroy():
+            if _lib is not None and channel_obj._channel is not None:
                 _lib.ares_destroy(channel[0])
+                # Now clear the reference
+                channel_obj._channel = None
+        
+        def _try_destroy():
+            if _lib is not None and channel_obj._channel is not None:
+                # Check if queue is empty with 0ms timeout (non-blocking)
+                status = _lib.ares_queue_wait_empty(channel[0], 0)
+                if status == _lib.ARES_SUCCESS:
+                    # Queue is empty (cancelled queries have finished), but we still
+                    # need a delay to ensure the event thread gets past critical
+                    # sections. This prevents race conditions at:
+                    # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1421
+                    #   (callback invocation in end_query)
+                    # - https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
+                    #   (query freeing in end_query)
+                    # Use longer delay if we had queries that were cancelled
+                    # With event_thread=True, we need more time for the event thread
+                    # to finish processing after the queue is empty
+                    delay = 2.0 if had_queries else 0.5
+                    self._loop.call_later(delay, _destroy)
+                else:
+                    # Cancelled queries still being processed, check again
+                    self._loop.call_later(0.1, _try_destroy)
+        
+        # Start checking if cancelled queries have finished
+        self._loop.call_soon(_try_destroy)
 
-    def destroy_channel(self, channel) -> None:
+    def destroy_channel(self, channel_obj) -> None:
         """
-        Schedule channel destruction on the background thread with a safety delay.
+        Schedule channel destruction on the background thread.
 
         Thread Safety and Synchronization:
-        This method uses SimpleQueue which is thread-safe for putting items
-        from multiple threads. The background thread processes channels
-        sequentially with a 1-second delay before each destruction.
-        """
-        # Put the channel in the queue
-        self._queue.put(channel)
+        This method uses a carefully designed synchronization approach to handle
+        concurrent calls from multiple threads:
 
-        # Start the background thread if not already started
-        if not self._thread_started:
-            self._thread_started = True
-            self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)
-            self._thread.start()
+        1. We check if self._loop is not None because the event loop might not
+           be created yet even if the thread has started. This avoids race
+           conditions where the thread exists but _loop is still None.
+
+        2. If the loop exists, we use call_soon_threadsafe() which is thread-safe
+           and can be called from any thread.
+
+        3. If the loop doesn't exist yet, we queue the channel in _pending_channels.
+           This queue acts as a buffer for channels that need destruction before
+           the event loop is ready.
+
+        4. We use a threading.Lock (_thread_start_lock) to prevent race conditions
+           when creating the shutdown thread. This ensures only one thread can
+           create the background thread, preventing duplicate threads.
+
+        5. The background thread processes all pending channels once the loop
+           starts, ensuring no channels are lost during the startup phase.
+
+        6. Before destroying a channel, we use ares_queue_wait_empty() with a 0ms
+           timeout to check if all queries are complete. If not, we reschedule
+           the check until it's safe to destroy, preventing use-after-free errors.
+        """
+        if self._loop is not None:
+            # Loop is running, use call_soon_threadsafe
+            self._loop.call_soon_threadsafe(self._schedule_destroy, channel_obj)
+            return
+
+        # Queue it for processing when thread starts
+        self._pending_channels.append(channel_obj)
+        if self._thread is not None:
+            # Thread has started, but loop is not ready yet
+            return
+        with self._thread_start_lock:
+            if self._thread is None:
+                self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)
+                self._thread.start()
 
 
 # Global shutdown manager instance
@@ -407,6 +490,7 @@ class Channel:
 
         # Initialize _channel to None first to ensure __del__ doesn't fail
         self._channel = None
+        self._destruction_scheduled = False
 
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
@@ -777,13 +861,17 @@ class Channel:
         """Schedule channel destruction using the global shutdown manager."""
         if self._channel is None:
             return
-        channel = self._channel
-        self._channel = None
+        # Prevent double destruction
+        if self._destruction_scheduled:
+            return
+        self._destruction_scheduled = True
+        
+        # Pass self (the Channel object) to keep it alive during destruction
         # Can't start threads during interpreter shutdown
         # The channel will be cleaned up by the OS
         # TODO: Change to PythonFinalizationError when Python 3.12 support is dropped
         with suppress(RuntimeError):
-            _shutdown_manager.destroy_channel(channel)
+            _shutdown_manager.destroy_channel(self)
 
 
 
