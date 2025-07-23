@@ -9,6 +9,7 @@ from . import errno
 from .utils import ascii_bytes, maybe_str, parse_name
 from ._version import __version__
 
+import asyncio
 import math
 import socket
 import threading
@@ -336,42 +337,74 @@ def parse_result(query_type, abuf, alen):
 
 
 class _ChannelShutdownManager:
-    """Manages channel destruction in a single background thread using SimpleQueue."""
+    """Manages channel destruction in a single background thread with asyncio event loop."""
 
     def __init__(self) -> None:
-        self._queue: SimpleQueue = SimpleQueue()
         self._thread: Optional[threading.Thread] = None
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._thread_started = False
+        self._pending_channels: list = []
 
     def _run_safe_shutdown_loop(self) -> None:
-        """Process channel destruction requests from the queue."""
-        while True:
-            # Block forever until we get a channel to destroy
-            channel = self._queue.get()
+        """Run the asyncio event loop in the background thread."""
+        self._loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._loop)
 
-            # Sleep for 1 second to ensure c-ares has finished processing
-            # Its important that c-ares is past this critcial section
-            # so we use a delay to ensure it has time to finish processing
-            # https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
-            time.sleep(1.0)
+        # Process any channels that were queued before thread started
+        pending = self._pending_channels
+        self._pending_channels = []
 
-            # Destroy the channel
-            if channel is not None:
+        for channel in pending:
+            self._schedule_destroy(channel)
+
+        self._loop.run_forever()
+
+    def _schedule_destroy(self, channel) -> None:
+        """Schedule the destruction of a channel with a 1 second delay."""
+        def _destroy():
+            if _lib is not None and channel is not None:
                 _lib.ares_destroy(channel[0])
+
+        # Its important that c-ares is past this critcial section
+        # so we use a delayed call to ensure it has time to finish processing
+        # https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
+        self._loop.call_later(1.0, _destroy)
 
     def destroy_channel(self, channel) -> None:
         """
         Schedule channel destruction on the background thread with a safety delay.
 
         Thread Safety and Synchronization:
-        This method uses SimpleQueue which is thread-safe for putting items
-        from multiple threads. The background thread processes channels
-        sequentially with a 1-second delay before each destruction.
-        """
-        # Put the channel in the queue
-        self._queue.put(channel)
+        This method uses a carefully designed synchronization approach to handle
+        concurrent calls from multiple threads without using locks:
 
-        # Start the background thread if not already started
+        1. We check if self._loop is not None (not _thread_started) because the
+           event loop might not be created yet even if the thread has started.
+           This avoids race conditions where _thread_started is True but _loop
+           is still None.
+
+        2. If the loop exists, we use call_soon_threadsafe() which is thread-safe
+           and can be called from any thread.
+
+        3. If the loop doesn't exist yet, we queue the channel in _pending_channels.
+           This queue acts as a buffer for channels that need destruction before
+           the event loop is ready.
+
+        4. The _thread_started flag is set to True immediately after checking it's
+           False, preventing multiple threads from creating the shutdown thread.
+           Any subsequent calls will either use the loop (once ready) or queue
+           their channels.
+
+        5. The background thread processes all pending channels once the loop
+           starts, ensuring no channels are lost during the startup phase.
+        """
+        if self._loop is not None:
+            # Loop is running, use call_soon_threadsafe
+            self._loop.call_soon_threadsafe(self._schedule_destroy, channel)
+            return
+
+        # Queue it for processing when thread starts
+        self._pending_channels.append(channel)
         if not self._thread_started:
             self._thread_started = True
             self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)

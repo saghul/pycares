@@ -77,19 +77,6 @@
         While channels will attempt automatic cleanup during garbage collection, explicit
         closing is safer as it gives you control over when resources are released.
 
-    .. warning::
-        The channel destruction mechanism has a limited throughput of 60 channels per minute
-        (one channel per second) to ensure thread safety and prevent use-after-free errors
-        in c-ares. This means:
-
-        - Avoid creating transient channels for individual queries
-        - Reuse channel instances whenever possible
-        - For applications with high query volume, use a single long-lived channel
-        - If you must create multiple channels, consider pooling them
-
-        Creating and destroying channels rapidly will result in a backlog as the destruction
-        queue processes channels sequentially with a 1-second delay between each.
-
     The Channel class supports the context manager protocol for automatic cleanup::
 
         with pycares.Channel() as channel:
