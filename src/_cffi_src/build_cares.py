@@ -90,34 +90,6 @@ struct sockaddr_in6 {
 typedef int... ares_socket_t;
 typedef int... ares_socklen_t;
 
-#define ARES_SUCCESS            ...
-
-#define ARES_ENODATA            ...
-#define ARES_EFORMERR           ...
-#define ARES_ESERVFAIL          ...
-#define ARES_ENOTFOUND          ...
-#define ARES_ENOTIMP            ...
-#define ARES_EREFUSED           ...
-#define ARES_EBADQUERY          ...
-#define ARES_EBADNAME           ...
-#define ARES_EBADFAMILY         ...
-#define ARES_EBADRESP           ...
-#define ARES_ECONNREFUSED       ...
-#define ARES_ETIMEOUT           ...
-#define ARES_EOF                ...
-#define ARES_EFILE              ...
-#define ARES_ENOMEM             ...
-#define ARES_EDESTRUCTION       ...
-#define ARES_EBADSTR            ...
-#define ARES_EBADFLAGS          ...
-#define ARES_ENONAME            ...
-#define ARES_EBADHINTS          ...
-#define ARES_ENOTINITIALIZED    ...
-#define ARES_ELOADIPHLPAPI           ...
-#define ARES_EADDRGETNETWORKPARAMS   ...
-#define ARES_ECANCELLED         ...
-#define ARES_ESERVICE           ...
-
 #define ARES_FLAG_USEVC         ...
 #define ARES_FLAG_PRIMARY       ...
 #define ARES_FLAG_IGNTC         ...
@@ -228,6 +200,54 @@ struct ares_server_failover_options {
   unsigned short retry_chance;
   size_t         retry_delay;
 };
+
+typedef enum {
+  ARES_SUCCESS = 0,
+
+  /* Server error codes (ARES_ENODATA indicates no relevant answer) */
+  ARES_ENODATA   = 1,
+  ARES_EFORMERR  = 2,
+  ARES_ESERVFAIL = 3,
+  ARES_ENOTFOUND = 4,
+  ARES_ENOTIMP   = 5,
+  ARES_EREFUSED  = 6,
+
+  /* Locally generated error codes */
+  ARES_EBADQUERY    = 7,
+  ARES_EBADNAME     = 8,
+  ARES_EBADFAMILY   = 9,
+  ARES_EBADRESP     = 10,
+  ARES_ECONNREFUSED = 11,
+  ARES_ETIMEOUT     = 12,
+  ARES_EOF          = 13,
+  ARES_EFILE        = 14,
+  ARES_ENOMEM       = 15,
+  ARES_EDESTRUCTION = 16,
+  ARES_EBADSTR      = 17,
+
+  /* ares_getnameinfo error codes */
+  ARES_EBADFLAGS = 18,
+
+  /* ares_getaddrinfo error codes */
+  ARES_ENONAME   = 19,
+  ARES_EBADHINTS = 20,
+
+  /* Uninitialized library error code */
+  ARES_ENOTINITIALIZED = 21, /* introduced in 1.7.0 */
+
+  /* ares_library_init error codes */
+  ARES_ELOADIPHLPAPI         = 22, /* introduced in 1.7.0 */
+  ARES_EADDRGETNETWORKPARAMS = 23, /* introduced in 1.7.0 */
+
+  /* More error codes */
+  ARES_ECANCELLED = 24, /* introduced in 1.7.0 */
+
+  /* More ares_getaddrinfo error codes */
+  ARES_ESERVICE = 25, /* ares_getaddrinfo() was passed a text service name that
+                       * is not recognized. introduced in 1.16.0 */
+
+  ARES_ENOSERVER = 26 /* No DNS servers were configured */
+} ares_status_t;
 
 /*! Values for ARES_OPT_EVENT_THREAD */
 typedef enum {
@@ -597,6 +617,8 @@ const char *ares_inet_ntop(int af, const void *src, char *dst,
 int ares_inet_pton(int af, const char *src, void *dst);
 
 ares_bool_t ares_threadsafety(void);
+
+ares_status_t ares_queue_wait_empty(ares_channel channel, int timeout_ms);
 """
 
 CALLBACKS = """

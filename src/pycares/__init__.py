@@ -12,9 +12,7 @@ from ._version import __version__
 import math
 import socket
 import threading
-import time
 from collections.abc import Callable, Iterable
-from contextlib import suppress
 from typing import Any, Callable, Final, Optional, Dict, Union
 from queue import SimpleQueue
 
@@ -341,7 +339,7 @@ class _ChannelShutdownManager:
     def __init__(self) -> None:
         self._queue: SimpleQueue = SimpleQueue()
         self._thread: Optional[threading.Thread] = None
-        self._thread_started = False
+        self._start_lock = threading.Lock()
 
     def _run_safe_shutdown_loop(self) -> None:
         """Process channel destruction requests from the queue."""
@@ -349,15 +347,26 @@ class _ChannelShutdownManager:
             # Block forever until we get a channel to destroy
             channel = self._queue.get()
 
-            # Sleep for 1 second to ensure c-ares has finished processing
-            # Its important that c-ares is past this critcial section
-            # so we use a delay to ensure it has time to finish processing
-            # https://github.com/c-ares/c-ares/blob/4f42928848e8b73d322b15ecbe3e8d753bf8734e/src/lib/ares_process.c#L1422
-            time.sleep(1.0)
+            # Cancel all pending queries - this will trigger callbacks with ARES_ECANCELLED
+            _lib.ares_cancel(channel[0])
+
+            # Wait for all queries to finish
+            _lib.ares_queue_wait_empty(channel[0], -1)
 
             # Destroy the channel
             if channel is not None:
                 _lib.ares_destroy(channel[0])
+
+    def start(self) -> None:
+        """Start the background thread if not already started."""
+        if self._thread is not None:
+            return
+        with self._start_lock:
+            if self._thread is not None:
+                # Started by another thread while waiting for the lock
+                return
+            self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)
+            self._thread.start()
 
     def destroy_channel(self, channel) -> None:
         """
@@ -366,16 +375,9 @@ class _ChannelShutdownManager:
         Thread Safety and Synchronization:
         This method uses SimpleQueue which is thread-safe for putting items
         from multiple threads. The background thread processes channels
-        sequentially with a 1-second delay before each destruction.
+        sequentially waiting for queries to end before each destruction.
         """
-        # Put the channel in the queue
         self._queue.put(channel)
-
-        # Start the background thread if not already started
-        if not self._thread_started:
-            self._thread_started = True
-            self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)
-            self._thread.start()
 
 
 # Global shutdown manager instance
@@ -504,11 +506,12 @@ class Channel:
         if local_dev:
             self.set_local_dev(local_dev)
 
+        # Ensure the shutdown thread is started
+        _shutdown_manager.start()
+
     def __del__(self) -> None:
         """Ensure the channel is destroyed when the object is deleted."""
-        if self._channel is not None:
-            # Schedule channel destruction using the global shutdown manager
-            self._schedule_destruction()
+        self.close()
 
     def _create_callback_handle(self, callback_data):
         """
@@ -758,24 +761,12 @@ class Channel:
             # Already destroyed
             return
 
-        # Cancel all pending queries - this will trigger callbacks with ARES_ECANCELLED
-        self.cancel()
+        # NB: don't cancel queries here, it may lead to problem if done from a
+        # query callback.
 
         # Schedule channel destruction
-        self._schedule_destruction()
-
-    def _schedule_destruction(self) -> None:
-        """Schedule channel destruction using the global shutdown manager."""
-        if self._channel is None:
-            return
-        channel = self._channel
-        self._channel = None
-        # Can't start threads during interpreter shutdown
-        # The channel will be cleaned up by the OS
-        # TODO: Change to PythonFinalizationError when Python 3.12 support is dropped
-        with suppress(RuntimeError):
-            _shutdown_manager.destroy_channel(channel)
-
+        channel, self._channel = self._channel, None
+        _shutdown_manager.destroy_channel(channel)
 
 
 class AresResult:
