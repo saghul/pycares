@@ -504,15 +504,6 @@ class Channel:
         if local_dev:
             self.set_local_dev(local_dev)
 
-    def __enter__(self):
-        """Enter the context manager."""
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit the context manager and close the channel."""
-        self.close()
-        return False
-
     def __del__(self) -> None:
         """Ensure the channel is destroyed when the object is deleted."""
         if self._channel is not None:

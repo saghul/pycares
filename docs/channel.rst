@@ -90,12 +90,6 @@
         Creating and destroying channels rapidly will result in a backlog as the destruction
         queue processes channels sequentially with a 1-second delay between each.
 
-    The Channel class supports the context manager protocol for automatic cleanup::
-
-        with pycares.Channel() as channel:
-            channel.query('example.com', pycares.QUERY_TYPE_A, callback)
-        # Channel is automatically closed when exiting the context
-
     .. py:method:: getaddrinfo(host, port, callback, family=0, type=0, proto=0, flags=0)
 
         :param string host: Hostname to resolve.
