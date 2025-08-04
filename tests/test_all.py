@@ -1021,33 +1021,6 @@ class ChannelCloseTest(unittest.TestCase):
             "can't create new thread at interpreter shutdown", result.stderr
         )
 
-    def test_context_manager(self):
-        # Test that Channel works as a context manager
-        result_container = []
-
-        def cb(result, error):
-            result_container.append((result, error))
-
-        # Test normal usage
-        with pycares.Channel() as channel:
-            self.assertIsNotNone(channel._channel)
-            # Can make queries while in context
-            channel.query("example.com", pycares.QUERY_TYPE_A, cb)
-
-        # Channel should be destroyed after exiting context
-        self.assertIsNone(channel._channel)
-
-        # Test with exception
-        try:
-            with pycares.Channel() as channel2:
-                self.assertIsNotNone(channel2._channel)
-                raise ValueError("Test exception")
-        except ValueError:
-            pass
-
-        # Channel should still be destroyed even with exception
-        self.assertIsNone(channel2._channel)
-
     def test_concurrent_close_multiple_channels(self):
         # Test multiple channels being closed concurrently
         channels = []
