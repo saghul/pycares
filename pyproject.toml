@@ -1,5 +1,10 @@
 [build-system]
-requires = ["setuptools", "wheel", "cffi>=1.5.0"]
+requires = [
+    "setuptools",
+    "wheel",
+    "cffi>=1.5.0; python_version < '3.14'",
+    "cffi>=2.0.0b1; python_version >= '3.14'",
+]
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
