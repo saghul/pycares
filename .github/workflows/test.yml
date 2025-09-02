@@ -21,7 +21,7 @@ jobs:
           - os: windows-11-arm  # setup-python action only supports 3.11+
             python-version: '3.10'
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: true
     - name: Setup Python
