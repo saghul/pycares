@@ -247,7 +247,7 @@
 
         :param callable callback: Callback to be called with the result of the query.
 
-        Tis function does the same as :py:meth:`query` but it will honor the ``domain`` and ``search`` directives in
+        This function does the same as :py:meth:`query` but it will honor the ``domain`` and ``search`` directives in
         ``resolv.conf``.
 
     .. py:method:: cancel()
@@ -293,6 +293,18 @@
 
         Process the given file descriptors for read and/or write events.
 
+
+    .. py:method:: process_read_fd(read_fd)
+
+        :param int read_fd: File descriptor ready to read from.
+
+        Processes the given file file descriptors for read events
+
+    .. py:method:: process_write_fd(write_fd)
+        :param int write_fd: File descriptor ready to write to.
+
+        Processes the given file file descriptors for write events
+        
     .. py:method:: getsock()
 
         Return a tuple containing 2 lists with the file descriptors ready to read and write.
@@ -305,15 +317,15 @@
         If the ``max_timeout`` parameter is specified, it is stored on the channel and the appropriate value is then
         returned.
 
-    .. py:method:: set_local_ip(local_ip)
+    .. py:method:: set_local_ip(ip)
 
-        :param str local_ip: IP address.
+        :param str ip: IP address.
 
         Set the local IPv4 or IPv6 address from which the queries will be sent.
 
-    .. py:method:: set_local_dev(local_dev)
+    .. py:method:: set_local_dev(dev)
 
-        :param str local_dev: Network device name.
+        :param str dev: Network device name.
 
         Set the local ethernet device from which the queries will be sent.
 
