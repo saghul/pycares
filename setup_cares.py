@@ -108,6 +108,7 @@ class cares_build_ext(build_ext):
         else:
             possible_paths = [
                 os.path.join(install_dir, 'lib', 'libcares.a'),
+                os.path.join(install_dir, 'lib64', 'libcares.a'),
             ]
 
         lib_path = None
