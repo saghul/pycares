@@ -1,12 +1,14 @@
 include README.rst PYPIREADME.rst LICENSE ChangeLog
-include setup.py setup_cares.py tox.ini
+include setup.py setup_cares.py
 graft docs
 graft examples
 graft tests
-graft deps
+graft deps/c-ares
 graft src
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 recursive-exclude * *.[ao]
 recursive-exclude * *.so
+recursive-exclude deps/c-ares/test *
+recursive-exclude deps/c-ares/docs *
 prune docs/_build

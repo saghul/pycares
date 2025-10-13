@@ -30,6 +30,24 @@ That is no longer the case and as a result only A and AAAA records will have TTL
 Follow this PR in uppstream c-ares, looks like TTLs will be added: https://github.com/c-ares/c-ares/pull/393
 
 
+Build Requirements
+------------------
+
+To build pycares from source, you need:
+
+- Python development headers
+- CMake >= 3.5 (https://cmake.org/)
+- A C compiler
+
+Installing CMake:
+
+- **Ubuntu/Debian**: ``apt-get install cmake``
+- **RHEL/CentOS/Fedora**: ``dnf install cmake`` or ``yum install cmake``
+- **macOS**: ``brew install cmake`` or download from cmake.org
+- **Windows**: Download from https://cmake.org/download/
+- **FreeBSD**: ``pkg install cmake``
+
+
 Installation
 ------------
 
