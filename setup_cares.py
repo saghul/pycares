@@ -55,6 +55,7 @@ class cares_build_ext(build_ext):
             '-DCARES_THREADS=ON',
             '-DCARES_STATIC_PIC=ON',  # Position independent code for static lib
             '-DCMAKE_BUILD_TYPE=Release',
+            '-DCMAKE_CONFIGURATION_TYPES=Release',  # For multi-config generators (VS, Xcode)
             f'-DCMAKE_INSTALL_PREFIX={install_dir}',
         ]
 
