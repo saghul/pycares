@@ -21,7 +21,7 @@ jobs:
       matrix:
         include:
           - name: Windows
-            os: windows-latest
+            os: windows-2022
           - name: Windows arm64
             os: windows-11-arm
           - name: macOS x86_64
