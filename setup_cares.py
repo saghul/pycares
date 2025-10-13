@@ -60,7 +60,10 @@ class cares_build_ext(build_ext):
         ]
 
         # Platform-specific configuration
-        if sys.platform == 'win32':
+        if sys.platform == 'darwin':
+            # Set minimum macOS deployment target
+            cmake_args.append('-DCMAKE_OSX_DEPLOYMENT_TARGET=10.12')
+        elif sys.platform == 'win32':
             # Windows-specific handling
             if 'mingw' in self.compiler.compiler_type:
                 cmake_args.extend(['-G', 'MinGW Makefiles'])
