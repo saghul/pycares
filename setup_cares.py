@@ -41,7 +41,9 @@ class cares_build_ext(build_ext):
         # Set up directories
         cares_dir = os.path.join('deps', 'c-ares')
         build_temp = os.path.abspath(os.path.join(self.build_temp, 'c-ares-build'))
+        install_dir = os.path.abspath(os.path.join(self.build_temp, 'c-ares-install'))
         os.makedirs(build_temp, exist_ok=True)
+        os.makedirs(install_dir, exist_ok=True)
 
         # Configure c-ares with CMake
         cmake_args = [
@@ -49,10 +51,11 @@ class cares_build_ext(build_ext):
             '-DCARES_SHARED=OFF',
             '-DCARES_BUILD_TOOLS=OFF',
             '-DCARES_BUILD_TESTS=OFF',
-            '-DCARES_INSTALL=OFF',
+            '-DCARES_INSTALL=ON',
             '-DCARES_THREADS=ON',
             '-DCARES_STATIC_PIC=ON',  # Position independent code for static lib
             '-DCMAKE_BUILD_TYPE=Release',
+            f'-DCMAKE_INSTALL_PREFIX={install_dir}',
         ]
 
         # Platform-specific configuration
@@ -89,20 +92,22 @@ class cares_build_ext(build_ext):
 
         subprocess.check_call([cmake_cmd] + build_args, cwd=build_temp)
 
-        # Find the built library
+        # Install c-ares to temp directory
+        print(f"Installing c-ares to {install_dir}")
+        install_args = ['--install', '.', '--config', 'Release']
+        subprocess.check_call([cmake_cmd] + install_args, cwd=build_temp)
+
+        # Find the installed library
         if sys.platform == 'win32':
-            # Windows puts libraries in different places depending on generator
+            # Windows libraries
             possible_paths = [
-                os.path.join(build_temp, 'lib', 'cares_static.lib'),
-                os.path.join(build_temp, 'lib', 'Release', 'cares_static.lib'),
-                os.path.join(build_temp, 'Release', 'cares_static.lib'),
-                os.path.join(build_temp, 'lib', 'libcares.a'),  # MinGW
-                os.path.join(build_temp, 'libcares.a'),  # MinGW
+                os.path.join(install_dir, 'lib', 'cares.lib'),
+                os.path.join(install_dir, 'lib', 'cares_static.lib'),
+                os.path.join(install_dir, 'lib', 'libcares.a'),  # MinGW
             ]
         else:
             possible_paths = [
-                os.path.join(build_temp, 'lib', 'libcares.a'),
-                os.path.join(build_temp, 'libcares.a'),
+                os.path.join(install_dir, 'lib', 'libcares.a'),
             ]
 
         lib_path = None
@@ -113,16 +118,17 @@ class cares_build_ext(build_ext):
 
         if not lib_path:
             raise RuntimeError(
-                f"Could not find built c-ares library in {build_temp}.\n"
+                f"Could not find installed c-ares library in {install_dir}.\n"
                 f"Checked: {', '.join(possible_paths)}"
             )
 
         print(f"Found c-ares library at: {lib_path}")
 
-        # Set up include directories
-        self.add_include_dir(os.path.join(cares_dir, 'include'), force=True)
+        # Set up include directories from the install directory
+        # This includes all headers (original + generated like ares_build.h, ares_config.h)
+        self.add_include_dir(os.path.join(install_dir, 'include'), force=True)
+        # Also need internal headers from src/lib for some definitions
         self.add_include_dir(os.path.join(cares_dir, 'src', 'lib'), force=True)
-        self.add_include_dir(os.path.join(build_temp, 'include'), force=True)
 
         # Set up the extension to link against the static library
         self.extensions[0].extra_objects = [lib_path]
