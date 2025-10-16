@@ -21,7 +21,7 @@ jobs:
       matrix:
         include:
           - name: Windows
-            os: windows-2022
+            os: windows-latest
           - name: Windows arm64
             os: windows-11-arm
           - name: macOS x86_64
@@ -42,6 +42,8 @@ jobs:
       - name: Enable CPython prerelease
         if: ${{ inputs.prerelease-pythons }}
         run: echo "CIBW_ENABLE=cpython-prerelease" >> $GITHUB_ENV
+      - name: Skip building Windows 32-bit wheels
+        run: echo "CIBW_SKIP=*-win32" >> $GITHUB_ENV
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.1.4
         with:
