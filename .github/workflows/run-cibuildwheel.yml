@@ -25,9 +25,9 @@ jobs:
           - name: Windows arm64
             os: windows-11-arm
           - name: macOS x86_64
-            os: macos-13
+            os: macos-15-intel
           - name: macOS arm64
-            os: macos-latest
+            os: macos-15
           - name: Linux
             os: ubuntu-latest
     steps:
@@ -44,6 +44,8 @@ jobs:
         run: echo "CIBW_ENABLE=cpython-prerelease" >> $GITHUB_ENV
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.1.4
+        env:
+            CIBW_SKIP: '*-win32'
         with:
           output-dir: dist
       - uses: actions/upload-artifact@v4
