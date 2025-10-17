@@ -5,7 +5,6 @@ import gc
 import ipaddress
 import os
 import random
-import select
 import socket
 import string
 import sys
@@ -22,7 +21,10 @@ FIXTURES_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "fixtur
 class DNSTest(unittest.TestCase):
     def setUp(self):
         self.channel = pycares.Channel(
-            timeout=10.0, tries=1, servers=["8.8.8.8", "8.8.4.4"]
+            timeout=10.0,
+            tries=1,
+            servers=["8.8.8.8", "8.8.4.4"],
+            event_thread=True
         )
         self.is_ci = (
             os.environ.get("APPVEYOR")
@@ -34,21 +36,7 @@ class DNSTest(unittest.TestCase):
         self.channel = None
 
     def wait(self):
-        while True:
-            read_fds, write_fds = self.channel.getsock()
-            if not read_fds and not write_fds:
-                break
-            timeout = self.channel.timeout()
-            if timeout == 0.0:
-                self.channel.process_fd(
-                    pycares.ARES_SOCKET_BAD, pycares.ARES_SOCKET_BAD
-                )
-                continue
-            rlist, wlist, xlist = select.select(read_fds, write_fds, [], timeout)
-            for fd in rlist:
-                self.channel.process_read_fd(fd)
-            for fd in wlist:
-                self.channel.process_write_fd(fd)
+        self.channel.wait()
 
     def assertNoError(self, errorno):
         if errorno == pycares.errno.ARES_ETIMEOUT and self.is_ci:
@@ -244,7 +232,7 @@ class DNSTest(unittest.TestCase):
                 self.errorno_count += 1
             self.count += 1
 
-        self.channel = pycares.Channel(timeout=1.0, tries=1, rotate=True)
+        self.channel = pycares.Channel(timeout=1.0, tries=1, rotate=True, event_thread=True)
         self.channel.query("google.com", pycares.QUERY_TYPE_A, cb)
         self.channel.query("google.com", pycares.QUERY_TYPE_A, cb)
         self.channel.query("google.com", pycares.QUERY_TYPE_A, cb)
@@ -572,7 +560,7 @@ class DNSTest(unittest.TestCase):
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
 
-        self.channel = pycares.Channel(timeout=5.0, tries=1, servers=["8.8.8.8"])
+        self.channel = pycares.Channel(timeout=5.0, tries=1, servers=["8.8.8.8"], event_thread=True)
         self.channel.query("google.com", pycares.QUERY_TYPE_A, cb)
         self.wait()
         self.assertNoError(self.errorno)
@@ -601,7 +589,11 @@ class DNSTest(unittest.TestCase):
             self.result, self.errorno = result, errorno
 
         self.channel = pycares.Channel(
-            timeout=5.0, tries=1, servers=["8.8.8.8"], local_ip="127.0.0.1"
+            timeout=5.0,
+            tries=1,
+            servers=["8.8.8.8"],
+            local_ip="127.0.0.1",
+            event_thread=True
         )
         self.channel.query("google.com", pycares.QUERY_TYPE_A, cb)
         self.wait()
@@ -634,7 +626,9 @@ class DNSTest(unittest.TestCase):
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
 
-        self.channel = pycares.Channel(timeout=0.5, tries=1)
+        # Here we are explicitly not using the event thread, so lookups don't even start.
+        # What we are trying to test is that cancellation works if a query is slow enough.
+        self.channel = pycares.Channel(timeout=0.5, tries=1, event_thread=False)
         self.channel.getaddrinfo("google.com", None, cb, socket.AF_INET)
         timeout = self.channel.timeout()
         self.assertTrue(timeout > 0.0)
@@ -736,6 +730,7 @@ class DNSTest(unittest.TestCase):
             tries=1,
             timeout=2.0,
             resolvconf_path=os.path.join(FIXTURES_PATH, "badresolv.conf"),
+            event_thread=True,
         )
         self.channel.query("google.com", pycares.QUERY_TYPE_A, cb)
         self.wait()
@@ -754,7 +749,7 @@ class DNSTest(unittest.TestCase):
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
 
-        self.channel = pycares.Channel(timeout=5.0, tries=1, domains=["google.com"])
+        self.channel = pycares.Channel(timeout=5.0, tries=1, domains=["google.com"], event_thread=True)
         self.channel.search("cloud", pycares.QUERY_TYPE_A, cb)
         self.wait()
         self.assertNoError(self.errorno)
@@ -763,7 +758,7 @@ class DNSTest(unittest.TestCase):
             self.assertNotEqual(r.host, None)
 
     def test_lookup(self):
-        channel = pycares.Channel(
+        self.channel = pycares.Channel(
             lookups="b",
             timeout=1,
             tries=1,
@@ -772,6 +767,7 @@ class DNSTest(unittest.TestCase):
             tcp_port=53,
             udp_port=53,
             rotate=True,
+            event_thread=True,
         )
 
         def on_result(result, errorno):
@@ -804,7 +800,7 @@ class DNSTest(unittest.TestCase):
 class ChannelCloseTest(unittest.TestCase):
     def test_close_from_same_thread(self):
         # Test that close() works when called from the same thread
-        channel = pycares.Channel()
+        channel = pycares.Channel(event_thread=True)
 
         # Start a query
         result = []
@@ -823,7 +819,7 @@ class ChannelCloseTest(unittest.TestCase):
 
     def test_close_from_different_thread_safe(self):
         # Test that close() can be safely called from different thread
-        channel = pycares.Channel()
+        channel = pycares.Channel(event_thread=True)
         close_complete = threading.Event()
 
         def close_in_thread():
@@ -841,7 +837,7 @@ class ChannelCloseTest(unittest.TestCase):
 
     def test_close_idempotent(self):
         # Test that close() can be called multiple times
-        channel = pycares.Channel()
+        channel = pycares.Channel(event_thread=True)
         channel.close()
         channel.close()  # Should not raise
 
@@ -889,7 +885,7 @@ class ChannelCloseTest(unittest.TestCase):
 
     def test_query_after_close_raises(self):
         # Test that queries raise after close()
-        channel = pycares.Channel()
+        channel = pycares.Channel(event_thread=True)
         channel.close()
 
         def cb(result, error):
@@ -902,7 +898,7 @@ class ChannelCloseTest(unittest.TestCase):
 
     def test_close_from_different_thread(self):
         # Test that close works from different thread
-        channel = pycares.Channel()
+        channel = pycares.Channel(event_thread=True)
         close_complete = threading.Event()
 
         def close_in_thread():
@@ -919,7 +915,7 @@ class ChannelCloseTest(unittest.TestCase):
     def test_automatic_cleanup_same_thread(self):
         # Test that __del__ cleans up automatically when in same thread
         # Create a channel and weak reference to track its lifecycle
-        channel = pycares.Channel()
+        channel = pycares.Channel(event_thread=True)
         weak_ref = weakref.ref(channel)
 
         # Verify channel exists
@@ -942,7 +938,7 @@ class ChannelCloseTest(unittest.TestCase):
         weak_ref_container = []
 
         def create_channel_in_thread():
-            channel = pycares.Channel()
+            channel = pycares.Channel(event_thread=True)
             weak_ref = weakref.ref(channel)
             channel_container.append(channel)
             weak_ref_container.append(weak_ref)
@@ -1000,7 +996,7 @@ class ChannelCloseTest(unittest.TestCase):
         # Test multiple channels being closed concurrently
         channels = []
         for _ in range(10):
-            channels.append(pycares.Channel())
+            channels.append(pycares.Channel(event_thread=True))
 
         close_events = []
         threads = []
@@ -1031,7 +1027,7 @@ class ChannelCloseTest(unittest.TestCase):
     def test_rapid_channel_creation_and_close(self):
         # Test rapid creation and closing of channels
         for i in range(20):
-            channel = pycares.Channel()
+            channel = pycares.Channel(event_thread=True)
 
             # Alternate between same-thread and cross-thread closes
             if i % 2 == 0:
@@ -1052,7 +1048,7 @@ class ChannelCloseTest(unittest.TestCase):
 
     def test_close_with_active_queries_from_different_thread(self):
         # Test closing a channel with active queries from a different thread
-        channel = pycares.Channel()
+        channel = pycares.Channel(event_thread=True)
         query_started = threading.Event()
         query_cancelled = threading.Event()
 
@@ -1084,7 +1080,7 @@ class ChannelCloseTest(unittest.TestCase):
 
     def test_multiple_closes_from_different_threads(self):
         # Test that multiple threads can call close() safely
-        channel = pycares.Channel()
+        channel = pycares.Channel(event_thread=True)
         close_count = 0
         close_lock = threading.Lock()
 
@@ -1145,14 +1141,12 @@ class EventThreadTest(unittest.TestCase):
 
     def test_query_a(self):
         self.result, self.errorno = None, None
-        event = threading.Event()
 
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
-            event.set()
 
         self.channel.query("google.com", pycares.QUERY_TYPE_A, cb)
-        event.wait()
+        self.channel.wait()
         self.assertNoError(self.errorno)
         for r in self.result:
             self.assertEqual(type(r), pycares.ares_query_a_result)
