@@ -761,6 +761,21 @@ class Channel:
         channel, self._channel = self._channel, None
         _shutdown_manager.destroy_channel(channel)
 
+    def wait(self, timeout: float=None) -> bool:
+        """
+        Wait until all pending queries are complete or timeout occurs.
+
+        Args:
+            timeout: Maximum time to wait in seconds. Use -1 for infinite wait.
+        """
+        r = _lib.ares_queue_wait_empty(self._channel[0],  int(timeout * 1000) if timeout is not None and timeout >= 0 else -1)
+        if r == _lib.ARES_SUCCESS:
+            return True
+        elif r == _lib.ARES_ETIMEOUT:
+            return False
+        else:
+            raise AresError(r, errno.strerror(r))
+
 
 class AresResult:
     __slots__ = ()

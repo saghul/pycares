@@ -266,6 +266,15 @@
 
         .. versionadded:: 4.9.0
 
+    .. py:method:: wait(timeout=None)
+
+        :param float timeout: Maximum time to wait for events. If None, wait indefinitely.
+
+        Waits for pending queries to be completed.
+
+        Returns `True` if all queries completed, `False` if the timeout was reached.
+
+        .. versionadded:: 5.0.0
 
     .. py:method:: reinit()
 
