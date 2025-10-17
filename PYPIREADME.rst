@@ -1,8 +1,3 @@
-Looking for new maintainers
-===========================
-
-https://github.com/saghul/pycares/issues/139
-
 pycares: Python interface for c-ares
 ====================================
 
@@ -63,7 +58,7 @@ Running the test suite
 
 From the top level directory, run: ``python -m unittest -v``
 
-NOTE: Running the tests requires internet access and are somewhat environment sensitive because real DNS quesries
+NOTE: Running the tests requires internet access and are somewhat environment sensitive because real DNS queries
 are made, there is no mocking. If you observe a failure that the CI cannot reproduce, please try to setup an
 environment as close as the current CI.
 
@@ -117,4 +112,4 @@ Contributing
 
 If you'd like to contribute, fork the project, make a patch and send a pull
 request. Have a look at the surrounding code and please, make yours look
-alike :-)
+alike.

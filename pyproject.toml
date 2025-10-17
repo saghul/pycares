@@ -7,6 +7,52 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "pycares"
+dynamic = ["version"]
+description = "Python interface for c-ares"
+readme = {file = "PYPIREADME.rst", content-type = "text/x-rst"}
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+    {name = "Saúl Ibarra Corretgé", email = "s@saghul.net"}
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Free Threading :: 3 - Stable",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+    "cffi>=1.5.0; python_version < '3.14'",
+    "cffi>=2.0.0b1; python_version >= '3.14'",
+]
+
+[project.optional-dependencies]
+idna = ["idna >= 2.1"]
+
+[project.urls]
+Homepage = "http://github.com/saghul/pycares"
+
+[tool.setuptools]
+zip-safe = false
+package-dir = {"" = "src"}
+packages = ["pycares"]
+
+[tool.setuptools.dynamic]
+version = {attr = "pycares._version.__version__"}
+
 [tool.cibuildwheel]
 build = "cp3*"
 

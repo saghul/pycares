@@ -1,5 +1,5 @@
 include README.rst PYPIREADME.rst LICENSE ChangeLog
-include setup.py setup_cares.py
+include setup.py pyproject.toml
 graft docs
 graft examples
 graft tests
