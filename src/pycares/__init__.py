@@ -587,19 +587,6 @@ class Channel:
         if r != _lib.ARES_SUCCESS:
             raise AresError(r, errno.strerror(r))
 
-    def getsock(self):
-        rfds = []
-        wfds = []
-        socks = _ffi.new("ares_socket_t [%d]" % _lib.ARES_GETSOCK_MAXNUM)
-        bitmask = _lib.ares_getsock(self._channel[0], socks, _lib.ARES_GETSOCK_MAXNUM)
-        for i in range(_lib.ARES_GETSOCK_MAXNUM):
-            if _lib.ARES_GETSOCK_READABLE(bitmask, i):
-                rfds.append(socks[i])
-            if _lib.ARES_GETSOCK_WRITABLE(bitmask, i):
-                wfds.append(socks[i])
-
-        return rfds, wfds
-
     def process_fd(self, read_fd: int, write_fd: int) -> None:
         _lib.ares_process_fd(self._channel[0], _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", write_fd))
 
