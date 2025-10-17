@@ -646,13 +646,6 @@ class Channel:
         userdata = self._create_callback_handle(callback)
         _lib.ares_gethostbyaddr(self._channel[0], address, _ffi.sizeof(address[0]), family, _lib._host_cb, userdata)
 
-    def gethostbyname(self, name: str, family: socket.AddressFamily, callback: Callable[[Any, int], None]) -> None:
-        if not callable(callback):
-            raise TypeError("a callable is required")
-
-        userdata = self._create_callback_handle(callback)
-        _lib.ares_gethostbyname(self._channel[0], parse_name(name), family, _lib._host_cb, userdata)
-
     def getaddrinfo(
         self,
         host: str,

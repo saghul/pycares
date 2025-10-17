@@ -16,11 +16,6 @@ class DNSResolver:
     ) -> None:
         self._channel.query(name, query_type, cb)
 
-    def gethostbyname(
-        self, name: str, cb: Callable[[Any, Optional[int]], None]
-    ) -> None:
-        self._channel.gethostbyname(name, socket.AF_INET, cb)
-
     def close(self) -> None:
         """Thread-safe shutdown of the channel."""
         # Simply call close() - it's thread-safe and handles everything
@@ -63,8 +58,7 @@ async def main() -> None:
     # Second batch - these will be cancelled
     resolver.query("github.com", pycares.QUERY_TYPE_A, cb("github.com"))
     resolver.query("stackoverflow.com", pycares.QUERY_TYPE_A, cb("stackoverflow.com"))
-    resolver.gethostbyname("python.org", cb("python.org"))
-    query_count += 3
+    query_count += 2
 
     # Immediately close - this will cancel pending queries
     print("\n=== Closing resolver (cancelling pending queries) ===")

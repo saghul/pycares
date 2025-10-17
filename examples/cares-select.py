@@ -1,7 +1,6 @@
 
 import pycares
 import select
-import socket
 
 
 def wait_channel(channel):
@@ -26,7 +25,6 @@ if __name__ == '__main__':
         print(error)
     channel = pycares.Channel()
     try:
-        channel.gethostbyname('google.com', socket.AF_INET, cb)
         channel.query('google.com', pycares.QUERY_TYPE_A, cb)
         channel.query('sip2sip.info', pycares.QUERY_TYPE_SOA, cb)
         wait_channel(channel)

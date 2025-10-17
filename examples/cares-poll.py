@@ -1,7 +1,6 @@
 
 import pycares
 import select
-import socket
 
 
 class DNSResolver(object):
@@ -45,9 +44,6 @@ class DNSResolver(object):
     def query(self, query_type, name, cb):
         self._channel.query(query_type, name, cb)
 
-    def gethostbyname(self, name, cb):
-        self._channel.gethostbyname(name, socket.AF_INET, cb)
-
     def close(self):
         """Close the resolver and cleanup resources."""
         for fd in list(self._fd_map):
@@ -60,15 +56,11 @@ if __name__ == '__main__':
     def query_cb(result, error):
         print(result)
         print(error)
-    def gethostbyname_cb(result, error):
-        print(result)
-        print(error)
     resolver = DNSResolver()
     try:
         resolver.query('google.com', pycares.QUERY_TYPE_A, query_cb)
         resolver.query('facebook.com', pycares.QUERY_TYPE_A, query_cb)
         resolver.query('sip2sip.info', pycares.QUERY_TYPE_SOA, query_cb)
-        resolver.gethostbyname('apple.com', gethostbyname_cb)
         resolver.wait_channel()
     finally:
         resolver.close()

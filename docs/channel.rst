@@ -77,6 +77,7 @@
         While channels will attempt automatic cleanup during garbage collection, explicit
         closing is safer as it gives you control over when resources are released.
 
+
     .. py:method:: getaddrinfo(host, port, callback, family=0, type=0, proto=0, flags=0)
 
         :param string host: Hostname to resolve.
@@ -92,19 +93,6 @@
 
         Translate the host/port argument into a sequence of 5-tuples that contain all the necessary arguments for
         creating a socket connected to that service.
-
-        Callback signature: ``callback(result, errorno)``
-
-
-    .. py:method:: gethostbyname(name, family, callback)
-
-        :param string name: Name to query.
-
-        :param int family: Socket family.
-
-        :param callable callback: Callback to be called with the result of the query.
-
-        Retrieves host information corresponding to a host name from a host database.
 
         Callback signature: ``callback(result, errorno)``
 
