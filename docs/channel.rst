@@ -290,10 +290,6 @@
 
         Process the given file descriptors for read and/or write events.
 
-    .. py:method:: getsock()
-
-        Return a tuple containing 2 lists with the file descriptors ready to read and write.
-
     .. py:method:: timeout([max_timeout])
 
         :param float max_timeout: Maximum timeout.

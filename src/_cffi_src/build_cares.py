@@ -149,10 +149,6 @@ typedef int... ares_socklen_t;
 #define ARES_AI_CANONIDN                ...
 #define ARES_AI_MASK ...
 
-#define ARES_GETSOCK_MAXNUM ...
-int ARES_GETSOCK_READABLE(int, int);
-int ARES_GETSOCK_WRITABLE(int, int);
-
 #define ARES_LIB_INIT_ALL    ...
 
 #define ARES_SOCKET_BAD ...
@@ -497,10 +493,6 @@ void ares_getnameinfo(ares_channel channel,
                                    int flags,
                                    ares_nameinfo_callback callback,
                                    void *arg);
-
-int ares_getsock(ares_channel channel,
-                              ares_socket_t *socks,
-                              int numsocks);
 
 struct timeval *ares_timeout(ares_channel channel,
                                           struct timeval *maxtv,
