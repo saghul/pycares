@@ -153,31 +153,6 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(type(self.result), pycares.ares_host_result)
 
     @unittest.skipIf(sys.platform == "win32", "skipped on Windows")
-    def test_gethostbyname(self):
-        self.result, self.errorno = None, None
-
-        def cb(result, errorno):
-            self.result, self.errorno = result, errorno
-
-        self.channel.gethostbyname("localhost", socket.AF_INET, cb)
-        self.wait()
-        self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_host_result)
-
-    @unittest.skipIf(sys.platform == "win32", "skipped on Windows")
-    def test_gethostbyname_small_timeout(self):
-        self.result, self.errorno = None, None
-
-        def cb(result, errorno):
-            self.result, self.errorno = result, errorno
-
-        self.channel = pycares.Channel(timeout=0.5, tries=1)
-        self.channel.gethostbyname("localhost", socket.AF_INET, cb)
-        self.wait()
-        self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_host_result)
-
-    @unittest.skipIf(sys.platform == "win32", "skipped on Windows")
     def test_getnameinfo(self):
         self.result, self.errorno = None, None
 
@@ -660,7 +635,7 @@ class DNSTest(unittest.TestCase):
             self.result, self.errorno = result, errorno
 
         self.channel = pycares.Channel(timeout=0.5, tries=1)
-        self.channel.gethostbyname("google.com", socket.AF_INET, cb)
+        self.channel.getaddrinfo("google.com", None, cb, socket.AF_INET)
         timeout = self.channel.timeout()
         self.assertTrue(timeout > 0.0)
         self.channel.cancel()
@@ -695,15 +670,15 @@ class DNSTest(unittest.TestCase):
             self.result, self.errorno = result, errorno
 
         # try encoding it as utf-8
-        self.channel.gethostbyname(host.encode(), socket.AF_INET, cb)
+        self.channel.getaddrinfo(host.encode(), None, cb, socket.AF_INET)
         self.wait()
         self.assertNotEqual(self.errorno, None)
         self.assertEqual(self.result, None)
         # use it as is (it's IDNA encoded internally)
-        self.channel.gethostbyname(host, socket.AF_INET, cb)
+        self.channel.getaddrinfo(host, None, cb, socket.AF_INET)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_host_result)
+        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
 
     def test_idna_encoding_query_a(self):
         host = "españa.icom.museum"
@@ -740,7 +715,7 @@ class DNSTest(unittest.TestCase):
         def cb(result, errorno):
             self.result, self.errorno = result, errorno
 
-        self.channel.gethostbyname(host, socket.AF_INET, cb)
+        self.channel.getaddrinfo(host, None, cb, socket.AF_INET)
         self.wait()
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.ares_host_result)

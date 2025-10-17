@@ -49,9 +49,6 @@ class DNSResolver(object):
     def query(self, query_type, name, cb):
         self._channel.query(query_type, name, cb)
 
-    def gethostbyname(self, name, cb):
-        self._channel.gethostbyname(name, socket.AF_INET, cb)
-
     def close(self):
         """Close the resolver and cleanup resources."""
         if self._timer:
@@ -76,7 +73,6 @@ async def main():
     try:
         resolver.query('google.com', pycares.QUERY_TYPE_A, cb)
         resolver.query('sip2sip.info', pycares.QUERY_TYPE_SOA, cb)
-        resolver.gethostbyname('apple.com', cb)
 
         # Give some time for queries to complete
         await asyncio.sleep(2)
