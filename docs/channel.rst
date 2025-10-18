@@ -266,6 +266,15 @@
 
         .. versionadded:: 4.9.0
 
+    .. py:method:: wait(timeout=None)
+
+        :param float timeout: Maximum time to wait for events. If None, wait indefinitely.
+
+        Waits for pending queries to be completed.
+
+        Returns `True` if all queries completed, `False` if the timeout was reached.
+
+        .. versionadded:: 5.0.0
 
     .. py:method:: reinit()
 
@@ -280,10 +289,6 @@
         :param int write_fd: File descriptor ready to write to.
 
         Process the given file descriptors for read and/or write events.
-
-    .. py:method:: getsock()
-
-        Return a tuple containing 2 lists with the file descriptors ready to read and write.
 
     .. py:method:: timeout([max_timeout])
 
