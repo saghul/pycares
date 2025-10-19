@@ -580,7 +580,8 @@ class DNSTest(unittest.TestCase):
         servers = ["8.8.8.8", "8.8.4.4"]
         self.channel.servers = servers
         servers2 = self.channel.servers
-        self.assertEqual(servers, servers2)
+        # CSV API includes default port :53
+        self.assertEqual(servers2, ["8.8.8.8:53", "8.8.4.4:53"])
 
     def test_channel_local_ip(self):
         self.result, self.errorno = None, None

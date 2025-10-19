@@ -548,42 +548,24 @@ class Channel:
 
     @property
     def servers(self) -> list[str]:
-        servers = _ffi.new("struct ares_addr_node **")
+        csv_str = _lib.ares_get_servers_csv(self._channel[0])
 
-        r = _lib.ares_get_servers(self._channel[0], servers)
-        if r != _lib.ARES_SUCCESS:
-            raise AresError(r, errno.strerror(r))
+        if csv_str == _ffi.NULL:
+            raise AresError(_lib.ARES_ENOMEM, errno.strerror(_lib.ARES_ENOMEM))
 
         server_list = []
-        server = _ffi.new("struct ares_addr_node **", servers[0])
-        while True:
-            if server == _ffi.NULL:
-                break
-
-            ip = _ffi.new("char []", _lib.INET6_ADDRSTRLEN)
-            s = server[0]
-            if _ffi.NULL != _lib.ares_inet_ntop(s.family, _ffi.addressof(s.addr), ip, _lib.INET6_ADDRSTRLEN):
-                server_list.append(maybe_str(_ffi.string(ip, _lib.INET6_ADDRSTRLEN)))
-
-            server = s.next
+        csv_string = maybe_str(_ffi.string(csv_str))
+        _lib.ares_free_string(csv_str)
+        server_list = [s.strip() for s in csv_string.split(',')]
 
         return server_list
 
     @servers.setter
     def servers(self, servers: Iterable[Union[str, bytes]]) -> None:
-        c = _ffi.new("struct ares_addr_node[%d]" % len(servers))
-        for i, server in enumerate(servers):
-            if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(server), _ffi.addressof(c[i].addr.addr4)) == 1:
-                c[i].family = socket.AF_INET
-            elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(server), _ffi.addressof(c[i].addr.addr6)) == 1:
-                c[i].family = socket.AF_INET6
-            else:
-                raise ValueError("invalid IP address")
+        server_list = [ascii_bytes(s).decode('ascii') if isinstance(s, bytes) else s for s in servers]
+        csv_str = ','.join(server_list)
 
-            if i > 0:
-                c[i - 1].next = _ffi.addressof(c[i])
-
-        r = _lib.ares_set_servers(self._channel[0], c)
+        r = _lib.ares_set_servers_csv(self._channel[0], csv_str.encode('ascii'))
         if r != _lib.ARES_SUCCESS:
             raise AresError(r, errno.strerror(r))
 

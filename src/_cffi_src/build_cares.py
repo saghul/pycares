@@ -399,16 +399,6 @@ struct ares_addrinfo_hints {
   int ai_socktype;
   int ai_protocol;
 };
-
-
-struct ares_addr_node {
-  struct ares_addr_node *next;
-  int family;
-  union {
-    struct in_addr       addr4;
-    struct ares_in6_addr addr6;
-  } addr;
-};
 """
 
 FUNCTIONS = """
@@ -586,11 +576,9 @@ void ares_free_data(void *dataptr);
 
 const char *ares_strerror(int code);
 
-int ares_set_servers(ares_channel channel,
-                                  struct ares_addr_node *servers);
+int ares_set_servers_csv(ares_channel channel, const char *servers);
 
-int ares_get_servers(ares_channel channel,
-                                  struct ares_addr_node **servers);
+char *ares_get_servers_csv(const ares_channel channel);
 
 const char *ares_inet_ntop(int af, const void *src, char *dst,
                                         ares_socklen_t size);
