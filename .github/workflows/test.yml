@@ -36,7 +36,7 @@ jobs:
     - name: Run tests
       run: python -m unittest -v
     - name: Run multithreaded tests on free-threaded build
-      if: ${{ matrix.python-version }} == '3.14t'
+      if: ${{ matrix.python-version == '3.14t-dev' }}
       run: |
         python -m pip install unittest-ft
         unittest-ft -v
