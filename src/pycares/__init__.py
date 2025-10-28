@@ -5,6 +5,9 @@ import _cffi_backend  # hint for bundler tools
 if _lib.ARES_SUCCESS != _lib.ares_library_init(_lib.ARES_LIB_INIT_ALL) or _ffi is None:
     raise RuntimeError('Could not initialize c-ares')
 
+if not _lib.ares_threadsafety():
+    raise RuntimeError("c-ares is not built with thread safety")
+
 from . import errno
 from .utils import ascii_bytes, maybe_str, parse_name
 from ._version import __version__
@@ -462,8 +465,6 @@ class Channel:
             optmask = optmask |  _lib.ARES_OPT_SOCK_STATE_CB
 
         if event_thread:
-            if not ares_threadsafety():
-                raise RuntimeError("c-ares is not built with thread safety")
             if sock_state_cb:
                 raise RuntimeError("sock_state_cb and event_thread cannot be used together")
             optmask = optmask |  _lib.ARES_OPT_EVENT_THREAD
@@ -972,15 +973,6 @@ class ares_addrinfo_result(AresResult):
         _lib.ares_freeaddrinfo(ares_addrinfo)
 
 
-def ares_threadsafety() -> bool:
-    """
-    Check if c-ares was compiled with thread safety support.
-
-    :return: True if thread-safe, False otherwise.
-    :rtype: bool
-    """
-    return bool(_lib.ares_threadsafety())
-
 __all__ = (
     "ARES_FLAG_USEVC",
     "ARES_FLAG_PRIMARY",
@@ -1039,7 +1031,6 @@ __all__ = (
     "ARES_VERSION",
     "AresError",
     "Channel",
-    "ares_threadsafety",
     "errno",
     "__version__"
 )
