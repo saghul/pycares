@@ -72,10 +72,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    # Check if c-ares supports threads
-    if pycares.ares_threadsafety():
-        # For Python 3.7+
-        asyncio.run(main())
-    else:
-        print("c-ares was not compiled with thread support")
-        print("Please see examples/cares-asyncio.py for sock_state_cb usage")
+    asyncio.run(main())

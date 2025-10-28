@@ -46,9 +46,7 @@
     :param bool event_thread: If set to True, c-ares will use its own thread
         to process events. This is the recommended way to use c-ares, as it
         allows for automatic reinitialization of the channel when the
-        system resolver configuration changes. Verify that c-ares was
-        compiled with thread-safety by calling :py:func:`ares_threadsafety`
-        before using this option.
+        system resolver configuration changes.
 
         This option is mutually exclusive with the ``sock_state_cb`` option.
 
