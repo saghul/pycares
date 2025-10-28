@@ -743,31 +743,38 @@ class Channel:
 
         dnsrec = dnsrec_p[0]
 
-        try:
-            # Add the query to the DNS record
-            status = _lib.ares_dns_record_query_add(
-                dnsrec,
-                parse_name(name),
-                query_type,
-                query_class
-            )
-            if status != _lib.ARES_SUCCESS:
-                raise AresError(status, errno.strerror(status))
-
-            # Perform the search with the created DNS record
-            userdata = self._create_callback_handle(callback)
-            status = _lib.ares_search_dnsrec(
-                self._channel[0],
-                dnsrec,
-                _lib._query_dnsrec_cb,
-                userdata
-            )
-            if status != _lib.ARES_SUCCESS:
-                _handle_to_channel.pop(userdata, None)
-                raise AresError(status, errno.strerror(status))
-        finally:
-            # Clean up the DNS record
+        # Add the query to the DNS record
+        status = _lib.ares_dns_record_query_add(
+            dnsrec,
+            parse_name(name),
+            query_type,
+            query_class
+        )
+        if status != _lib.ARES_SUCCESS:
             _lib.ares_dns_record_destroy(dnsrec)
+            raise AresError(status, errno.strerror(status))
+
+        # Wrap callback to destroy DNS record after it's called
+        original_callback = callback
+        def cleanup_callback(result, error):
+            try:
+                original_callback(result, error)
+            finally:
+                # Clean up the DNS record after the callback completes
+                _lib.ares_dns_record_destroy(dnsrec)
+
+        # Perform the search with the created DNS record
+        userdata = self._create_callback_handle(cleanup_callback)
+        status = _lib.ares_search_dnsrec(
+            self._channel[0],
+            dnsrec,
+            _lib._query_dnsrec_cb,
+            userdata
+        )
+        if status != _lib.ARES_SUCCESS:
+            _handle_to_channel.pop(userdata, None)
+            _lib.ares_dns_record_destroy(dnsrec)
+            raise AresError(status, errno.strerror(status))
 
     def set_local_ip(self, ip):
         addr4 = _ffi.new("struct in_addr*")
