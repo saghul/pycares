@@ -123,13 +123,15 @@
         Callback signature: ``callback(result, errorno)``
 
 
-    .. py:method:: query(name, query_type, callback)
+    .. py:method:: query(name, query_type, callback, query_class=QUERY_CLASS_IN)
 
         :param string name: Name to query.
 
         :param int query_type: Type of query to perform.
 
         :param callable callback: Callback to be called with the result of the query.
+
+        :param int query_class: Query class (default: QUERY_CLASS_IN).
 
         Do a DNS query of the specified type. Available types:
             - ``QUERY_TYPE_A``
@@ -145,87 +147,105 @@
             - ``QUERY_TYPE_SRV``
             - ``QUERY_TYPE_TXT``
 
-        Callback signature: ``callback(result, errorno)``. The result type varies depending on the
-        query type:
+        Callback signature: ``callback(result, errorno)`` where result is a ``DNSResult`` dataclass with:
 
-            - A: (list of) ``ares_query_a_result``, fields:
+            - ``answer``: list of ``DNSRecord`` - Records from the answer section
+            - ``authority``: list of ``DNSRecord`` - Records from the authority section
+            - ``additional``: list of ``DNSRecord`` - Records from the additional section
 
-              - host
-              - ttl
+        Each ``DNSRecord`` is a dataclass with:
 
-            - AAAA: (list of) ``ares_query_aaaa_result``, fields:
+            - ``name``: str - Domain name
+            - ``type``: int - Record type constant
+            - ``record_class``: int - Record class constant
+            - ``ttl``: int - Time to live in seconds (real TTL values from DNS server)
+            - ``data``: Record-specific dataclass (see below)
 
-              - host
-              - ttl
+        **Record data types by query type:**
 
-            - CAA: (list of) ``ares_query_caa_result``, fields:
+            - **A**: ``ARecordData`` dataclass
 
-              - critical
-              - property
-              - value
-              - ttl
+              - ``addr``: str - IPv4 address
 
-            - CNAME: ``ares_query_cname_result``, fields:
+            - **AAAA**: ``AAAARecordData`` dataclass
 
-              - cname
-              - ttl
+              - ``addr``: str - IPv6 address
 
-            - MX: (list of) ``ares_query_mx_result``, fields:
+            - **CAA**: ``CAARecordData`` dataclass
 
-              - host
-              - priority
-              - ttl
+              - ``critical``: int - Critical flag
+              - ``tag``: str - Property tag
+              - ``value``: str - Property value
 
-            - NAPTR: (list of) ``ares_query_naptr_result``, fields:
+            - **CNAME**: ``CNAMERecordData`` dataclass
 
-              - order
-              - preference
-              - flags
-              - service
-              - regex
-              - replacement
-              - ttl
+              - ``cname``: str - Canonical name
 
-            - NS: (list of) ``ares_query_ns_result``, fields:
+            - **MX**: ``MXRecordData`` dataclass
 
-              - host
-              - ttl
+              - ``priority``: int - Mail server priority
+              - ``exchange``: str - Mail server hostname
 
-            - PTR: (list of) ``ares_query_ptr_result``, fields:
+            - **NAPTR**: ``NAPTRRecordData`` dataclass
 
-              - name
-              - ttl
+              - ``order``: int - Order value
+              - ``preference``: int - Preference value
+              - ``flags``: str - Flags string
+              - ``service``: str - Service string
+              - ``regexp``: str - Regular expression
+              - ``replacement``: str - Replacement string
 
-            - SOA: ``ares_query_soa_result``, fields:
+            - **NS**: ``NSRecordData`` dataclass
 
-              - nsname
-              - hostmaster
-              - serial
-              - refresh
-              - retry
-              - expires
-              - minttl
-              - ttl
+              - ``nsdname``: str - Name server domain name
 
-            - SRV: (list of) ``ares_query_srv_result``, fields:
+            - **PTR**: ``PTRRecordData`` dataclass
 
-              - host
-              - port
-              - priority
-              - weight
-              - ttl
+              - ``dname``: str - Domain name pointer
 
-            - TXT: (list of) ``ares_query_txt_result``, fields:
+            - **SOA**: ``SOARecordData`` dataclass
 
-              - text
-              - ttl
+              - ``mname``: str - Primary name server
+              - ``rname``: str - Responsible party email
+              - ``serial``: int - Serial number
+              - ``refresh``: int - Refresh interval
+              - ``retry``: int - Retry interval
+              - ``expire``: int - Expire time
+              - ``minimum``: int - Minimum TTL
 
-            - ANY: a list of any of the above.
+            - **SRV**: ``SRVRecordData`` dataclass
 
-        .. note::
-            TTL is not implemented for CNAME and NS), so it's set to -1.
+              - ``priority``: int - Priority
+              - ``weight``: int - Weight
+              - ``port``: int - Port number
+              - ``target``: str - Target hostname
 
-    .. py:method:: search(name, query_type, callback)
+            - **TXT**: ``TXTRecordData`` dataclass
+
+              - ``text``: str - Text content
+
+        **Example:**
+
+        .. code-block:: python
+
+            def callback(result, error):
+                if error:
+                    print(f"Error: {error}")
+                    return
+
+                print(f"Answer section: {len(result.answer)} records")
+                for record in result.answer:
+                    print(f"  {record.name} TTL={record.ttl}s: {record.data}")
+
+                if result.authority:
+                    print(f"Authority section: {len(result.authority)} records")
+
+                if result.additional:
+                    print(f"Additional section: {len(result.additional)} records")
+
+            channel.query("google.com", pycares.QUERY_TYPE_A, callback)
+
+    .. py:method:: search(name, query_type, callback, query_class=QUERY_CLASS_IN)
 
         :param string name: Name to query.
 
@@ -233,8 +253,10 @@
 
         :param callable callback: Callback to be called with the result of the query.
 
-        Tis function does the same as :py:meth:`query` but it will honor the ``domain`` and ``search`` directives in
-        ``resolv.conf``.
+        :param int query_class: Query class (default: QUERY_CLASS_IN).
+
+        This function does the same as :py:meth:`query` but it will honor the ``domain`` and ``search`` directives in
+        ``resolv.conf``. The callback signature and return types are identical to :py:meth:`query`.
 
     .. py:method:: cancel()
 

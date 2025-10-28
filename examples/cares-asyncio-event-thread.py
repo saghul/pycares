@@ -34,11 +34,15 @@ async def main() -> None:
             if error == pycares.errno.ARES_ECANCELLED:
                 cancelled_count += 1
                 print(f"Query for {query_name} was CANCELLED")
+            elif error:
+                completed_count += 1
+                print(f"Query for {query_name} failed - Error: {error}")
             else:
                 completed_count += 1
-                print(
-                    f"Query for {query_name} completed - Result: {result}, Error: {error}"
-                )
+                print(f"Query for {query_name} completed successfully:")
+                print(f"  Answer: {len(result.answer)} records, TTL: {result.answer[0].ttl if result.answer else 'N/A'}s")
+                print(f"  Authority: {len(result.authority)} records")
+                print(f"  Additional: {len(result.additional)} records")
 
         return _cb
 
