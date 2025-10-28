@@ -408,8 +408,6 @@ void ares_library_cleanup(void);
 
 const char *ares_version(int *version);
 
-int ares_init(ares_channel *channelptr);
-
 int ares_init_options(ares_channel *channelptr,
                                    struct ares_options *options,
                                    int optmask);
@@ -450,12 +448,6 @@ void ares_getaddrinfo(ares_channel channel,
 
 void ares_freeaddrinfo(struct ares_addrinfo* ai);
 
-void ares_send(ares_channel channel,
-                            const unsigned char *qbuf,
-                            int qlen,
-                            ares_callback callback,
-                            void *arg);
-
 void ares_query(ares_channel channel,
                              const char *name,
                              int dnsclass,
@@ -491,23 +483,6 @@ struct timeval *ares_timeout(ares_channel channel,
 void ares_process_fd(ares_channel channel,
                                   ares_socket_t read_fd,
                                   ares_socket_t write_fd);
-
-int ares_create_query(const char *name,
-                                   int dnsclass,
-                                   int type,
-                                   unsigned short id,
-                                   int rd,
-                                   unsigned char **buf,
-                                   int *buflen,
-                                   int max_udp_size);
-
-int ares_mkquery(const char *name,
-                              int dnsclass,
-                              int type,
-                              unsigned short id,
-                              int rd,
-                              unsigned char **buf,
-                              int *buflen);
 
 int ares_expand_name(const unsigned char *encoded,
                                   const unsigned char *abuf,
