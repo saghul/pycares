@@ -434,6 +434,9 @@ class Channel:
         # Initialize _channel to None first to ensure __del__ doesn't fail
         self._channel = None
 
+        # Store flags for later use (default is 0 if not specified)
+        self._flags = flags if flags is not None else 0
+
         channel = _ffi.new("ares_channel *")
         options = _ffi.new("struct ares_options *")
         optmask = 0
@@ -730,11 +733,14 @@ class Channel:
             raise ValueError('invalid query class specified')
 
         # Create a DNS record for the search query
+        # Set RD (Recursion Desired) flag unless ARES_FLAG_NORECURSE is set
+        dns_flags = 0 if (self._flags & _lib.ARES_FLAG_NORECURSE) else _lib.ARES_FLAG_RD
+
         dnsrec_p = _ffi.new("ares_dns_record_t **")
         status = _lib.ares_dns_record_create(
             dnsrec_p,
             0,  # id (will be set by c-ares)
-            0,  # flags
+            dns_flags,  # flags - include RD for recursive queries
             _lib.ARES_OPCODE_QUERY,
             _lib.ARES_RCODE_NOERROR
         )

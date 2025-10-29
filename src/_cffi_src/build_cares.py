@@ -139,6 +139,18 @@ typedef enum {
   ...
 } ares_dns_rcode_t;
 
+/* DNS Header flags */
+typedef enum {
+  ARES_FLAG_QR = 1 << 0,
+  ARES_FLAG_AA = 1 << 1,
+  ARES_FLAG_TC = 1 << 2,
+  ARES_FLAG_RD = 1 << 3,
+  ARES_FLAG_RA = 1 << 4,
+  ARES_FLAG_AD = 1 << 5,
+  ARES_FLAG_CD = 1 << 6,
+  ...
+} ares_dns_flags_t;
+
 /* DNS RR keys for accessing record fields */
 typedef enum {
   /* A record */
