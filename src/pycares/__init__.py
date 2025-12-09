@@ -970,7 +970,7 @@ class HostResult:
 class NameInfoResult:
     """Result from getnameinfo() operation"""
     node: str
-    service: str | None
+    service: Optional[str]
 
 @dataclass
 class AddrInfoNode:
