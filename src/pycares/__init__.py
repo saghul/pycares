@@ -625,7 +625,7 @@ class Channel:
 
         return (tv.tv_sec + tv.tv_usec / 1000000.0)
 
-    def gethostbyaddr(self, addr: str, callback: Callable[[Any, int], None]) -> None:
+    def gethostbyaddr(self, addr: str, *, callback: Callable[[Any, int], None]) -> None:
         if not callable(callback):
             raise TypeError("a callable is required")
 
@@ -647,11 +647,12 @@ class Channel:
         self,
         host: str,
         port: Optional[int],
-        callback: Callable[[Any, int], None],
+        *,
         family: socket.AddressFamily = 0,
         type: int = 0,
         proto: int = 0,
-        flags: int = 0
+        flags: int = 0,
+        callback: Callable[[Any, int], None]
     ) -> None:
         if not callable(callback):
             raise TypeError("a callable is required")
@@ -672,15 +673,15 @@ class Channel:
         hints.ai_protocol = proto
         _lib.ares_getaddrinfo(self._channel[0], parse_name(host), service, hints, _lib._addrinfo_cb, userdata)
 
-    def query(self, name: str, query_type: str, callback: Callable[[Any, int], None], query_class: Optional[int] = None) -> None:
+    def query(self, name: str, query_type: int, *, query_class: int = QUERY_CLASS_IN, callback: Callable[[Any, int], None]) -> None:
         """
         Perform a DNS query.
 
         Args:
             name: Domain name to query
             query_type: Type of query (e.g., QUERY_TYPE_A, QUERY_TYPE_AAAA, etc.)
-            callback: Callback function that receives (result, errno)
             query_class: Query class (default: QUERY_CLASS_IN)
+            callback: Callback function that receives (result, errno)
 
         The callback will receive a DNSResult object containing answer, authority, and additional sections.
         """
@@ -690,9 +691,7 @@ class Channel:
         if query_type not in self.__qtypes__:
             raise ValueError('invalid query type specified')
 
-        if query_class is None:
-            query_class = _lib.ARES_CLASS_IN
-        elif query_class not in self.__qclasses__:
+        if query_class not in self.__qclasses__:
             raise ValueError('invalid query class specified')
 
         userdata = self._create_callback_handle(callback)
@@ -710,15 +709,15 @@ class Channel:
             _handle_to_channel.pop(userdata, None)
             raise AresError(status, errno.strerror(status))
 
-    def search(self, name: str, query_type: str, callback: Callable[[Any, int], None], query_class: Optional[int] = None) -> None:
+    def search(self, name: str, query_type: int, *, query_class: int = QUERY_CLASS_IN, callback: Callable[[Any, int], None]) -> None:
         """
         Perform a DNS search (honors resolv.conf search domains).
 
         Args:
             name: Domain name to search
             query_type: Type of query (e.g., QUERY_TYPE_A, QUERY_TYPE_AAAA, etc.)
-            callback: Callback function that receives (result, errno)
             query_class: Query class (default: QUERY_CLASS_IN)
+            callback: Callback function that receives (result, errno)
 
         The callback will receive a DNSResult object containing answer, authority, and additional sections.
         """
@@ -728,9 +727,7 @@ class Channel:
         if query_type not in self.__qtypes__:
             raise ValueError('invalid query type specified')
 
-        if query_class is None:
-            query_class = _lib.ARES_CLASS_IN
-        elif query_class not in self.__qclasses__:
+        if query_class not in self.__qclasses__:
             raise ValueError('invalid query class specified')
 
         # Create a DNS record for the search query
@@ -793,7 +790,7 @@ class Channel:
         else:
             raise ValueError("invalid IP address")
 
-    def getnameinfo(self, address: Union[IP4, IP6], flags: int, callback: Callable[[Any, int], None]) -> None:
+    def getnameinfo(self, address: Union[IP4, IP6], flags: int, *, callback: Callable[[Any, int], None]) -> None:
         if not callable(callback):
             raise TypeError("a callable is required")
 
