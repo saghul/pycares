@@ -164,13 +164,16 @@
             - ``QUERY_TYPE_ANY``
             - ``QUERY_TYPE_CAA``
             - ``QUERY_TYPE_CNAME``
+            - ``QUERY_TYPE_HTTPS``
             - ``QUERY_TYPE_MX``
             - ``QUERY_TYPE_NAPTR``
             - ``QUERY_TYPE_NS``
             - ``QUERY_TYPE_PTR``
             - ``QUERY_TYPE_SOA``
             - ``QUERY_TYPE_SRV``
+            - ``QUERY_TYPE_TLSA``
             - ``QUERY_TYPE_TXT``
+            - ``QUERY_TYPE_URI``
 
         Callback signature: ``callback(result, errorno)`` where result is a ``DNSResult`` dataclass with:
 
@@ -248,6 +251,51 @@
             - **TXT**: ``TXTRecordData`` dataclass
 
               - ``text``: str - Text content
+
+            - **HTTPS**: ``HTTPSRecordData`` dataclass (RFC 9460)
+
+              - ``priority``: int - Priority (0 = alias mode, >0 = service mode)
+              - ``target``: str - Target domain name (empty string means same as owner)
+              - ``params``: list[tuple[int, bytes]] - Service parameters as (key, value) pairs
+
+              The ``params`` list contains SVCB/HTTPS parameters where each tuple is
+              (param_key, param_value). Common parameter keys include:
+
+              - 1 (alpn): Application-Layer Protocol Negotiation (e.g., h2, h3)
+              - 3 (port): Alternative port number
+              - 4 (ipv4hint): IPv4 address hints
+              - 6 (ipv6hint): IPv6 address hints
+
+            - **TLSA**: ``TLSARecordData`` dataclass (RFC 6698 - DANE)
+
+              - ``cert_usage``: int - Certificate usage field (0-3)
+              - ``selector``: int - Selector field (0-1)
+              - ``matching_type``: int - Matching type field (0-2)
+              - ``cert_association_data``: bytes - Certificate association data (hash or full cert)
+
+              Certificate usage values:
+
+              - 0 (PKIX-TA): CA constraint
+              - 1 (PKIX-EE): Service certificate constraint
+              - 2 (DANE-TA): Trust anchor assertion
+              - 3 (DANE-EE): Domain-issued certificate
+
+              Selector values:
+
+              - 0: Full certificate
+              - 1: SubjectPublicKeyInfo
+
+              Matching type values:
+
+              - 0: No hash (exact match)
+              - 1: SHA-256 hash
+              - 2: SHA-512 hash
+
+            - **URI**: ``URIRecordData`` dataclass (RFC 7553)
+
+              - ``priority``: int - Priority (lower values preferred)
+              - ``weight``: int - Weight for load balancing among equal priorities
+              - ``target``: str - URI target
 
         **Example:**
 

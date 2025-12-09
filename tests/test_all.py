@@ -528,6 +528,45 @@ class DNSTest(unittest.TestCase):
         self.assertGreater(len(self.result.answer), 0)
         self.assertEqual(type(self.result.answer[0].data), pycares.PTRRecordData)
 
+    def test_query_tlsa(self):
+        self.result, self.errorno = None, None
+
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+
+        # DANE-enabled domain with TLSA records
+        self.channel.query("_25._tcp.mail.ietf.org", pycares.QUERY_TYPE_TLSA, cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.DNSResult)
+        self.assertGreater(len(self.result.answer), 0)
+        for record in self.result.answer:
+            self.assertEqual(type(record.data), pycares.TLSARecordData)
+            # Verify TLSA fields are present
+            self.assertIsInstance(record.data.cert_usage, int)
+            self.assertIsInstance(record.data.selector, int)
+            self.assertIsInstance(record.data.matching_type, int)
+            self.assertIsInstance(record.data.cert_association_data, bytes)
+
+    def test_query_https(self):
+        self.result, self.errorno = None, None
+
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+
+        # Cloudflare has HTTPS records
+        self.channel.query("cloudflare.com", pycares.QUERY_TYPE_HTTPS, cb)
+        self.wait()
+        self.assertNoError(self.errorno)
+        self.assertEqual(type(self.result), pycares.DNSResult)
+        self.assertGreater(len(self.result.answer), 0)
+        for record in self.result.answer:
+            self.assertEqual(type(record.data), pycares.HTTPSRecordData)
+            # Verify HTTPS fields are present
+            self.assertIsInstance(record.data.priority, int)
+            self.assertIsInstance(record.data.target, str)
+            self.assertIsInstance(record.data.params, list)
+
     @unittest.skip("ANY type does not work on Mac.")
     def test_query_any(self):
         self.result, self.errorno = None, None

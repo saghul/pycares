@@ -43,6 +43,99 @@ Nameinfo constants
 .. seealso::
     `c-ares documentation for ares_getnameinfo <https://c-ares.org/ares_getnameinfo.html>`_
 
+Query types
+===========
+
+.. py:data:: pycares.QUERY_TYPE_A
+
+    IPv4 address record.
+
+.. py:data:: pycares.QUERY_TYPE_AAAA
+
+    IPv6 address record.
+
+.. py:data:: pycares.QUERY_TYPE_ANY
+
+    Any record type (may be restricted by some DNS servers).
+
+.. py:data:: pycares.QUERY_TYPE_CAA
+
+    Certification Authority Authorization record.
+
+.. py:data:: pycares.QUERY_TYPE_CNAME
+
+    Canonical name record.
+
+.. py:data:: pycares.QUERY_TYPE_HTTPS
+
+    HTTPS service binding record (RFC 9460). Used for discovering HTTPS
+    endpoints and their parameters like supported protocols (h2, h3),
+    alternative ports, and IP hints.
+
+.. py:data:: pycares.QUERY_TYPE_MX
+
+    Mail exchange record.
+
+.. py:data:: pycares.QUERY_TYPE_NAPTR
+
+    Naming Authority Pointer record.
+
+.. py:data:: pycares.QUERY_TYPE_NS
+
+    Name server record.
+
+.. py:data:: pycares.QUERY_TYPE_PTR
+
+    Pointer record (reverse DNS lookup).
+
+.. py:data:: pycares.QUERY_TYPE_SOA
+
+    Start of Authority record.
+
+.. py:data:: pycares.QUERY_TYPE_SRV
+
+    Service locator record.
+
+.. py:data:: pycares.QUERY_TYPE_TLSA
+
+    TLSA record for DANE TLS authentication (RFC 6698). Used to associate
+    TLS server certificates or public keys with domain names, enabling
+    certificate pinning via DNS.
+
+.. py:data:: pycares.QUERY_TYPE_TXT
+
+    Text record.
+
+.. py:data:: pycares.QUERY_TYPE_URI
+
+    URI record (RFC 7553). Used for publishing mappings from hostnames
+    to URIs.
+
+
+Query classes
+=============
+
+.. py:data:: pycares.QUERY_CLASS_IN
+
+    Internet class (default).
+
+.. py:data:: pycares.QUERY_CLASS_CHAOS
+
+    Chaos class.
+
+.. py:data:: pycares.QUERY_CLASS_HESOID
+
+    Hesoid class.
+
+.. py:data:: pycares.QUERY_CLASS_NONE
+
+    None class.
+
+.. py:data:: pycares.QUERY_CLASS_ANY
+
+    Any class.
+
+
 Others
 ======
 

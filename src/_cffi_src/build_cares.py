@@ -81,7 +81,10 @@ typedef enum {
   ARES_REC_TYPE_AAAA = 28,
   ARES_REC_TYPE_SRV = 33,
   ARES_REC_TYPE_NAPTR = 35,
+  ARES_REC_TYPE_TLSA = 52,
+  ARES_REC_TYPE_HTTPS = 65,
   ARES_REC_TYPE_CAA = 257,
+  ARES_REC_TYPE_URI = 256,
   ARES_REC_TYPE_ANY = 255,
   ...
 } ares_dns_rec_type_t;
@@ -202,6 +205,22 @@ typedef enum {
   ARES_RR_CAA_CRITICAL = 1,
   ARES_RR_CAA_TAG = 2,
   ARES_RR_CAA_VALUE = 3,
+
+  /* TLSA record */
+  ARES_RR_TLSA_CERT_USAGE = 5201,
+  ARES_RR_TLSA_SELECTOR = 5202,
+  ARES_RR_TLSA_MATCH = 5203,
+  ARES_RR_TLSA_DATA = 5204,
+
+  /* HTTPS record */
+  ARES_RR_HTTPS_PRIORITY = 6501,
+  ARES_RR_HTTPS_TARGET = 6502,
+  ARES_RR_HTTPS_PARAMS = 6503,
+
+  /* URI record */
+  ARES_RR_URI_PRIORITY = 25601,
+  ARES_RR_URI_WEIGHT = 25602,
+  ARES_RR_URI_TARGET = 25603,
   ...
 } ares_dns_rr_key_t;
 
@@ -641,6 +660,15 @@ const unsigned char *ares_dns_rr_get_abin(const ares_dns_rr_t *rr,
                                          ares_dns_rr_key_t key,
                                          size_t idx,
                                          size_t *len);
+
+size_t ares_dns_rr_get_opt_cnt(const ares_dns_rr_t *dns_rr,
+                               ares_dns_rr_key_t key);
+
+unsigned short ares_dns_rr_get_opt(const ares_dns_rr_t *dns_rr,
+                                   ares_dns_rr_key_t key,
+                                   size_t idx,
+                                   const unsigned char **val,
+                                   size_t *val_len);
 
 void ares_gethostbyaddr(ares_channel channel,
                                      const void *addr,
