@@ -54,8 +54,17 @@ class DNSResolver(object):
 
 if __name__ == '__main__':
     def query_cb(result, error):
-        print(result)
-        print(error)
+        if error:
+            print("Error: {}".format(error))
+        else:
+            print("DNS Result:")
+            print("  Answer: {} records".format(len(result.answer)))
+            for record in result.answer:
+                print("    - {} (TTL: {}s): {}".format(record.name, record.ttl, record.data))
+            if result.authority:
+                print("  Authority: {} records".format(len(result.authority)))
+            if result.additional:
+                print("  Additional: {} records".format(len(result.additional)))
     resolver = DNSResolver()
     try:
         resolver.query('google.com', pycares.QUERY_TYPE_A, query_cb)

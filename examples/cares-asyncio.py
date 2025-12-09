@@ -65,7 +65,18 @@ class DNSResolver(object):
 
 async def main():
     def cb(result, error):
-        print("Result: {}, Error: {}".format(result, error))
+        if error:
+            print("Error: {}".format(error))
+        else:
+            print("Query result:")
+            print("  Answer section ({} records):".format(len(result.answer)))
+            for record in result.answer:
+                print("    - Name: {}, Type: {}, TTL: {}s".format(record.name, record.type, record.ttl))
+                print("      Data: {}".format(record.data))
+            if result.authority:
+                print("  Authority section ({} records)".format(len(result.authority)))
+            if result.additional:
+                print("  Additional section ({} records)".format(len(result.additional)))
 
     loop = asyncio.get_running_loop()
     resolver = DNSResolver(loop)
