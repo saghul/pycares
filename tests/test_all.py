@@ -344,7 +344,7 @@ class DNSTest(unittest.TestCase):
         # Three would show if they are not properly merged.
         self.assertEqual(type(self.result), pycares.DNSResult)
         self.assertEqual(len(self.result.answer), 1)
-        self.assertTrue(self.result.answer[0].data.text.startswith("v=spf1 A MX"))
+        self.assertTrue(self.result.answer[0].data.data.startswith(b"v=spf1 A MX"))
 
     def test_query_txt_multiple_chunked(self):
         self.result, self.errorno = None, None
@@ -382,7 +382,7 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(type(self.result), pycares.DNSResult)
         for record in self.result.answer:
             self.assertEqual(type(record.data), pycares.TXTRecordData)
-            self.assertIsInstance(record.data.text, str)  # it's ASCII
+            self.assertIsInstance(record.data.data, bytes)
 
     # The 2 tests below hit a dead end thus fail. Commenting for now as I couldn't find a live server
     # that satisfies what the tests are looking for
@@ -401,7 +401,7 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(type(self.result), pycares.DNSResult)
         for record in self.result.answer:
             self.assertEqual(type(record.data), pycares.TXTRecordData)
-            self.assertIsInstance(record.data.text, str)
+            self.assertIsInstance(record.data.data, bytes)
 
     # FIXME: "txt-non-ascii.dns-test.hmnid.ru" is a dead end!
     @unittest.expectedFailure
@@ -422,7 +422,7 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(len(self.result.answer), 1)
         record = self.result.answer[0]
         self.assertEqual(type(record.data), pycares.TXTRecordData)
-        self.assertIsInstance(record.data.text, str)
+        self.assertIsInstance(record.data.data, bytes)
 
     def test_query_class_chaos(self):
         self.result, self.errorno = None, None
@@ -442,7 +442,7 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(len(self.result.answer), 1)
         record = self.result.answer[0]
         self.assertEqual(type(record.data), pycares.TXTRecordData)
-        self.assertIsInstance(record.data.text, str)
+        self.assertIsInstance(record.data.data, bytes)
 
     def test_query_class_invalid(self):
         with self.assertRaises(ValueError):
