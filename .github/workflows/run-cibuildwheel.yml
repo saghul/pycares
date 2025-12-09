@@ -69,6 +69,7 @@ jobs:
         env:
             CIBW_SKIP: '*-win32'
         with:
+          only: ${{ matrix.only }}
           output-dir: dist
       - uses: actions/upload-artifact@v5
         with:
