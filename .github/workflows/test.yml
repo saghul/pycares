@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, windows-11-arm, macos-13, macos-latest]
+        os: [ubuntu-latest, windows-latest, windows-11-arm, macos-14, macos-latest]
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14-dev', '3.14t-dev']
         exclude:
           - os: windows-11-arm  # setup-python action only supports 3.11+
