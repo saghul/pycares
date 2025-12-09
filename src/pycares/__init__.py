@@ -68,6 +68,9 @@ QUERY_TYPE_PTR = _lib.ARES_REC_TYPE_PTR
 QUERY_TYPE_SOA = _lib.ARES_REC_TYPE_SOA
 QUERY_TYPE_SRV = _lib.ARES_REC_TYPE_SRV
 QUERY_TYPE_TXT = _lib.ARES_REC_TYPE_TXT
+QUERY_TYPE_TLSA = _lib.ARES_REC_TYPE_TLSA
+QUERY_TYPE_HTTPS = _lib.ARES_REC_TYPE_HTTPS
+QUERY_TYPE_URI = _lib.ARES_REC_TYPE_URI
 
 # Query classes
 QUERY_CLASS_IN = _lib.ARES_CLASS_IN
@@ -171,6 +174,25 @@ def _addrinfo_cb(arg, status, timeouts, res):
     _handle_to_channel.pop(arg, None)
 
 
+def _extract_opt_params(rr, key):
+    """Extract OPT params as list of (key, value) tuples for HTTPS/SVCB records."""
+    opt_cnt = _lib.ares_dns_rr_get_opt_cnt(rr, key)
+    if opt_cnt == 0:
+        return []
+    # Collect all options as a list of (key, value) tuples
+    params = []
+    for i in range(opt_cnt):
+        val_ptr = _ffi.new("unsigned char **")
+        val_len = _ffi.new("size_t *")
+        opt_key = _lib.ares_dns_rr_get_opt(rr, key, i, val_ptr, val_len)
+        if val_ptr[0] != _ffi.NULL:
+            val = bytes(_ffi.buffer(val_ptr[0], val_len[0]))
+        else:
+            val = b''
+        params.append((opt_key, val))
+    return params
+
+
 def extract_record_data(rr, record_type):
     """Extract type-specific data from a DNS resource record and return appropriate dataclass"""
     if record_type == _lib.ARES_REC_TYPE_A:
@@ -264,6 +286,40 @@ def extract_record_data(rr, record_type):
             priority=priority,
             weight=weight,
             port=port,
+            target=maybe_str(_ffi.string(target))
+        )
+
+    elif record_type == _lib.ARES_REC_TYPE_TLSA:
+        cert_usage = _lib.ares_dns_rr_get_u8(rr, _lib.ARES_RR_TLSA_CERT_USAGE)
+        selector = _lib.ares_dns_rr_get_u8(rr, _lib.ARES_RR_TLSA_SELECTOR)
+        matching_type = _lib.ares_dns_rr_get_u8(rr, _lib.ARES_RR_TLSA_MATCH)
+        data_len = _ffi.new("size_t *")
+        data_ptr = _lib.ares_dns_rr_get_bin(rr, _lib.ARES_RR_TLSA_DATA, data_len)
+        cert_data = bytes(_ffi.buffer(data_ptr, data_len[0])) if data_ptr != _ffi.NULL else b''
+        return TLSARecordData(
+            cert_usage=cert_usage,
+            selector=selector,
+            matching_type=matching_type,
+            cert_association_data=cert_data
+        )
+
+    elif record_type == _lib.ARES_REC_TYPE_HTTPS:
+        priority = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_HTTPS_PRIORITY)
+        target = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_HTTPS_TARGET)
+        params = _extract_opt_params(rr, _lib.ARES_RR_HTTPS_PARAMS)
+        return HTTPSRecordData(
+            priority=priority,
+            target=maybe_str(_ffi.string(target)),
+            params=params
+        )
+
+    elif record_type == _lib.ARES_REC_TYPE_URI:
+        priority = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_URI_PRIORITY)
+        weight = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_URI_WEIGHT)
+        target = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_URI_TARGET)
+        return URIRecordData(
+            priority=priority,
+            weight=weight,
             target=maybe_str(_ffi.string(target))
         )
 
@@ -411,7 +467,7 @@ _shutdown_manager = _ChannelShutdownManager()
 
 
 class Channel:
-    __qtypes__ = (_lib.ARES_REC_TYPE_A, _lib.ARES_REC_TYPE_AAAA, _lib.ARES_REC_TYPE_ANY, _lib.ARES_REC_TYPE_CAA, _lib.ARES_REC_TYPE_CNAME, _lib.ARES_REC_TYPE_MX, _lib.ARES_REC_TYPE_NAPTR, _lib.ARES_REC_TYPE_NS, _lib.ARES_REC_TYPE_PTR, _lib.ARES_REC_TYPE_SOA, _lib.ARES_REC_TYPE_SRV, _lib.ARES_REC_TYPE_TXT)
+    __qtypes__ = (_lib.ARES_REC_TYPE_A, _lib.ARES_REC_TYPE_AAAA, _lib.ARES_REC_TYPE_ANY, _lib.ARES_REC_TYPE_CAA, _lib.ARES_REC_TYPE_CNAME, _lib.ARES_REC_TYPE_HTTPS, _lib.ARES_REC_TYPE_MX, _lib.ARES_REC_TYPE_NAPTR, _lib.ARES_REC_TYPE_NS, _lib.ARES_REC_TYPE_PTR, _lib.ARES_REC_TYPE_SOA, _lib.ARES_REC_TYPE_SRV, _lib.ARES_REC_TYPE_TLSA, _lib.ARES_REC_TYPE_TXT, _lib.ARES_REC_TYPE_URI)
     __qclasses__ = (_lib.ARES_CLASS_IN, _lib.ARES_CLASS_CHAOS, _lib.ARES_CLASS_HESOID, _lib.ARES_CLASS_NONE, _lib.ARES_CLASS_ANY)
 
     def __init__(self,
@@ -935,6 +991,28 @@ class SRVRecordData:
     target: str
 
 @dataclass
+class TLSARecordData:
+    """Data for TLSA (DANE TLS authentication) record - RFC 6698"""
+    cert_usage: int
+    selector: int
+    matching_type: int
+    cert_association_data: bytes
+
+@dataclass
+class HTTPSRecordData:
+    """Data for HTTPS (service binding) record - RFC 9460"""
+    priority: int
+    target: str
+    params: list  # List of (key: int, value: bytes) tuples
+
+@dataclass
+class URIRecordData:
+    """Data for URI (Uniform Resource Identifier) record - RFC 7553"""
+    priority: int
+    weight: int
+    target: str
+
+@dataclass
 class DNSRecord:
     """Represents a single DNS resource record"""
     name: str
@@ -942,8 +1020,9 @@ class DNSRecord:
     record_class: int
     ttl: int
     data: Union[ARecordData, AAAARecordData, MXRecordData, TXTRecordData,
-                CAARecordData, CNAMERecordData, NAPTRRecordData, NSRecordData,
-                PTRRecordData, SOARecordData, SRVRecordData]
+                CAARecordData, CNAMERecordData, HTTPSRecordData, NAPTRRecordData,
+                NSRecordData, PTRRecordData, SOARecordData, SRVRecordData,
+                TLSARecordData, URIRecordData]
 
 @dataclass
 class DNSResult:
@@ -1123,13 +1202,16 @@ __all__ = (
     "QUERY_TYPE_ANY",
     "QUERY_TYPE_CAA",
     "QUERY_TYPE_CNAME",
+    "QUERY_TYPE_HTTPS",
     "QUERY_TYPE_MX",
     "QUERY_TYPE_NAPTR",
     "QUERY_TYPE_NS",
     "QUERY_TYPE_PTR",
     "QUERY_TYPE_SOA",
     "QUERY_TYPE_SRV",
+    "QUERY_TYPE_TLSA",
     "QUERY_TYPE_TXT",
+    "QUERY_TYPE_URI",
 
     # Query classes
     "QUERY_CLASS_IN",
@@ -1154,11 +1236,14 @@ __all__ = (
     "TXTRecordData",
     "CAARecordData",
     "CNAMERecordData",
+    "HTTPSRecordData",
     "NAPTRRecordData",
     "NSRecordData",
     "PTRRecordData",
     "SOARecordData",
     "SRVRecordData",
+    "TLSARecordData",
+    "URIRecordData",
 
     # Host/AddrInfo result types
     "HostResult",
