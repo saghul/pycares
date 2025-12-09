@@ -53,7 +53,7 @@ class DNSTest(unittest.TestCase):
         self.channel.getaddrinfo("localhost", 80, cb)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
+        self.assertEqual(type(self.result), pycares.AddrInfoResult)
         self.assertTrue(len(self.result.nodes) > 0)
         for node in self.result.nodes:
             self.assertEqual(node.addr[1], 80)
@@ -68,7 +68,7 @@ class DNSTest(unittest.TestCase):
         self.channel.getaddrinfo("localhost", "http", cb)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
+        self.assertEqual(type(self.result), pycares.AddrInfoResult)
         self.assertTrue(len(self.result.nodes) > 0)
         for node in self.result.nodes:
             self.assertEqual(node.addr[1], 80)
@@ -83,7 +83,7 @@ class DNSTest(unittest.TestCase):
         self.channel.getaddrinfo("localhost", None, cb)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
+        self.assertEqual(type(self.result), pycares.AddrInfoResult)
         self.assertTrue(len(self.result.nodes) > 0)
         for node in self.result.nodes:
             self.assertEqual(node.addr[1], 0)
@@ -98,7 +98,7 @@ class DNSTest(unittest.TestCase):
         self.channel.getaddrinfo("localhost", "http", cb, family=socket.AF_INET)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
+        self.assertEqual(type(self.result), pycares.AddrInfoResult)
         self.assertEqual(len(self.result.nodes), 1)
         node = self.result.nodes[0]
         self.assertEqual(node.addr[0], b"127.0.0.1")
@@ -113,7 +113,7 @@ class DNSTest(unittest.TestCase):
         self.channel.getaddrinfo("google.com", "http", cb)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
+        self.assertEqual(type(self.result), pycares.AddrInfoResult)
         self.assertTrue(len(self.result.nodes) > 0)
 
     @unittest.skipIf(sys.platform == "win32", "skipped on Windows")
@@ -126,7 +126,7 @@ class DNSTest(unittest.TestCase):
         self.channel.gethostbyaddr("127.0.0.1", cb)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_host_result)
+        self.assertEqual(type(self.result), pycares.HostResult)
 
     @unittest.skipIf(sys.platform == "win32", "skipped on Windows")
     def test_gethostbyaddr6(self):
@@ -138,7 +138,7 @@ class DNSTest(unittest.TestCase):
         self.channel.gethostbyaddr("::1", cb)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_host_result)
+        self.assertEqual(type(self.result), pycares.HostResult)
 
     @unittest.skipIf(sys.platform == "win32", "skipped on Windows")
     def test_getnameinfo(self):
@@ -154,7 +154,7 @@ class DNSTest(unittest.TestCase):
         )
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_nameinfo_result)
+        self.assertEqual(type(self.result), pycares.NameInfoResult)
         self.assertIn(self.result.node, ("localhost.localdomain", "localhost"))
         self.assertEqual(self.result.service, "http")
 
@@ -173,7 +173,7 @@ class DNSTest(unittest.TestCase):
         )
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_nameinfo_result)
+        self.assertEqual(type(self.result), pycares.NameInfoResult)
         self.assertEqual(self.result.node, "fd01:dec0:0:1::2020")
         self.assertEqual(self.result.service, "80")
 
@@ -194,7 +194,7 @@ class DNSTest(unittest.TestCase):
         )
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_nameinfo_result)
+        self.assertEqual(type(self.result), pycares.NameInfoResult)
         self.assertEqual(self.result.node, "fe80::5abd:fee7:4177:60c0%666")
         self.assertEqual(self.result.service, "80")
 
@@ -725,7 +725,7 @@ class DNSTest(unittest.TestCase):
         self.channel.getaddrinfo(host, None, cb, socket.AF_INET)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_addrinfo_result)
+        self.assertEqual(type(self.result), pycares.AddrInfoResult)
 
     def test_idna_encoding_query_a(self):
         host = "españa.icom.museum"
@@ -777,7 +777,7 @@ class DNSTest(unittest.TestCase):
         self.channel.getaddrinfo(host, None, cb, socket.AF_INET)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.ares_host_result)
+        self.assertEqual(type(self.result), pycares.HostResult)
         self.assertTrue("81.169.145.78" in self.result.addresses)
 
     @unittest.skipIf(sys.platform == "win32", "skipped on Windows")

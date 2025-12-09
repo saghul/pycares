@@ -107,7 +107,7 @@ def _host_cb(arg, status, timeouts, hostent):
     if status != _lib.ARES_SUCCESS:
         result = None
     else:
-        result = ares_host_result(hostent)
+        result = parse_hostent(hostent)
         status = None
 
     callback(result, status)
@@ -124,7 +124,7 @@ def _nameinfo_cb(arg, status, timeouts, node, service):
     if status != _lib.ARES_SUCCESS:
         result = None
     else:
-        result = ares_nameinfo_result(node, service)
+        result = parse_nameinfo(node, service)
         status = None
 
     callback(result, status)
@@ -164,7 +164,7 @@ def _addrinfo_cb(arg, status, timeouts, res):
     if status != _lib.ARES_SUCCESS:
         result = None
     else:
-        result = ares_addrinfo_result(res)
+        result = parse_addrinfo(res)
         status = None
 
     callback(result, status)
@@ -957,97 +957,135 @@ class DNSResult:
     additional: list[DNSRecord]
 
 
-class AresResult:
-    __slots__ = ()
+# Host/AddrInfo result types
 
-    def __repr__(self):
-        attrs = ['%s=%s' % (a, getattr(self, a)) for a in self.__slots__]
-        return '<%s> %s' % (self.__class__.__name__, ', '.join(attrs))
+@dataclass
+class HostResult:
+    """Result from gethostbyaddr() operation"""
+    name: str
+    aliases: list[str]
+    addresses: list[str]
+
+@dataclass
+class NameInfoResult:
+    """Result from getnameinfo() operation"""
+    node: str
+    service: str | None
+
+@dataclass
+class AddrInfoNode:
+    """Single address node from getaddrinfo() result"""
+    ttl: int
+    flags: int
+    family: int
+    socktype: int
+    protocol: int
+    addr: tuple  # (ip, port) or (ip, port, flowinfo, scope_id)
+
+@dataclass
+class AddrInfoCname:
+    """CNAME information from getaddrinfo() result"""
+    ttl: int
+    alias: str
+    name: str
+
+@dataclass
+class AddrInfoResult:
+    """Complete result from getaddrinfo() operation"""
+    cnames: list[AddrInfoCname]
+    nodes: list[AddrInfoNode]
 
 
-# Other result types
-#
+# Parser functions for Host/AddrInfo results
 
-class ares_host_result(AresResult):
-    __slots__ = ('name', 'aliases', 'addresses')
+def parse_hostent(hostent) -> HostResult:
+    """Parse c-ares hostent structure into HostResult"""
+    name = maybe_str(_ffi.string(hostent.h_name))
+    aliases = []
+    addresses = []
 
-    def __init__(self, hostent):
-        self.name = maybe_str(_ffi.string(hostent.h_name))
-        self.aliases = []
-        self.addresses = []
-        i = 0
-        while hostent.h_aliases[i] != _ffi.NULL:
-            self.aliases.append(maybe_str(_ffi.string(hostent.h_aliases[i])))
-            i += 1
+    i = 0
+    while hostent.h_aliases[i] != _ffi.NULL:
+        aliases.append(maybe_str(_ffi.string(hostent.h_aliases[i])))
+        i += 1
 
-        i = 0
-        while hostent.h_addr_list[i] != _ffi.NULL:
-            buf = _ffi.new("char[]", _lib.INET6_ADDRSTRLEN)
-            if _ffi.NULL != _lib.ares_inet_ntop(hostent.h_addrtype, hostent.h_addr_list[i], buf, _lib.INET6_ADDRSTRLEN):
-                self.addresses.append(maybe_str(_ffi.string(buf, _lib.INET6_ADDRSTRLEN)))
-            i += 1
+    i = 0
+    while hostent.h_addr_list[i] != _ffi.NULL:
+        buf = _ffi.new("char[]", _lib.INET6_ADDRSTRLEN)
+        if _ffi.NULL != _lib.ares_inet_ntop(hostent.h_addrtype, hostent.h_addr_list[i], buf, _lib.INET6_ADDRSTRLEN):
+            addresses.append(maybe_str(_ffi.string(buf, _lib.INET6_ADDRSTRLEN)))
+        i += 1
 
-
-class ares_nameinfo_result(AresResult):
-    __slots__ = ('node', 'service')
-
-    def __init__(self, node, service):
-        self.node = maybe_str(_ffi.string(node))
-        self.service = maybe_str(_ffi.string(service)) if service != _ffi.NULL else None
+    return HostResult(name=name, aliases=aliases, addresses=addresses)
 
 
-class ares_addrinfo_node_result(AresResult):
-    __slots__ = ('ttl', 'flags', 'family', 'socktype', 'protocol', 'addr')
+def parse_nameinfo(node, service) -> NameInfoResult:
+    """Parse c-ares nameinfo into NameInfoResult"""
+    node_str = maybe_str(_ffi.string(node))
+    service_str = maybe_str(_ffi.string(service)) if service != _ffi.NULL else None
+    return NameInfoResult(node=node_str, service=service_str)
 
-    def __init__(self, ares_node):
-        self.ttl = ares_node.ai_ttl
-        self.flags = ares_node.ai_flags
-        self.socktype = ares_node.ai_socktype
-        self.protocol = ares_node.ai_protocol
 
-        addr = ares_node.ai_addr
-        assert addr.sa_family == ares_node.ai_family
-        ip = _ffi.new("char []", _lib.INET6_ADDRSTRLEN)
-        if addr.sa_family == socket.AF_INET:
-            self.family = socket.AF_INET
-            s = _ffi.cast("struct sockaddr_in*", addr)
-            if _ffi.NULL != _lib.ares_inet_ntop(s.sin_family, _ffi.addressof(s.sin_addr), ip, _lib.INET6_ADDRSTRLEN):
-                # (address, port) 2-tuple for AF_INET
-                self.addr = (_ffi.string(ip, _lib.INET6_ADDRSTRLEN), socket.ntohs(s.sin_port))
-        elif addr.sa_family == socket.AF_INET6:
-            self.family = socket.AF_INET6
-            s = _ffi.cast("struct sockaddr_in6*", addr)
-            if _ffi.NULL != _lib.ares_inet_ntop(s.sin6_family, _ffi.addressof(s.sin6_addr), ip, _lib.INET6_ADDRSTRLEN):
-                # (address, port, flow info, scope id) 4-tuple for AF_INET6
-                self.addr = (_ffi.string(ip, _lib.INET6_ADDRSTRLEN), socket.ntohs(s.sin6_port), s.sin6_flowinfo, s.sin6_scope_id)
+def parse_addrinfo_node(ares_node) -> AddrInfoNode:
+    """Parse a single c-ares addrinfo node into AddrInfoNode"""
+    ttl = ares_node.ai_ttl
+    flags = ares_node.ai_flags
+    socktype = ares_node.ai_socktype
+    protocol = ares_node.ai_protocol
+
+    addr_struct = ares_node.ai_addr
+    assert addr_struct.sa_family == ares_node.ai_family
+    ip = _ffi.new("char []", _lib.INET6_ADDRSTRLEN)
+
+    if addr_struct.sa_family == socket.AF_INET:
+        family = socket.AF_INET
+        s = _ffi.cast("struct sockaddr_in*", addr_struct)
+        if _ffi.NULL != _lib.ares_inet_ntop(s.sin_family, _ffi.addressof(s.sin_addr), ip, _lib.INET6_ADDRSTRLEN):
+            # (address, port) 2-tuple for AF_INET
+            addr = (_ffi.string(ip, _lib.INET6_ADDRSTRLEN), socket.ntohs(s.sin_port))
         else:
-            raise ValueError("invalid sockaddr family")
+            raise ValueError("failed to convert IPv4 address")
+    elif addr_struct.sa_family == socket.AF_INET6:
+        family = socket.AF_INET6
+        s = _ffi.cast("struct sockaddr_in6*", addr_struct)
+        if _ffi.NULL != _lib.ares_inet_ntop(s.sin6_family, _ffi.addressof(s.sin6_addr), ip, _lib.INET6_ADDRSTRLEN):
+            # (address, port, flow info, scope id) 4-tuple for AF_INET6
+            addr = (_ffi.string(ip, _lib.INET6_ADDRSTRLEN), socket.ntohs(s.sin6_port), s.sin6_flowinfo, s.sin6_scope_id)
+        else:
+            raise ValueError("failed to convert IPv6 address")
+    else:
+        raise ValueError("invalid sockaddr family")
+
+    return AddrInfoNode(ttl=ttl, flags=flags, family=family, socktype=socktype, protocol=protocol, addr=addr)
 
 
-class ares_addrinfo_cname_result(AresResult):
-    __slots__ = ('ttl', 'alias', 'name')
+def parse_addrinfo_cname(ares_cname) -> AddrInfoCname:
+    """Parse a single c-ares addrinfo cname into AddrInfoCname"""
+    return AddrInfoCname(
+        ttl=ares_cname.ttl,
+        alias=maybe_str(_ffi.string(ares_cname.alias)),
+        name=maybe_str(_ffi.string(ares_cname.name))
+    )
 
-    def __init__(self, ares_cname):
-        self.ttl = ares_cname.ttl
-        self.alias = maybe_str(_ffi.string(ares_cname.alias))
-        self.name = maybe_str(_ffi.string(ares_cname.name))
 
+def parse_addrinfo(ares_addrinfo) -> AddrInfoResult:
+    """Parse c-ares addrinfo structure into AddrInfoResult"""
+    cnames = []
+    nodes = []
 
-class ares_addrinfo_result(AresResult):
-    __slots__ = ('cnames', 'nodes')
+    cname_ptr = ares_addrinfo.cnames
+    while cname_ptr != _ffi.NULL:
+        cnames.append(parse_addrinfo_cname(cname_ptr))
+        cname_ptr = cname_ptr.next
 
-    def __init__(self, ares_addrinfo):
-        self.cnames = []
-        self.nodes = []
-        cname_ptr = ares_addrinfo.cnames
-        while cname_ptr != _ffi.NULL:
-            self.cnames.append(ares_addrinfo_cname_result(cname_ptr))
-            cname_ptr = cname_ptr.next
-        node_ptr = ares_addrinfo.nodes
-        while node_ptr != _ffi.NULL:
-            self.nodes.append(ares_addrinfo_node_result(node_ptr))
-            node_ptr = node_ptr.ai_next
-        _lib.ares_freeaddrinfo(ares_addrinfo)
+    node_ptr = ares_addrinfo.nodes
+    while node_ptr != _ffi.NULL:
+        nodes.append(parse_addrinfo_node(node_ptr))
+        node_ptr = node_ptr.ai_next
+
+    _lib.ares_freeaddrinfo(ares_addrinfo)
+
+    return AddrInfoResult(cnames=cnames, nodes=nodes)
 
 
 __all__ = (
@@ -1111,7 +1149,7 @@ __all__ = (
     "errno",
     "__version__",
 
-    # Result types
+    # DNS record result types
     "DNSResult",
     "DNSRecord",
     "ARecordData",
@@ -1125,4 +1163,11 @@ __all__ = (
     "PTRRecordData",
     "SOARecordData",
     "SRVRecordData",
+
+    # Host/AddrInfo result types
+    "HostResult",
+    "NameInfoResult",
+    "AddrInfoResult",
+    "AddrInfoNode",
+    "AddrInfoCname",
 )
