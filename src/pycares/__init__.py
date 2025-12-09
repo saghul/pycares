@@ -672,7 +672,7 @@ class Channel:
         hints.ai_protocol = proto
         _lib.ares_getaddrinfo(self._channel[0], parse_name(host), service, hints, _lib._addrinfo_cb, userdata)
 
-    def query(self, name: str, query_type: str, callback: Callable[[Any, int], None], query_class: Optional[str] = None) -> None:
+    def query(self, name: str, query_type: str, callback: Callable[[Any, int], None], query_class: Optional[int] = None) -> None:
         """
         Perform a DNS query.
 
@@ -710,7 +710,7 @@ class Channel:
             _handle_to_channel.pop(userdata, None)
             raise AresError(status, errno.strerror(status))
 
-    def search(self, name, query_type, callback, query_class=None):
+    def search(self, name: str, query_type: str, callback: Callable[[Any, int], None], query_class: Optional[int] = None) -> None:
         """
         Perform a DNS search (honors resolv.conf search domains).
 
@@ -957,7 +957,6 @@ class DNSResult:
     additional: list[DNSRecord]
 
 
-# Base class for legacy compatibility (if needed)
 class AresResult:
     __slots__ = ()
 
@@ -1052,6 +1051,7 @@ class ares_addrinfo_result(AresResult):
 
 
 __all__ = (
+    # Channel flags
     "ARES_FLAG_USEVC",
     "ARES_FLAG_PRIMARY",
     "ARES_FLAG_IGNTC",
@@ -1083,7 +1083,6 @@ __all__ = (
     # Bad socket
     "ARES_SOCKET_BAD",
 
-
     # Query types
     "QUERY_TYPE_A",
     "QUERY_TYPE_AAAA",
@@ -1105,14 +1104,14 @@ __all__ = (
     "QUERY_CLASS_NONE",
     "QUERY_CLASS_ANY",
 
-
+    # Core stuff
     "ARES_VERSION",
     "AresError",
     "Channel",
     "errno",
     "__version__",
 
-    # New DNS record result types
+    # Result types
     "DNSResult",
     "DNSRecord",
     "ARecordData",
