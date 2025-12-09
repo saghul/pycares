@@ -247,7 +247,7 @@
 
             - **TXT**: ``TXTRecordData`` dataclass
 
-              - ``text``: str - Text content
+              - ``data``: bytes - Raw TXT record data
 
         **Example:**
 

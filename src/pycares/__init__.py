@@ -199,8 +199,7 @@ def extract_record_data(rr, record_type):
             data = _lib.ares_dns_rr_get_abin(rr, _lib.ARES_RR_TXT_DATA, i, length)
             if data != _ffi.NULL:
                 chunks.append(_ffi.buffer(data, length[0])[:])
-        text = b''.join(chunks).decode('utf-8', errors='replace')
-        return TXTRecordData(text=text)
+        return TXTRecordData(data=b''.join(chunks))
 
     elif record_type == _lib.ARES_REC_TYPE_CAA:
         critical = _lib.ares_dns_rr_get_u8(rr, _lib.ARES_RR_CAA_CRITICAL)
@@ -885,7 +884,7 @@ class MXRecordData:
 @dataclass
 class TXTRecordData:
     """Data for TXT (text) record"""
-    text: str
+    data: bytes
 
 @dataclass
 class CAARecordData:
