@@ -92,7 +92,25 @@
         Translate the host/port argument into a sequence of 5-tuples that contain all the necessary arguments for
         creating a socket connected to that service.
 
-        Callback signature: ``callback(result, errorno)``
+        Callback signature: ``callback(result, errorno)`` where result is an ``AddrInfoResult`` dataclass with:
+
+            - ``cnames``: list of ``AddrInfoCname`` - CNAME records encountered
+            - ``nodes``: list of ``AddrInfoNode`` - Address nodes
+
+        Each ``AddrInfoCname`` is a dataclass with:
+
+            - ``ttl``: int - Time to live in seconds
+            - ``alias``: str - Alias name
+            - ``name``: str - Canonical name
+
+        Each ``AddrInfoNode`` is a dataclass with:
+
+            - ``ttl``: int - Time to live in seconds
+            - ``flags``: int - Address info flags
+            - ``family``: int - Address family (socket.AF_INET or socket.AF_INET6)
+            - ``socktype``: int - Socket type
+            - ``protocol``: int - Protocol number
+            - ``addr``: tuple - (ip, port) for IPv4 or (ip, port, flowinfo, scope_id) for IPv6
 
 
     .. py:method:: gethostbyaddr(name, callback)
@@ -103,7 +121,11 @@
 
         Retrieves the host information corresponding to a network address.
 
-        Callback signature: ``callback(result, errorno)``
+        Callback signature: ``callback(result, errorno)`` where result is a ``HostResult`` dataclass with:
+
+            - ``name``: str - Canonical hostname
+            - ``aliases``: list[str] - List of hostname aliases
+            - ``addresses``: list[str] - List of IP addresses
 
 
     .. py:method:: getnameinfo(address, flags, callback)
@@ -120,7 +142,10 @@
         ``address`` must be a 2-item tuple for IPv4 or a 4-item tuple for IPv6. Format of
         fields is the same as one returned by `getaddrinfo()`.
 
-        Callback signature: ``callback(result, errorno)``
+        Callback signature: ``callback(result, errorno)`` where result is a ``NameInfoResult`` dataclass with:
+
+            - ``node``: str - Hostname or IP address information
+            - ``service``: str | None - Service name or port information
 
 
     .. py:method:: query(name, query_type, callback, query_class=QUERY_CLASS_IN)
