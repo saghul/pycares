@@ -76,13 +76,13 @@
         closing is safer as it gives you control over when resources are released.
 
 
-    .. py:method:: getaddrinfo(host, port, callback, family=0, type=0, proto=0, flags=0)
+    .. py:method:: getaddrinfo(host, port, *, family=0, type=0, proto=0, flags=0, callback)
 
         :param string host: Hostname to resolve.
 
         :param string port: Service to resolve. Can be a string, int or None.
 
-        :param callable callback: Callback to be called with the result of the query.
+        :param callable callback: Callback to be called with the result of the query (keyword-only).
 
         The ``family``, ``type`` and ``proto`` arguments can be optionally specified in order to narrow the list of
         addresses returned. Passing zero as a value for each of these arguments selects the full range of results.
@@ -113,11 +113,11 @@
             - ``addr``: tuple - (ip, port) for IPv4 or (ip, port, flowinfo, scope_id) for IPv6
 
 
-    .. py:method:: gethostbyaddr(name, callback)
+    .. py:method:: gethostbyaddr(name, *, callback)
 
         :param string name: Name to query.
 
-        :param callable callback: Callback to be called with the result of the query.
+        :param callable callback: Callback to be called with the result of the query (keyword-only).
 
         Retrieves the host information corresponding to a network address.
 
@@ -128,13 +128,13 @@
             - ``addresses``: list[str] - List of IP addresses
 
 
-    .. py:method:: getnameinfo(address, flags, callback)
+    .. py:method:: getnameinfo(address, flags, *, callback)
 
         :param tuple address: address tuple to get info about.
 
         :param int flags: Query flags, see the NI flags section.
 
-        :param callable callback: Callback to be called with the result of the query.
+        :param callable callback: Callback to be called with the result of the query (keyword-only).
 
         Provides protocol-independent name resolution from an address to a host name and
         from a port number to the service name.
@@ -148,13 +148,13 @@
             - ``service``: str | None - Service name or port information
 
 
-    .. py:method:: query(name, query_type, callback, query_class=QUERY_CLASS_IN)
+    .. py:method:: query(name, query_type, *, query_class=QUERY_CLASS_IN, callback)
 
         :param string name: Name to query.
 
         :param int query_type: Type of query to perform.
 
-        :param callable callback: Callback to be called with the result of the query.
+        :param callable callback: Callback to be called with the result of the query (keyword-only).
 
         :param int query_class: Query class (default: QUERY_CLASS_IN).
 
@@ -268,15 +268,15 @@
                 if result.additional:
                     print(f"Additional section: {len(result.additional)} records")
 
-            channel.query("google.com", pycares.QUERY_TYPE_A, callback)
+            channel.query("google.com", pycares.QUERY_TYPE_A, callback=callback)
 
-    .. py:method:: search(name, query_type, callback, query_class=QUERY_CLASS_IN)
+    .. py:method:: search(name, query_type, *, query_class=QUERY_CLASS_IN, callback)
 
         :param string name: Name to query.
 
         :param int query_type: Type of query to perform.
 
-        :param callable callback: Callback to be called with the result of the query.
+        :param callable callback: Callback to be called with the result of the query (keyword-only).
 
         :param int query_class: Query class (default: QUERY_CLASS_IN).
 

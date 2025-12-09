@@ -14,7 +14,7 @@ def callback(result, error):
     pass
 
 
-channel.query("example.com", pycares.QUERY_TYPE_A, callback)
+channel.query("example.com", pycares.QUERY_TYPE_A, callback=callback)
 
 # Exit immediately - the channel will be garbage collected during interpreter shutdown
 # This should not raise PythonFinalizationError
