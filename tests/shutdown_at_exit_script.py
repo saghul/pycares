@@ -5,8 +5,14 @@ import sys
 
 import pycares
 
+
+def dummy(*args):
+    pass
+
+
 # Create a channel
-channel = pycares.Channel()
+# TODO: using event thread seems to crash on Windows 11 ARM.
+channel = pycares.Channel(sock_state_cb=dummy)
 
 
 # Start a query to ensure pending handles
