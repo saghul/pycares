@@ -44,7 +44,7 @@ def cb(result, error):
         print('\n'.join(parts))
 
 
-channel = pycares.Channel(event_thread=True)
+channel = pycares.Channel()
 
 if len(sys.argv) not in (2, 3):
     print('Invalid arguments! Usage: python -m pycares [query_type] hostname')

@@ -41,14 +41,9 @@
     :param callable sock_state_cb: A callback function to be invoked when a
         socket changes state. Callback signature: ``sock_state_cb(self, fd, readable, writable)``
 
-        This option is mutually exclusive with the ``event_thread`` option.
-
-    :param bool event_thread: If set to True, c-ares will use its own thread
-        to process events. This is the recommended way to use c-ares, as it
-        allows for automatic reinitialization of the channel when the
-        system resolver configuration changes.
-
-        This option is mutually exclusive with the ``sock_state_cb`` option.
+        When not set (or set to None), the event thread model will be used: c-ares
+        will create threads to run queries on. Query callbacks will be invoked
+        in the context of those threads.
 
     :param int socket_send_buffer_size: Size for the created socket's send buffer.
 

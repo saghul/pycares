@@ -486,8 +486,7 @@ class Channel:
                  rotate: bool = False,
                  local_ip: Union[str, bytes, None] = None,
                  local_dev: Optional[str] = None,
-                 resolvconf_path: Union[str, bytes, None] = None,
-                 event_thread: bool = False) -> None:
+                 resolvconf_path: Union[str, bytes, None] = None) -> None:
 
         # Initialize _channel to None first to ensure __del__ doesn't fail
         self._channel = None
@@ -534,8 +533,6 @@ class Channel:
         if sock_state_cb:
             if not callable(sock_state_cb):
                 raise TypeError("sock_state_cb is not callable")
-            if event_thread:
-                raise RuntimeError("sock_state_cb and event_thread cannot be used together")
 
             userdata = _ffi.new_handle(sock_state_cb)
 
@@ -545,10 +542,7 @@ class Channel:
             options.sock_state_cb = _lib._sock_state_cb
             options.sock_state_cb_data = userdata
             optmask = optmask |  _lib.ARES_OPT_SOCK_STATE_CB
-
-        if event_thread:
-            if sock_state_cb:
-                raise RuntimeError("sock_state_cb and event_thread cannot be used together")
+        else:
             optmask = optmask |  _lib.ARES_OPT_EVENT_THREAD
             options.evsys = _lib.ARES_EVSYS_DEFAULT
 
@@ -577,8 +571,6 @@ class Channel:
         if r != _lib.ARES_SUCCESS:
             raise AresError('Failed to initialize c-ares channel')
 
-        # Initialize all attributes for consistency
-        self._event_thread = event_thread
         self._channel = channel
         if servers:
             self.servers = servers
