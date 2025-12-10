@@ -32,6 +32,7 @@ class DNSTest(unittest.TestCase):
         )
 
     def tearDown(self):
+        self.channel.close()
         self.channel = None
 
     def wait(self):
