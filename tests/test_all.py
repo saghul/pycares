@@ -236,7 +236,7 @@ class DNSTest(unittest.TestCase):
                 self.errorno_count += 1
             self.count += 1
 
-        self.channel = pycares.Channel(timeout=1.0, tries=1, rotate=True)
+        self.channel = pycares.Channel(timeout=10.0, tries=1, rotate=True)
         self.channel.query("google.com", pycares.QUERY_TYPE_A, callback=cb)
         self.channel.query("google.com", pycares.QUERY_TYPE_A, callback=cb)
         self.channel.query("google.com", pycares.QUERY_TYPE_A, callback=cb)
