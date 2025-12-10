@@ -965,8 +965,12 @@ class ChannelCloseTest(unittest.TestCase):
         self.assertIsNone(channel._channel)
 
     def test_threadsafe_close_with_pending_queries(self):
-        # Test close with queries in flight
-        channel = pycares.Channel()
+        def dummy(*args):
+            pass
+
+        # Test close with queries in flight. Use a dummy socket state callback
+        # to make sure queries don't start immediately.
+        channel = pycares.Channel(sock_state_cb=dummy)
         query_completed = threading.Event()
         cancelled_count = 0
 
