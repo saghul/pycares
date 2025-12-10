@@ -18,16 +18,11 @@ Documentation
 https://pycares.readthedocs.io/latest/
 
 
-Bundled c-ares
---------------
+Migrating to version 5
+----------------------
 
-pycares currently bundles c-ares as a submodule for ease of building. Using the system
-provided c-ares is possible if the ``PYCARES_USE_SYSTEM_LIB`` environment variable is
-set to ``1`` when building.
-
-NOTE: Versions prior to 4.0.0 used to embed a modified c-ares with extended TTL support.
-That is no longer the case and as a result only A and AAAA records will have TTL information.
-Follow this PR in uppstream c-ares, looks like TTLs will be added: https://github.com/c-ares/c-ares/pull/393
+Version 5 introduces a number of breaking changes, please check the
+migration guide here: https://pycares.readthedocs.io/latest/migration.html
 
 
 Build Requirements
@@ -46,6 +41,10 @@ Installing CMake:
 - **macOS**: ``brew install cmake`` or download from cmake.org
 - **Windows**: Download from https://cmake.org/download/
 - **FreeBSD**: ``pkg install cmake``
+
+pycares currently bundles c-ares as a submodule for ease of building. Using the system
+provided c-ares is possible if the ``PYCARES_USE_SYSTEM_LIB`` environment variable is
+set to ``1`` when building.
 
 
 Installation
