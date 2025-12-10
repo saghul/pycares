@@ -533,7 +533,7 @@ class DNSTest(unittest.TestCase):
             self.result, self.errorno = result, errorno
 
         # DANE-enabled domain with TLSA records
-        self.channel.query("_25._tcp.mail.ietf.org", pycares.QUERY_TYPE_TLSA, cb)
+        self.channel.query("_25._tcp.mail.ietf.org", pycares.QUERY_TYPE_TLSA, callback=cb)
         self.wait()
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.DNSResult)
@@ -553,7 +553,7 @@ class DNSTest(unittest.TestCase):
             self.result, self.errorno = result, errorno
 
         # Cloudflare has HTTPS records
-        self.channel.query("cloudflare.com", pycares.QUERY_TYPE_HTTPS, cb)
+        self.channel.query("cloudflare.com", pycares.QUERY_TYPE_HTTPS, callback=cb)
         self.wait()
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.DNSResult)
