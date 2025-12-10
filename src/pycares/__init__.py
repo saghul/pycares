@@ -427,7 +427,7 @@ class _ChannelShutdownManager:
         """Process channel destruction requests from the queue."""
         while True:
             # Block forever until we get a channel to destroy
-            channel = self._queue.get()
+            channel, _ = self._queue.get()
 
             # Cancel all pending queries - this will trigger callbacks with ARES_ECANCELLED
             _lib.ares_cancel(channel[0])
@@ -450,16 +450,19 @@ class _ChannelShutdownManager:
             self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)
             self._thread.start()
 
-    def destroy_channel(self, channel) -> None:
+    def destroy_channel(self, channel, sock_state_cb_handle) -> None:
         """
-        Schedule channel destruction on the background thread with a safety delay.
+        Schedule channel destruction on the background thread.
+
+        The socket state callback handle is passed along to ensure it remains
+        alive until the channel is destroyed.
 
         Thread Safety and Synchronization:
         This method uses SimpleQueue which is thread-safe for putting items
         from multiple threads. The background thread processes channels
         sequentially waiting for queries to end before each destruction.
         """
-        self._queue.put(channel)
+        self._queue.put((channel, sock_state_cb_handle))
 
 
 # Global shutdown manager instance
@@ -544,6 +547,7 @@ class Channel:
             options.sock_state_cb_data = userdata
             optmask = optmask |  _lib.ARES_OPT_SOCK_STATE_CB
         else:
+            self._sock_state_cb_handle = None
             optmask = optmask |  _lib.ARES_OPT_EVENT_THREAD
             options.evsys = _lib.ARES_EVSYS_DEFAULT
 
@@ -890,7 +894,7 @@ class Channel:
 
         # Schedule channel destruction
         channel, self._channel = self._channel, None
-        _shutdown_manager.destroy_channel(channel)
+        _shutdown_manager.destroy_channel(channel, self._sock_state_cb_handle)
 
     def wait(self, timeout: float=None) -> bool:
         """
