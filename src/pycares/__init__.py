@@ -471,6 +471,7 @@ class Channel:
     __qclasses__ = (_lib.ARES_CLASS_IN, _lib.ARES_CLASS_CHAOS, _lib.ARES_CLASS_HESOID, _lib.ARES_CLASS_NONE, _lib.ARES_CLASS_ANY)
 
     def __init__(self,
+                 *,
                  flags: Optional[int] = None,
                  timeout: Optional[float] = None,
                  tries: Optional[int] = None,
