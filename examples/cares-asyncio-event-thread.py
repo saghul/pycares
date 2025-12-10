@@ -7,8 +7,7 @@ import pycares
 
 class DNSResolver:
     def __init__(self, loop: Optional[asyncio.AbstractEventLoop] = None) -> None:
-        # Use event_thread=True for automatic event handling in a separate thread
-        self._channel = pycares.Channel(event_thread=True)
+        self._channel = pycares.Channel()
         self.loop = loop or asyncio.get_running_loop()
 
     def query(
