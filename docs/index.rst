@@ -18,6 +18,7 @@ Contents
     :maxdepth: 3
     :titlesonly:
 
+    migration
     pycares
 
 
