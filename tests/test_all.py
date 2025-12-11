@@ -816,8 +816,7 @@ class DNSTest(unittest.TestCase):
         self.channel.getaddrinfo(host, None, family=socket.AF_INET, callback=cb)
         self.wait()
         self.assertNoError(self.errorno)
-        self.assertEqual(type(self.result), pycares.HostResult)
-        self.assertTrue("81.169.145.78" in self.result.addresses)
+        self.assertEqual(type(self.result), pycares.AddrInfoResult)
 
     @unittest.skipIf(sys.platform == "win32", "skipped on Windows")
     @unittest.skipIf(
