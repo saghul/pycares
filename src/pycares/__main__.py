@@ -1,7 +1,78 @@
 
-import collections.abc
 import pycares
 import sys
+
+
+# Map query type integers to string names for display
+QUERY_TYPE_NAMES = {
+    pycares.QUERY_TYPE_A: 'A',
+    pycares.QUERY_TYPE_AAAA: 'AAAA',
+    pycares.QUERY_TYPE_ANY: 'ANY',
+    pycares.QUERY_TYPE_CAA: 'CAA',
+    pycares.QUERY_TYPE_CNAME: 'CNAME',
+    pycares.QUERY_TYPE_HTTPS: 'HTTPS',
+    pycares.QUERY_TYPE_MX: 'MX',
+    pycares.QUERY_TYPE_NAPTR: 'NAPTR',
+    pycares.QUERY_TYPE_NS: 'NS',
+    pycares.QUERY_TYPE_PTR: 'PTR',
+    pycares.QUERY_TYPE_SOA: 'SOA',
+    pycares.QUERY_TYPE_SRV: 'SRV',
+    pycares.QUERY_TYPE_TLSA: 'TLSA',
+    pycares.QUERY_TYPE_TXT: 'TXT',
+    pycares.QUERY_TYPE_URI: 'URI',
+}
+
+
+def format_record(record):
+    """Format a DNS record for display."""
+    type_name = QUERY_TYPE_NAMES.get(record.type, str(record.type))
+    prefix = '%s\t\t%d\tIN\t%s' % (record.name, record.ttl, type_name)
+    data = record.data
+
+    if record.type == pycares.QUERY_TYPE_A:
+        return '%s\t%s' % (prefix, data.addr)
+    elif record.type == pycares.QUERY_TYPE_AAAA:
+        return '%s\t%s' % (prefix, data.addr)
+    elif record.type == pycares.QUERY_TYPE_CAA:
+        return '%s\t%d %s "%s"' % (prefix, data.critical, data.tag, data.value)
+    elif record.type == pycares.QUERY_TYPE_CNAME:
+        return '%s\t%s' % (prefix, data.cname)
+    elif record.type == pycares.QUERY_TYPE_HTTPS:
+        params_str = ' '.join('%s=%s' % (k, v) for k, v in data.params)
+        return '%s\t%d %s %s' % (prefix, data.priority, data.target, params_str)
+    elif record.type == pycares.QUERY_TYPE_MX:
+        return '%s\t%d %s' % (prefix, data.priority, data.exchange)
+    elif record.type == pycares.QUERY_TYPE_NAPTR:
+        return '%s\t%d %d "%s" "%s" "%s" %s' % (
+            prefix, data.order, data.preference, data.flags,
+            data.service, data.regexp, data.replacement
+        )
+    elif record.type == pycares.QUERY_TYPE_NS:
+        return '%s\t%s' % (prefix, data.nsdname)
+    elif record.type == pycares.QUERY_TYPE_PTR:
+        return '%s\t%s' % (prefix, data.dname)
+    elif record.type == pycares.QUERY_TYPE_SOA:
+        return '%s\t%s %s %d %d %d %d %d' % (
+            prefix, data.mname, data.rname, data.serial,
+            data.refresh, data.retry, data.expire, data.minimum
+        )
+    elif record.type == pycares.QUERY_TYPE_SRV:
+        return '%s\t%d %d %d %s' % (
+            prefix, data.priority, data.weight, data.port, data.target
+        )
+    elif record.type == pycares.QUERY_TYPE_TLSA:
+        return '%s\t%d %d %d %s' % (
+            prefix, data.cert_usage, data.selector,
+            data.matching_type, data.cert_association_data.hex()
+        )
+    elif record.type == pycares.QUERY_TYPE_TXT:
+        # TXT data is bytes in 5.0
+        text = data.data.decode('utf-8', errors='replace')
+        return '%s\t"%s"' % (prefix, text)
+    elif record.type == pycares.QUERY_TYPE_URI:
+        return '%s\t%d %d "%s"' % (prefix, data.priority, data.weight, data.target)
+    else:
+        return '%s\t%s' % (prefix, data)
 
 
 def cb(result, error):
@@ -15,31 +86,8 @@ def cb(result, error):
             ';; ANSWER SECTION:'
         ]
 
-        if not isinstance(result, collections.abc.Iterable):
-            result = [result]
-
-        for r in result:
-            txt = '%s\t\t%d\tIN\t%s' % (hostname, r.ttl, r.type)
-            if r.type in ('A', 'AAAA'):
-                parts.append('%s\t%s' % (txt, r.host))
-            elif r.type == 'CAA':
-                parts.append('%s\t%d %s "%s"' % (txt, r.critical, r.property, r.value))
-            elif r.type == 'CNAME':
-                parts.append('%s\t%s' % (txt, r.cname))
-            elif r.type == 'MX':
-                parts.append('%s\t%d %s' % (txt, r.priority, r.host))
-            elif r.type == 'NAPTR':
-                parts.append('%s\t%d %d "%s" "%s" "%s" %s' % (txt, r.order, r.preference, r.flags, r.service, r.regex, r.replacement))
-            elif r.type == 'NS':
-                parts.append('%s\t%s' % (txt, r.host))
-            elif r.type == 'PTR':
-                parts.append('%s\t%s' % (txt, r.name))
-            elif r.type == 'SOA':
-                parts.append('%s\t%s %s %d %d %d %d %d' % (txt, r.nsname, r.hostmaster, r.serial, r.refresh, r.retry, r.expires, r.minttl))
-            elif r.type == 'SRV':
-                parts.append('%s\t%d %d %d %s' % (txt, r.priority, r.weight, r.port, r.host))
-            elif r.type == 'TXT':
-                parts.append('%s\t"%s"' % (txt, r.text))
+        for record in result.answer:
+            parts.append(format_record(record))
 
         print('\n'.join(parts))
 
@@ -62,5 +110,5 @@ except Exception:
     print('Invalid query type: %s' % qtype)
     sys.exit(1)
 
-channel.query(hostname, query_type, cb)
+channel.query(hostname, query_type, callback=cb)
 channel.wait()
