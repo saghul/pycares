@@ -9,6 +9,4 @@ recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 recursive-exclude * *.[ao]
 recursive-exclude * *.so
-recursive-exclude deps/c-ares/test *
-recursive-exclude deps/c-ares/docs *
 prune docs/_build
