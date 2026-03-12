@@ -195,19 +195,19 @@ def _extract_opt_params(rr, key):
 def _extract_str_data(rr, key):
     """Extract OPT str values"""
     value = _lib.ares_dns_rr_get_str(rr, key)
-    return maybe_str(_ffi.string(value))
+    return maybe_str(_ffi.string(value)[:]) if value != _ffi.NULL else "" 
 
 def _extract_bin_data_as_str(rr, key):
     """Extract OPT bin values to strings"""
     length = _ffi.new("size_t *")
     value = _lib.ares_dns_rr_get_bin(rr, key, length)
-    return maybe_str(_ffi.buffer(value, length[0])[:])
+    return maybe_str(_ffi.buffer(value, length[0])[:]) if value != _ffi.NULL else ""
 
 def _extract_bin_data_as_bytes(rr, key):
     """Extract OPT bin values to bytes"""
     length = _ffi.new("size_t *")
     value = _lib.ares_dns_rr_get_bin(rr, key, length)
-    return bytes(_ffi.buffer(value, length[0])) if value != _ffi.NULL else b''
+    return bytes(_ffi.buffer(value, length[0])[:]) if value != _ffi.NULL else b''
 
 
 def extract_record_data(rr, record_type):
