@@ -198,13 +198,13 @@ def _extract_str_data(rr, key):
     return maybe_str(_ffi.string(value)[:]) if value != _ffi.NULL else "" 
 
 def _extract_bin_data_as_str(rr, key):
-    """Extract OPT bin values to strings"""
+    """Reterives a pointer to binary data as a string"""
     length = _ffi.new("size_t *")
     value = _lib.ares_dns_rr_get_bin(rr, key, length)
-    return maybe_str(_ffi.buffer(value, length[0])) if value != _ffi.NULL else ""
+    return maybe_str(_ffi.buffer(value, length[0])[:]) if value != _ffi.NULL else ""
 
 def _extract_bin_data_as_bytes(rr, key):
-    """Extract OPT bin values to bytes"""
+    """Reterives a pointer to binary data as bytes"""
     length = _ffi.new("size_t *")
     value = _lib.ares_dns_rr_get_bin(rr, key, length)
     return bytes(_ffi.buffer(value, length[0])) if value != _ffi.NULL else b''
