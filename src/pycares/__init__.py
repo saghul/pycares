@@ -195,13 +195,13 @@ def _extract_opt_params(rr, key):
 def _extract_str_data(rr, key):
     """Extract OPT str values"""
     value = _lib.ares_dns_rr_get_str(rr, key)
-    return maybe_str(_ffi.string(value)[:]) if value != _ffi.NULL else "" 
+    return maybe_str(_ffi.string(value)) if value != _ffi.NULL else "" 
 
 def _extract_bin_data_as_str(rr, key):
     """Reterives a pointer to binary data as a string"""
     length = _ffi.new("size_t *")
     value = _lib.ares_dns_rr_get_bin(rr, key, length)
-    return maybe_str(_ffi.buffer(value, length[0])[:]) if value != _ffi.NULL else ""
+    return maybe_str(_ffi.buffer(value, length[0])) if value != _ffi.NULL else ""
 
 def _extract_bin_data_as_bytes(rr, key):
     """Reterives a pointer to binary data as bytes"""
