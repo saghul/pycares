@@ -193,7 +193,7 @@ def _extract_opt_params(rr, key):
     return params
 
 def _extract_str_data(rr, key):
-    """Extract OPT str values"""
+    """Reterives a point to a string"""
     value = _lib.ares_dns_rr_get_str(rr, key)
     return maybe_str(_ffi.string(value)) if value != _ffi.NULL else "" 
 
