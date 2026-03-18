@@ -192,6 +192,23 @@ def _extract_opt_params(rr, key):
         params.append((opt_key, val))
     return params
 
+def _extract_str_data(rr, key):
+    """Reterives a point to a string"""
+    value = _lib.ares_dns_rr_get_str(rr, key)
+    return maybe_str(_ffi.string(value)) if value != _ffi.NULL else "" 
+
+def _extract_bin_data_as_str(rr, key):
+    """Reterives a pointer to binary data as a string"""
+    length = _ffi.new("size_t *")
+    value = _lib.ares_dns_rr_get_bin(rr, key, length)
+    return maybe_str(_ffi.buffer(value, length[0])) if value != _ffi.NULL else ""
+
+def _extract_bin_data_as_bytes(rr, key):
+    """Reterives a pointer to binary data as bytes"""
+    length = _ffi.new("size_t *")
+    value = _lib.ares_dns_rr_get_bin(rr, key, length)
+    return bytes(_ffi.buffer(value, length[0])) if value != _ffi.NULL else b''
+
 
 def extract_record_data(rr, record_type):
     """Extract type-specific data from a DNS resource record and return appropriate dataclass"""
@@ -209,8 +226,8 @@ def extract_record_data(rr, record_type):
 
     elif record_type == _lib.ARES_REC_TYPE_MX:
         priority = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_MX_PREFERENCE)
-        exchange = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_MX_EXCHANGE)
-        return MXRecordData(priority=priority, exchange=maybe_str(_ffi.string(exchange)))
+        exchange = _extract_str_data(rr, _lib.ARES_RR_MX_EXCHANGE)
+        return MXRecordData(priority=priority, exchange=exchange)
 
     elif record_type == _lib.ARES_REC_TYPE_TXT:
         # TXT records use ABIN (array of binary) for chunks
@@ -225,51 +242,49 @@ def extract_record_data(rr, record_type):
 
     elif record_type == _lib.ARES_REC_TYPE_CAA:
         critical = _lib.ares_dns_rr_get_u8(rr, _lib.ARES_RR_CAA_CRITICAL)
-        tag = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_CAA_TAG)
-        length = _ffi.new("size_t *")
-        value = _lib.ares_dns_rr_get_bin(rr, _lib.ARES_RR_CAA_VALUE, length)
-        value_str = maybe_str(_ffi.buffer(value, length[0])[:])
-        return CAARecordData(critical=critical, tag=maybe_str(_ffi.string(tag)), value=value_str)
+        tag = _extract_bin_data_as_str(rr, _lib.ARES_RR_CAA_TAG)
+        value_str = _extract_str_data(rr, _lib.ARES_RR_CAA_VALUE) 
+        return CAARecordData(critical=critical, tag=tag, value=value_str)
 
     elif record_type == _lib.ARES_REC_TYPE_CNAME:
-        cname = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_CNAME_CNAME)
-        return CNAMERecordData(cname=maybe_str(_ffi.string(cname)))
+        cname = _extract_str_data(rr, _lib.ARES_RR_CNAME_CNAME)
+        return CNAMERecordData(cname=cname)
 
     elif record_type == _lib.ARES_REC_TYPE_NAPTR:
         order = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_NAPTR_ORDER)
         preference = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_NAPTR_PREFERENCE)
-        flags = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_NAPTR_FLAGS)
-        service = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_NAPTR_SERVICES)
-        regexp = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_NAPTR_REGEXP)
-        replacement = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_NAPTR_REPLACEMENT)
+        flags = _extract_str_data(rr, _lib.ARES_RR_NAPTR_FLAGS)
+        service = _extract_str_data(rr, _lib.ARES_RR_NAPTR_SERVICES)
+        regexp = _extract_str_data(rr, _lib.ARES_RR_NAPTR_REGEXP)
+        replacement = _extract_str_data(rr, _lib.ARES_RR_NAPTR_REPLACEMENT)
         return NAPTRRecordData(
             order=order,
             preference=preference,
-            flags=maybe_str(_ffi.string(flags)),
-            service=maybe_str(_ffi.string(service)),
-            regexp=maybe_str(_ffi.string(regexp)),
-            replacement=maybe_str(_ffi.string(replacement))
+            flags=flags,
+            service=service,
+            regexp=regexp,
+            replacement=replacement
         )
 
     elif record_type == _lib.ARES_REC_TYPE_NS:
-        nsdname = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_NS_NSDNAME)
-        return NSRecordData(nsdname=maybe_str(_ffi.string(nsdname)))
+        nsdname = _extract_str_data(rr, _lib.ARES_RR_NS_NSDNAME)
+        return NSRecordData(nsdname=nsdname)
 
     elif record_type == _lib.ARES_REC_TYPE_PTR:
-        dname = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_PTR_DNAME)
-        return PTRRecordData(dname=maybe_str(_ffi.string(dname)))
+        dname = _extract_str_data(rr, _lib.ARES_RR_PTR_DNAME)
+        return PTRRecordData(dname=dname)
 
     elif record_type == _lib.ARES_REC_TYPE_SOA:
-        mname = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_SOA_MNAME)
-        rname = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_SOA_RNAME)
+        mname = _extract_str_data(rr, _lib.ARES_RR_SOA_MNAME)
+        rname = _extract_str_data(rr, _lib.ARES_RR_SOA_RNAME)
         serial = _lib.ares_dns_rr_get_u32(rr, _lib.ARES_RR_SOA_SERIAL)
         refresh = _lib.ares_dns_rr_get_u32(rr, _lib.ARES_RR_SOA_REFRESH)
         retry = _lib.ares_dns_rr_get_u32(rr, _lib.ARES_RR_SOA_RETRY)
         expire = _lib.ares_dns_rr_get_u32(rr, _lib.ARES_RR_SOA_EXPIRE)
         minimum = _lib.ares_dns_rr_get_u32(rr, _lib.ARES_RR_SOA_MINIMUM)
         return SOARecordData(
-            mname=maybe_str(_ffi.string(mname)),
-            rname=maybe_str(_ffi.string(rname)),
+            mname=mname,
+            rname=rname,
             serial=serial,
             refresh=refresh,
             retry=retry,
@@ -281,21 +296,19 @@ def extract_record_data(rr, record_type):
         priority = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_SRV_PRIORITY)
         weight = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_SRV_WEIGHT)
         port = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_SRV_PORT)
-        target = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_SRV_TARGET)
+        target = _extract_str_data(rr, _lib.ARES_RR_SRV_TARGET)
         return SRVRecordData(
             priority=priority,
             weight=weight,
             port=port,
-            target=maybe_str(_ffi.string(target))
+            target=target
         )
 
     elif record_type == _lib.ARES_REC_TYPE_TLSA:
         cert_usage = _lib.ares_dns_rr_get_u8(rr, _lib.ARES_RR_TLSA_CERT_USAGE)
         selector = _lib.ares_dns_rr_get_u8(rr, _lib.ARES_RR_TLSA_SELECTOR)
         matching_type = _lib.ares_dns_rr_get_u8(rr, _lib.ARES_RR_TLSA_MATCH)
-        data_len = _ffi.new("size_t *")
-        data_ptr = _lib.ares_dns_rr_get_bin(rr, _lib.ARES_RR_TLSA_DATA, data_len)
-        cert_data = bytes(_ffi.buffer(data_ptr, data_len[0])) if data_ptr != _ffi.NULL else b''
+        cert_data = _extract_bin_data_as_bytes(rr, _lib.ARES_RR_TLSA_DATA)
         return TLSARecordData(
             cert_usage=cert_usage,
             selector=selector,
@@ -305,22 +318,22 @@ def extract_record_data(rr, record_type):
 
     elif record_type == _lib.ARES_REC_TYPE_HTTPS:
         priority = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_HTTPS_PRIORITY)
-        target = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_HTTPS_TARGET)
+        target = _extract_str_data(rr, _lib.ARES_RR_HTTPS_TARGET)
         params = _extract_opt_params(rr, _lib.ARES_RR_HTTPS_PARAMS)
         return HTTPSRecordData(
             priority=priority,
-            target=maybe_str(_ffi.string(target)),
+            target=target,
             params=params
         )
 
     elif record_type == _lib.ARES_REC_TYPE_URI:
         priority = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_URI_PRIORITY)
         weight = _lib.ares_dns_rr_get_u16(rr, _lib.ARES_RR_URI_WEIGHT)
-        target = _lib.ares_dns_rr_get_str(rr, _lib.ARES_RR_URI_TARGET)
+        target = _extract_str_data(rr, _lib.ARES_RR_URI_TARGET)
         return URIRecordData(
             priority=priority,
             weight=weight,
-            target=maybe_str(_ffi.string(target))
+            target=target
         )
 
     else:
