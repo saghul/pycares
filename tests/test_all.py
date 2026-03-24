@@ -275,6 +275,8 @@ class DNSTest(unittest.TestCase):
         self.assertGreater(len(self.result.answer), 0)
         for record in self.result.answer:
             self.assertEqual(type(record.data), pycares.CAARecordData)
+            assert record.data.tag
+            assert record.data.value
 
     def test_query_cname(self):
         self.result, self.errorno = None, None

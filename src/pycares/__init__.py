@@ -193,18 +193,18 @@ def _extract_opt_params(rr, key):
     return params
 
 def _extract_str_data(rr, key):
-    """Reterives a point to a string"""
+    """Retrieves a string"""
     value = _lib.ares_dns_rr_get_str(rr, key)
-    return maybe_str(_ffi.string(value)) if value != _ffi.NULL else "" 
+    return maybe_str(_ffi.string(value)) if value != _ffi.NULL else ""
 
 def _extract_bin_data_as_str(rr, key):
-    """Reterives a pointer to binary data as a string"""
+    """Retrieves binary data as a string"""
     length = _ffi.new("size_t *")
     value = _lib.ares_dns_rr_get_bin(rr, key, length)
-    return maybe_str(_ffi.buffer(value, length[0])) if value != _ffi.NULL else ""
+    return maybe_str(_ffi.string(value)) if value != _ffi.NULL else ""
 
 def _extract_bin_data_as_bytes(rr, key):
-    """Reterives a pointer to binary data as bytes"""
+    """Retrieves binary data as bytes"""
     length = _ffi.new("size_t *")
     value = _lib.ares_dns_rr_get_bin(rr, key, length)
     return bytes(_ffi.buffer(value, length[0])) if value != _ffi.NULL else b''
@@ -242,8 +242,8 @@ def extract_record_data(rr, record_type):
 
     elif record_type == _lib.ARES_REC_TYPE_CAA:
         critical = _lib.ares_dns_rr_get_u8(rr, _lib.ARES_RR_CAA_CRITICAL)
-        tag = _extract_bin_data_as_str(rr, _lib.ARES_RR_CAA_TAG)
-        value_str = _extract_str_data(rr, _lib.ARES_RR_CAA_VALUE) 
+        tag = _extract_str_data(rr, _lib.ARES_RR_CAA_TAG)
+        value_str = _extract_bin_data_as_str(rr, _lib.ARES_RR_CAA_VALUE)
         return CAARecordData(critical=critical, tag=tag, value=value_str)
 
     elif record_type == _lib.ARES_REC_TYPE_CNAME:
