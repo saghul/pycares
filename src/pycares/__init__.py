@@ -812,6 +812,8 @@ class Channel:
         if query_class not in self.__qclasses__:
             raise ValueError('invalid query class specified')
 
+        channel = self._capture_channel()
+
         # Create a DNS record for the search query
         # Set RD (Recursion Desired) flag unless ARES_FLAG_NORECURSE is set
         dns_flags = 0 if (self._flags & _lib.ARES_FLAG_NORECURSE) else _lib.ARES_FLAG_RD
@@ -850,11 +852,6 @@ class Channel:
                 _lib.ares_dns_record_destroy(dnsrec)
 
         # Perform the search with the created DNS record
-        try:
-            channel = self._capture_channel()
-        except BaseException:
-            _lib.ares_dns_record_destroy(dnsrec)
-            raise
         userdata = self._register_callback_handle(cleanup_callback)
         try:
             status = _lib.ares_search_dnsrec(
