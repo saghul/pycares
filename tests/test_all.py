@@ -159,7 +159,6 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(self.result.service, "http")
 
     @unittest.skipIf(sys.platform == "win32", "skipped on Windows")
-    @unittest.expectedFailure  # c-ares is broken (does not return numeric service if asked) and unconditionally adds zero scope
     def test_getnameinfo_ipv6(self):
         self.result, self.errorno = None, None
 
@@ -168,17 +167,26 @@ class DNSTest(unittest.TestCase):
 
         self.channel.getnameinfo(
             ("fd01:dec0:0:1::2020", 80, 0, 0),
-            pycares.ARES_NI_NUMERICHOST | pycares.ARES_NI_NUMERICSERV,
+            pycares.ARES_NI_LOOKUPHOST
+            | pycares.ARES_NI_LOOKUPSERVICE
+            | pycares.ARES_NI_NUMERICHOST
+            | pycares.ARES_NI_NUMERICSERV,
             callback=cb,
         )
         self.wait()
         self.assertNoError(self.errorno)
         self.assertEqual(type(self.result), pycares.NameInfoResult)
-        self.assertEqual(self.result.node, "fd01:dec0:0:1::2020")
+        # c-ares unconditionally appends the numeric scope id for AF_INET6,
+        # even when the address is global and the scope id is zero. This
+        # diverges from glibc but is a long-standing c-ares choice; accept
+        # either form.
+        self.assertIn(
+            self.result.node,
+            ("fd01:dec0:0:1::2020", "fd01:dec0:0:1::2020%0"),
+        )
         self.assertEqual(self.result.service, "80")
 
     @unittest.skipIf(sys.platform == "win32", "skipped on Windows")
-    @unittest.expectedFailure  # c-ares is broken (does not return numeric service if asked)
     def test_getnameinfo_ipv6_ll(self):
         self.result, self.errorno = None, None
 
@@ -187,7 +195,9 @@ class DNSTest(unittest.TestCase):
 
         self.channel.getnameinfo(
             ("fe80::5abd:fee7:4177:60c0", 80, 0, 666),
-            pycares.ARES_NI_NUMERICHOST
+            pycares.ARES_NI_LOOKUPHOST
+            | pycares.ARES_NI_LOOKUPSERVICE
+            | pycares.ARES_NI_NUMERICHOST
             | pycares.ARES_NI_NUMERICSERV
             | pycares.ARES_NI_NUMERICSCOPE,
             callback=cb,
