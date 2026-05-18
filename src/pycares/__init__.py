@@ -102,77 +102,78 @@ def _sock_state_cb(data, socket_fd, readable, writable):
 
 @_ffi.def_extern()
 def _host_cb(arg, status, timeouts, hostent):
-    # Get callback data without removing the reference yet
     if arg not in _handle_to_channel:
         return
 
     callback = _ffi.from_handle(arg)
 
-    if status != _lib.ARES_SUCCESS:
-        result = None
-    else:
-        result = parse_hostent(hostent)
-        status = None
-
-    callback(result, status)
-    _handle_to_channel.pop(arg, None)
+    try:
+        if status != _lib.ARES_SUCCESS:
+            result = None
+        else:
+            result = parse_hostent(hostent)
+            status = None
+        callback(result, status)
+    finally:
+        _handle_to_channel.pop(arg, None)
 
 @_ffi.def_extern()
 def _nameinfo_cb(arg, status, timeouts, node, service):
-    # Get callback data without removing the reference yet
     if arg not in _handle_to_channel:
         return
 
     callback = _ffi.from_handle(arg)
 
-    if status != _lib.ARES_SUCCESS:
-        result = None
-    else:
-        result = parse_nameinfo(node, service)
-        status = None
-
-    callback(result, status)
-    _handle_to_channel.pop(arg, None)
+    try:
+        if status != _lib.ARES_SUCCESS:
+            result = None
+        else:
+            result = parse_nameinfo(node, service)
+            status = None
+        callback(result, status)
+    finally:
+        _handle_to_channel.pop(arg, None)
 
 @_ffi.def_extern()
 def _query_dnsrec_cb(arg, status, timeouts, dnsrec):
     """Callback for new DNS record API queries"""
-    # Get callback data without removing the reference yet
+
     if arg not in _handle_to_channel:
         return
 
     callback = _ffi.from_handle(arg)
 
-    if status != _lib.ARES_SUCCESS:
-        result = None
-    else:
-        result, parse_status = parse_dnsrec(dnsrec)
-        if parse_status is not None:
-            status = parse_status
+    try:
+        if status != _lib.ARES_SUCCESS:
+            result = None
         else:
-            # Success - set status to None
-            status = None
-
-    callback(result, status)
-    _handle_to_channel.pop(arg, None)
+            result, parse_status = parse_dnsrec(dnsrec)
+            if parse_status is not None:
+                status = parse_status
+            else:
+                # Success - set status to None
+                status = None
+        callback(result, status)
+    finally:
+        _handle_to_channel.pop(arg, None)
 
 
 @_ffi.def_extern()
 def _addrinfo_cb(arg, status, timeouts, res):
-    # Get callback data without removing the reference yet
     if arg not in _handle_to_channel:
         return
 
     callback = _ffi.from_handle(arg)
 
-    if status != _lib.ARES_SUCCESS:
-        result = None
-    else:
-        result = parse_addrinfo(res)
-        status = None
-
-    callback(result, status)
-    _handle_to_channel.pop(arg, None)
+    try:
+        if status != _lib.ARES_SUCCESS:
+            result = None
+        else:
+            result = parse_addrinfo(res)
+            status = None
+        callback(result, status)
+    finally:
+        _handle_to_channel.pop(arg, None)
 
 
 def _extract_opt_params(rr, key):
