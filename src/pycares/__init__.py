@@ -449,8 +449,7 @@ class _ChannelShutdownManager:
             _lib.ares_queue_wait_empty(channel[0], -1)
 
             # Destroy the channel
-            if channel is not None:
-                _lib.ares_destroy(channel[0])
+            _lib.ares_destroy(channel[0])
 
     def start(self) -> None:
         """Start the background thread if not already started."""
