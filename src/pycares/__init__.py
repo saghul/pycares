@@ -927,7 +927,8 @@ class Channel:
         queries will be cancelled and their callbacks will receive ARES_ECANCELLED.
 
         """
-        if self._channel is None:
+        channel, self._channel = self._channel, None
+        if channel is None:
             # Already destroyed
             return
 
@@ -935,7 +936,6 @@ class Channel:
         # query callback.
 
         # Schedule channel destruction
-        channel, self._channel = self._channel, None
         _shutdown_manager.destroy_channel(channel, self._sock_state_cb_handle)
 
     def wait(self, timeout: float=None) -> bool:
