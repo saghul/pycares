@@ -604,8 +604,10 @@ class Channel:
         _shutdown_manager.start()
 
     def __del__(self) -> None:
-        """Ensure the channel is destroyed when the object is deleted."""
-        self.close()
+        # Deliberately lock-free: when __del__ runs, no submitter holds
+        # self and no callback is pending, so the read-and-null in
+        # _destroy_channel is uncontested.
+        self._destroy_channel()
 
     @contextlib.contextmanager
     def _capture_channel(self):
@@ -925,8 +927,10 @@ class Channel:
 
         """
         with self._lock:
-            channel, self._channel = self._channel, None
+            self._destroy_channel()
 
+    def _destroy_channel(self) -> None:
+        channel, self._channel = self._channel, None
         if channel is None:
             # Already destroyed
             return
