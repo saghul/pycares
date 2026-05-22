@@ -1233,6 +1233,28 @@ class ChannelCloseTest(unittest.TestCase):
         with self.assertRaises((RuntimeError, UnicodeError)):
             channel.query(large_domain_attack, pycares.QUERY_TYPE_A, callback=noop)
 
+    def test_server_state_cb(self):
+        channel = pycares.Channel(servers=["8.8.8.8"])
+
+        # we don't really care if the query decides to fail or not 
+        # we just want to ensure that server state callbacks trigger
+        # correctly.
+        called = False
+        def server_state_cb(server, success, flags):
+            nonlocal called
+            called = True
+            assert server == "8.8.8.8:53"
+            assert isinstance(success, bool)
+            assert isinstance(flags, int)
+
+        def noop(cb, status):
+            pass
+        
+        channel.set_server_state_callback(server_state_cb)
+        channel.query("www.google.com", pycares.QUERY_TYPE_A, callback=noop)
+        channel.wait()
+        assert called == True
+
 
 class EventThreadTest(unittest.TestCase):
     def setUp(self):
