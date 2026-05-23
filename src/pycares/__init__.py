@@ -954,14 +954,10 @@ class Channel:
         # query callback.
 
         # Schedule channel destruction
-<<<<<<< HEAD
         channel, self._channel = self._channel, None
         _shutdown_manager.destroy_channel(
             channel, self._sock_state_cb_handle, self._server_state_cb_handle
         )
-=======
-        _shutdown_manager.destroy_channel(channel, self._sock_state_cb_handle)
->>>>>>> 96da7710dd7c798bed9a33efcf40ae110a31da89
 
     def wait(self, timeout: float=None) -> bool:
         """
