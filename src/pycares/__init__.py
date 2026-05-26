@@ -80,6 +80,10 @@ QUERY_CLASS_HS = _lib.ARES_CLASS_HESOID
 QUERY_CLASS_NONE = _lib.ARES_CLASS_NONE
 QUERY_CLASS_ANY = _lib.ARES_CLASS_ANY
 
+# Server states 
+SERVER_STATE_UDP = _lib.ARES_SERV_STATE_UDP
+SERVER_STATE_TCP = _lib.ARES_SERV_STATE_TCP
+
 ARES_VERSION = maybe_str(_ffi.string(_lib.ares_version(_ffi.NULL)))
 PYCARES_ADDRTTL_SIZE = 256
 
@@ -174,6 +178,13 @@ def _addrinfo_cb(arg, status, timeouts, res):
         callback(result, status)
     finally:
         _handle_to_channel.pop(arg, None)
+
+@_ffi.def_extern()
+def _server_state_cb(server_string, success, flags, data):
+    # same behavior as a socket state callback
+    server_state_cb = _ffi.from_handle(data)
+    server = maybe_str(_ffi.string(server_string))
+    server_state_cb(server, success == 1, flags)
 
 
 def _extract_opt_params(rr, key):
@@ -442,7 +453,7 @@ class _ChannelShutdownManager:
         """Process channel destruction requests from the queue."""
         while True:
             # Block forever until we get a channel to destroy
-            channel, _ = self._queue.get()
+            channel, _ , _ = self._queue.get()
 
             # Cancel all pending queries - this will trigger callbacks with ARES_ECANCELLED
             _lib.ares_cancel(channel[0])
@@ -464,7 +475,7 @@ class _ChannelShutdownManager:
             self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)
             self._thread.start()
 
-    def destroy_channel(self, channel, sock_state_cb_handle) -> None:
+    def destroy_channel(self, channel, sock_state_cb_handle, server_state_cb_handle) -> None:
         """
         Schedule channel destruction on the background thread.
 
@@ -476,7 +487,7 @@ class _ChannelShutdownManager:
         from multiple threads. The background thread processes channels
         sequentially waiting for queries to end before each destruction.
         """
-        self._queue.put((channel, sock_state_cb_handle))
+        self._queue.put((channel, sock_state_cb_handle, server_state_cb_handle))
 
 
 # Global shutdown manager instance
@@ -600,6 +611,9 @@ class Channel:
 
         if local_dev:
             self.set_local_dev(local_dev)
+        
+        # This gets set later...
+        self._server_state_cb_handle = None
 
         # Ensure the shutdown thread is started
         _shutdown_manager.start()
@@ -931,8 +945,7 @@ class Channel:
             self._destroy_channel()
 
     def _destroy_channel(self) -> None:
-        channel, self._channel = self._channel, None
-        if channel is None:
+        if self._channel is None:
             # Already destroyed
             return
 
@@ -940,7 +953,10 @@ class Channel:
         # query callback.
 
         # Schedule channel destruction
-        _shutdown_manager.destroy_channel(channel, self._sock_state_cb_handle)
+        channel, self._channel = self._channel, None
+        _shutdown_manager.destroy_channel(
+            channel, self._sock_state_cb_handle, self._server_state_cb_handle
+        )
 
     def wait(self, timeout: float=None) -> bool:
         """
@@ -956,6 +972,24 @@ class Channel:
             return False
         else:
             raise AresError(r, errno.strerror(r))
+
+    def set_server_state_callback(self, callback: Callable[[str, bool, int], None]) -> None:
+        """
+        Set a callback that is notified when there are both successful and unsuccessful queries
+        it can even be used to monitor or trace the DNS servers being used by this active channel.
+
+        Args:
+            callback: callback containing the server string, 
+                success status and flag to indicate if the query 
+                was attempted over TCP or UDP.
+        """
+        if not callable(callback):
+            raise TypeError("a callable is required")
+
+        with self._lock:
+            userdata = _ffi.new_handle(callback)
+            self._server_state_cb_handle = userdata
+            _lib.ares_set_server_state_callback(self._channel[0], _lib._server_state_cb, userdata)
 
 
 # DNS query result types - New dataclass-based API

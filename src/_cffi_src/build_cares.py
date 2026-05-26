@@ -290,6 +290,10 @@ typedef int... ares_socklen_t;
 #define ARES_AI_CANONIDN                ...
 #define ARES_AI_MASK ...
 
+#define ARES_SERV_STATE_UDP ...
+#define ARES_SERV_STATE_TCP ...
+
+
 #define ARES_LIB_INIT_ALL    ...
 
 #define ARES_SOCKET_BAD ...
@@ -376,6 +380,10 @@ typedef void (*ares_addrinfo_callback)(void *arg,
                                    int status,
                                    int timeouts,
                                    struct ares_addrinfo *res);
+
+typedef void (*ares_server_state_callback)(const char *server_string, 
+                                        ares_bool_t success, 
+                                        int flags, void *data);
 
 struct ares_channeldata;
 typedef struct ares_channeldata *ares_channel;
@@ -712,6 +720,10 @@ int ares_inet_pton(int af, const char *src, void *dst);
 ares_bool_t ares_threadsafety(void);
 
 ares_status_t ares_queue_wait_empty(ares_channel channel, int timeout_ms);
+
+void ares_set_server_state_callback(
+    ares_channel channel,
+    ares_server_state_callback cb, void *data);
 """
 
 CALLBACKS = """
@@ -740,6 +752,11 @@ extern "Python" void _addrinfo_cb(void *arg,
                                   int status,
                                   int timeouts,
                                   struct ares_addrinfo *res);
+
+extern "Python" void _server_state_cb(const char *server_string, 
+                                      ares_bool_t success, 
+                                      int flags, 
+                                      void *data);
 """
 
 INCLUDES = """
