@@ -945,8 +945,7 @@ class Channel:
             self._destroy_channel()
 
     def _destroy_channel(self) -> None:
-        channel, self._channel = self._channel, None
-        if channel is None:
+        if self._channel is None:
             # Already destroyed
             return
 
