@@ -986,9 +986,10 @@ class Channel:
         if not callable(callback):
             raise TypeError("a callable is required")
 
-        userdata = _ffi.new_handle(callback)
-        self._server_state_cb_handle = userdata
-        _lib.ares_set_server_state_callback(self._channel[0], _lib._server_state_cb, userdata)
+        with self._lock:
+            userdata = _ffi.new_handle(callback)
+            self._server_state_cb_handle = userdata
+            _lib.ares_set_server_state_callback(self._channel[0], _lib._server_state_cb, userdata)
 
 
 # DNS query result types - New dataclass-based API
