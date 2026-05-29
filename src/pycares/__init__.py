@@ -442,16 +442,17 @@ class _ChannelShutdownManager:
         """Process channel destruction requests from the queue."""
         while True:
             # Block forever until we get a channel to destroy
-            channel, _ = self._queue.get()
+            ch, _ = self._queue.get()
+            channel = ch[0]
 
             # Cancel all pending queries - this will trigger callbacks with ARES_ECANCELLED
-            _lib.ares_cancel(channel[0])
+            _lib.ares_cancel(channel)
 
             # Wait for all queries to finish
-            _lib.ares_queue_wait_empty(channel[0], -1)
+            _lib.ares_queue_wait_empty(channel, -1)
 
             # Destroy the channel
-            _lib.ares_destroy(channel[0])
+            _lib.ares_destroy(channel)
 
     def start(self) -> None:
         """Start the background thread if not already started."""
@@ -636,16 +637,19 @@ class Channel:
         return userdata
 
     def cancel(self) -> None:
-        _lib.ares_cancel(self._channel[0])
+        with self._capture_channel() as channel:
+            _lib.ares_cancel(channel[0])
 
     def reinit(self) -> None:
-        r = _lib.ares_reinit(self._channel[0])
+        with self._capture_channel() as channel:
+            r = _lib.ares_reinit(channel[0])
         if r != _lib.ARES_SUCCESS:
             raise AresError(r, errno.strerror(r))
 
     @property
     def servers(self) -> list[str]:
-        csv_str = _lib.ares_get_servers_csv(self._channel[0])
+        with self._capture_channel() as channel:
+            csv_str = _lib.ares_get_servers_csv(channel[0])
 
         if csv_str == _ffi.NULL:
             raise AresError(_lib.ARES_ENOMEM, errno.strerror(_lib.ARES_ENOMEM))
@@ -662,18 +666,22 @@ class Channel:
         server_list = [ascii_bytes(s).decode('ascii') if isinstance(s, bytes) else s for s in servers]
         csv_str = ','.join(server_list)
 
-        r = _lib.ares_set_servers_csv(self._channel[0], csv_str.encode('ascii'))
+        with self._capture_channel() as channel:
+            r = _lib.ares_set_servers_csv(channel[0], csv_str.encode('ascii'))
         if r != _lib.ARES_SUCCESS:
             raise AresError(r, errno.strerror(r))
 
     def process_fd(self, read_fd: int, write_fd: int) -> None:
-        _lib.ares_process_fd(self._channel[0], _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", write_fd))
+        with self._capture_channel() as channel:
+            _lib.ares_process_fd(channel[0], _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", write_fd))
 
     def process_read_fd(self, read_fd:int) -> None:
-        _lib.ares_process_fd(self._channel[0], _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", ARES_SOCKET_BAD))
+        with self._capture_channel() as channel:
+            _lib.ares_process_fd(channel[0], _ffi.cast("ares_socket_t", read_fd), _ffi.cast("ares_socket_t", ARES_SOCKET_BAD))
 
     def process_write_fd(self, write_fd:int) -> None:
-        _lib.ares_process_fd(self._channel[0], _ffi.cast("ares_socket_t", ARES_SOCKET_BAD), _ffi.cast("ares_socket_t", write_fd))
+        with self._capture_channel() as channel:
+            _lib.ares_process_fd(channel[0], _ffi.cast("ares_socket_t", ARES_SOCKET_BAD), _ffi.cast("ares_socket_t", write_fd))
 
     def timeout(self, t = None):
         maxtv = _ffi.NULL
@@ -687,7 +695,8 @@ class Channel:
             else:
                 raise ValueError("timeout needs to be a positive number or None")
 
-        _lib.ares_timeout(self._channel[0], maxtv, tv)
+        with self._capture_channel() as channel:
+            _lib.ares_timeout(channel[0], maxtv, tv)
 
         if tv == _ffi.NULL:
             return 0.0
@@ -872,12 +881,14 @@ class Channel:
     def set_local_ip(self, ip):
         addr4 = _ffi.new("struct in_addr*")
         addr6 = _ffi.new("struct ares_in6_addr*")
-        if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), addr4) == 1:
-            _lib.ares_set_local_ip4(self._channel[0], socket.ntohl(addr4.s_addr))
-        elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), addr6) == 1:
-            _lib.ares_set_local_ip6(self._channel[0], addr6)
-        else:
-            raise ValueError("invalid IP address")
+
+        with self._capture_channel() as channel:
+            if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), addr4) == 1:
+                _lib.ares_set_local_ip4(channel[0], socket.ntohl(addr4.s_addr))
+            elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), addr6) == 1:
+                _lib.ares_set_local_ip6(channel[0], addr6)
+            else:
+                raise ValueError("invalid IP address")
 
     def getnameinfo(self, address: Union[IP4, IP6], flags: int, *, callback: Callable[[Any, int], None]) -> None:
         if not callable(callback):
@@ -913,7 +924,8 @@ class Channel:
                 raise
 
     def set_local_dev(self, dev):
-        _lib.ares_set_local_dev(self._channel[0], dev)
+        with self._capture_channel() as channel:
+            _lib.ares_set_local_dev(channel[0], dev)
 
     def close(self) -> None:
         """
@@ -949,7 +961,8 @@ class Channel:
         Args:
             timeout: Maximum time to wait in seconds. Use -1 for infinite wait.
         """
-        r = _lib.ares_queue_wait_empty(self._channel[0],  int(timeout * 1000) if timeout is not None and timeout >= 0 else -1)
+        with self._capture_channel() as channel:
+            r = _lib.ares_queue_wait_empty(channel[0],  int(timeout * 1000) if timeout is not None and timeout >= 0 else -1)
         if r == _lib.ARES_SUCCESS:
             return True
         elif r == _lib.ARES_ETIMEOUT:
