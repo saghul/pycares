@@ -850,33 +850,25 @@ class Channel:
             _lib.ares_dns_record_destroy(dnsrec)
             raise AresError(status, errno.strerror(status))
 
-        # Wrap callback to destroy DNS record after it's called
-        original_callback = callback
-        def cleanup_callback(result, error):
-            try:
-                original_callback(result, error)
-            finally:
-                # Clean up the DNS record after the callback completes
-                _lib.ares_dns_record_destroy(dnsrec)
-
-        # Perform the search with the created DNS record
-        with self._capture_channel() as channel:
-            userdata = self._register_callback_handle(cleanup_callback)
-            try:
-                status = _lib.ares_search_dnsrec(
-                    channel,
-                    dnsrec,
-                    _lib._query_dnsrec_cb,
-                    userdata
-                )
-            except BaseException:
-                _handle_to_channel.pop(userdata, None)
-                _lib.ares_dns_record_destroy(dnsrec)
-                raise
-        if status != _lib.ARES_SUCCESS:
-            _handle_to_channel.pop(userdata, None)
+        # dnsrec is only needed for this call (it's a const parameter); free
+        # it once ares_search_dnsrec() returns, regardless of outcome.
+        try:
+            with self._capture_channel() as channel:
+                userdata = self._register_callback_handle(callback)
+                try:
+                    status = _lib.ares_search_dnsrec(
+                        channel,
+                        dnsrec,
+                        _lib._query_dnsrec_cb,
+                        userdata
+                    )
+                except BaseException:
+                    _handle_to_channel.pop(userdata, None)
+                    raise
+            if status != _lib.ARES_SUCCESS:
+                raise AresError(status, errno.strerror(status))
+        finally:
             _lib.ares_dns_record_destroy(dnsrec)
-            raise AresError(status, errno.strerror(status))
 
     def set_local_ip(self, ip):
         addr4 = _ffi.new("struct in_addr*")
