@@ -643,6 +643,25 @@ class DNSTest(unittest.TestCase):
             # Error raised immediately - this is also valid
             self.assertEqual(e.args[0], pycares.errno.ARES_ENOTFOUND)
 
+    def test_search_onion(self):
+        # Regression test: ares_search_dnsrec() rejects ".onion" names
+        # synchronously (RFC 7686) and invokes the callback before
+        # returning its status. search() must not double-free the
+        # internal ares_dns_record_t in that case.
+        self.result, self.errorno = None, None
+
+        def cb(result, errorno):
+            self.result, self.errorno = result, errorno
+
+        try:
+            self.channel.search("foo.onion", pycares.QUERY_TYPE_A, callback=cb)
+            self.wait()
+            self.assertEqual(self.result, None)
+            self.assertEqual(self.errorno, pycares.errno.ARES_ENOTFOUND)
+        except pycares.AresError as e:
+            # Error raised immediately - this is also valid
+            self.assertEqual(e.args[0], pycares.errno.ARES_ENOTFOUND)
+
     def test_channel_nameservers(self):
         self.result, self.errorno = None, None
 

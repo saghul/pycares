@@ -59,6 +59,18 @@ class HandleLeakTest(unittest.TestCase):
             self.channel.getnameinfo(('not-an-ip', 80), 0, callback=_cb)
         self.assertEqual(len(_handle_to_channel), before)
 
+    def test_search_does_not_leak_dnsrec_on_closed_channel(self):
+        # Regression test: search() builds its own ares_dns_record_t before
+        # acquiring the channel. If the channel is already closed,
+        # _capture_channel() raises before that record is ever handed off
+        # to a callback, so search() must free it itself instead of leaking
+        # the native allocation.
+        self.channel.close()
+        before = len(_handle_to_channel)
+        with self.assertRaises(RuntimeError):
+            self.channel.search('example.com', pycares.QUERY_TYPE_A, callback=_cb)
+        self.assertEqual(len(_handle_to_channel), before)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
