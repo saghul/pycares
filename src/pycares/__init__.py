@@ -696,12 +696,12 @@ class Channel:
                 raise ValueError("timeout needs to be a positive number or None")
 
         with self._capture_channel() as channel:
-            _lib.ares_timeout(channel, maxtv, tv)
+            result = _lib.ares_timeout(channel, maxtv, tv)
 
-        if tv == _ffi.NULL:
+        if result == _ffi.NULL:
             return 0.0
 
-        return (tv.tv_sec + tv.tv_usec / 1000000.0)
+        return (result.tv_sec + result.tv_usec / 1000000.0)
 
     def gethostbyaddr(self, addr: str, *, callback: Callable[[Any, int], None]) -> None:
         if not callable(callback):

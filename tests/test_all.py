@@ -743,6 +743,15 @@ class DNSTest(unittest.TestCase):
         self.assertEqual(self.result, None)
         self.assertEqual(self.errorno, pycares.errno.ARES_ECANCELLED)
 
+    def test_channel_timeout_no_pending_queries(self):
+        # Regression test: ares_timeout() only fills in its tv buffer when a
+        # query is actually pending; with none pending it returns maxtv
+        # unchanged. timeout(t) must honor that and return t, not 0.0 (which
+        # event loops interpret as "timeout immediately" and busy-loop on).
+        self.channel = pycares.Channel()
+        self.assertEqual(self.channel.timeout(1.0), 1.0)
+        self.assertEqual(self.channel.timeout(), 0.0)
+
     def test_import_errno(self):
         from pycares.errno import ARES_SUCCESS
 
