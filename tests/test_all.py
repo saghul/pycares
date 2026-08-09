@@ -742,6 +742,12 @@ class DNSTest(unittest.TestCase):
             )
         self.assertRaises(ValueError, self.channel.set_local_ip, "an invalid ip")
 
+    def test_channel_local_ipv6(self):
+        self.channel.set_local_ip("::1")
+
+    def test_channel_local_dev(self):
+        self.channel.set_local_dev("lo")
+
     def test_channel_timeout(self):
         self.result, self.errorno = None, None
 

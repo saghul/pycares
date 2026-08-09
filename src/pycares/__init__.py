@@ -878,7 +878,10 @@ class Channel:
             if _lib.ares_inet_pton(socket.AF_INET, ascii_bytes(ip), addr4) == 1:
                 _lib.ares_set_local_ip4(channel, socket.ntohl(addr4.s_addr))
             elif _lib.ares_inet_pton(socket.AF_INET6, ascii_bytes(ip), addr6) == 1:
-                _lib.ares_set_local_ip6(channel, addr6)
+                _lib.ares_set_local_ip6(
+                    channel,
+                    _ffi.cast("unsigned char *", addr6),
+                )
             else:
                 raise ValueError("invalid IP address")
 
@@ -917,7 +920,7 @@ class Channel:
 
     def set_local_dev(self, dev):
         with self._capture_channel() as channel:
-            _lib.ares_set_local_dev(channel, dev)
+            _lib.ares_set_local_dev(channel, ascii_bytes(dev))
 
     def close(self) -> None:
         """
