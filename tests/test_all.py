@@ -945,7 +945,34 @@ class DNSTest(unittest.TestCase):
             self.assertTrue(type(pycares.errno.strerror(key)), str)
 
 
+_BLOCK_TIMEOUT = 5.0  # generous: only a real deadlock should ever exceed it
+
+
 class ChannelCloseTest(unittest.TestCase):
+    def assertDoesNotBlock(self, func, message):
+        # Run func() on its own thread, so that a call which deadlocks fails
+        # the test rather than hanging it.
+        thread = threading.Thread(target=func, daemon=True)
+        thread.start()
+        thread.join(timeout=_BLOCK_TIMEOUT)
+        self.assertFalse(thread.is_alive(), message)
+
+    def start_wait(self, channel, **kwargs):
+        # Start a thread in channel.wait() and return it with the list which
+        # will collect its result. The thread signals immediately before the
+        # call, so the caller need not sleep for an arbitrary period and hope.
+        entered = threading.Event()
+        result = []
+
+        def wait():
+            entered.set()
+            result.append(channel.wait(**kwargs))
+
+        thread = threading.Thread(target=wait, daemon=True)
+        thread.start()
+        self.assertTrue(entered.wait(timeout=_BLOCK_TIMEOUT), "wait() did not start")
+        return thread, result
+
     def test_close_from_same_thread(self):
         # Test that close() works when called from the same thread
         channel = pycares.Channel()
@@ -1143,6 +1170,90 @@ class ChannelCloseTest(unittest.TestCase):
         self.assertNotIn(
             "can't create new thread at interpreter shutdown", result.stderr
         )
+
+    def test_submit_query_from_callback_while_waiting(self):
+        # A callback must be able to submit a query while another thread is
+        # blocked in wait(), and cancel() must not block behind that wait().
+        channel = pycares.Channel(sock_state_cb=lambda *args: None)
+        self.addCleanup(channel.close)
+        errors = []
+
+        def second_callback(result, error):
+            errors.append(error)
+
+        def first_callback(result, error):
+            errors.append(error)
+            channel.query(
+                "callback-submission.example.invalid",
+                pycares.QUERY_TYPE_A,
+                callback=second_callback,
+            )
+
+        channel.query(
+            "wait-callback-submission.example.invalid",
+            pycares.QUERY_TYPE_A,
+            callback=first_callback,
+        )
+
+        wait_thread, wait_result = self.start_wait(channel, timeout=_BLOCK_TIMEOUT)
+
+        self.assertDoesNotBlock(channel.cancel, "cancel() blocked behind wait()")
+
+        # ares_cancel() only cancels the queries which were outstanding when
+        # it was entered, so the query submitted by first_callback outlives
+        # the cancel that triggered it; cancel again to let the wait complete.
+        channel.cancel()
+        wait_thread.join(timeout=_BLOCK_TIMEOUT)
+
+        self.assertEqual(errors, [pycares.errno.ARES_ECANCELLED] * 2)
+        self.assertEqual(wait_result, [True])
+
+    def test_close_while_waiting(self):
+        # close() must neither block behind an in-flight wait() nor leave it
+        # blocked forever.
+        channel = pycares.Channel(sock_state_cb=lambda *args: None)
+        channel.query(
+            "close-while-waiting.example.invalid",
+            pycares.QUERY_TYPE_A,
+            callback=lambda result, error: None,
+        )
+        wait_thread, wait_result = self.start_wait(channel)
+
+        self.assertDoesNotBlock(channel.close, "close() blocked behind wait()")
+        wait_thread.join(timeout=_BLOCK_TIMEOUT)
+
+        self.assertEqual(wait_result, [True])
+
+    def test_event_thread_callback_can_reenter_channel(self):
+        # Without a sock_state_cb the channel drives itself on c-ares' own
+        # event thread, which is the default configuration. Callbacks then
+        # arrive on that thread while c-ares holds its channel lock, and must
+        # still be able to call back into the Channel while this thread is
+        # blocked in wait().
+        #
+        # The server is unroutable (TEST-NET-1), so the query stays
+        # outstanding until it times out, by which point the waiting thread is
+        # reliably inside wait(). The wait runs on its own thread so that this
+        # inversion is reported as a failure rather than hanging the suite.
+        channel = pycares.Channel(servers=["192.0.2.1"], timeout=0.5, tries=1)
+        self.addCleanup(self.assertDoesNotBlock, channel.close, "close() blocked")
+        reentered = []
+
+        def callback(result, error):
+            reentered.append(channel.timeout())
+
+        channel.query(
+            "event-thread-reentry.example.invalid",
+            pycares.QUERY_TYPE_A,
+            callback=callback,
+        )
+
+        wait_thread, wait_result = self.start_wait(channel, timeout=_BLOCK_TIMEOUT)
+        wait_thread.join(timeout=_BLOCK_TIMEOUT * 2)
+
+        self.assertFalse(wait_thread.is_alive(), "wait() deadlocked against callback")
+        self.assertEqual(wait_result, [True])
+        self.assertEqual(len(reentered), 1)
 
     def test_concurrent_close_multiple_channels(self):
         # Test multiple channels being closed concurrently
