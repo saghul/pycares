@@ -430,6 +430,37 @@ def parse_dnsrec(dnsrec):
     return result, None
 
 
+class _InFlight:
+    """
+    Counts the threads which are currently inside a c-ares call on a channel.
+
+    A channel must not be destroyed while it is still in use, so the shutdown
+    thread drains the count before destroying it.
+
+    Deliberately holds no reference to the Channel, so that handing it to the
+    shutdown thread doesn't resurrect a Channel which is being finalized.
+    """
+
+    def __init__(self) -> None:
+        self._cond = threading.Condition()
+        self._count = 0
+
+    def __enter__(self) -> None:
+        with self._cond:
+            self._count += 1
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        with self._cond:
+            self._count -= 1
+            if self._count == 0:
+                self._cond.notify_all()
+
+    def drain(self) -> None:
+        """Block until every call which was in flight has returned."""
+        with self._cond:
+            self._cond.wait_for(lambda: self._count == 0)
+
+
 class _ChannelShutdownManager:
     """Manages channel destruction in a single background thread using SimpleQueue."""
 
@@ -442,11 +473,20 @@ class _ChannelShutdownManager:
         """Process channel destruction requests from the queue."""
         while True:
             # Block forever until we get a channel to destroy
-            ch, _ = self._queue.get()
+            ch, _, calls, waits = self._queue.get()
             channel = ch[0]
 
-            # Cancel all pending queries - this will trigger callbacks with ARES_ECANCELLED
+            # The channel has already been detached, so no new call can start,
+            # but a call which started just before may still be submitting a
+            # query. Let those finish, otherwise a query could be submitted
+            # after the cancellation below and so never complete.
+            calls.drain()
+
+            # Cancel all pending queries - this will trigger callbacks with
+            # ARES_ECANCELLED. It also releases any thread blocked in wait(),
+            # which can then be drained in turn.
             _lib.ares_cancel(channel)
+            waits.drain()
 
             # Wait for all queries to finish
             _lib.ares_queue_wait_empty(channel, -1)
@@ -465,19 +505,20 @@ class _ChannelShutdownManager:
             self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)
             self._thread.start()
 
-    def destroy_channel(self, channel, sock_state_cb_handle) -> None:
+    def destroy_channel(self, channel, sock_state_cb_handle, calls: _InFlight, waits: _InFlight) -> None:
         """
         Schedule channel destruction on the background thread.
 
         The socket state callback handle is passed along to ensure it remains
-        alive until the channel is destroyed.
+        alive until the channel is destroyed. The in-flight counters are passed
+        along so that destruction can wait until the channel is unused.
 
         Thread Safety and Synchronization:
         This method uses SimpleQueue which is thread-safe for putting items
         from multiple threads. The background thread processes channels
         sequentially waiting for queries to end before each destruction.
         """
-        self._queue.put((channel, sock_state_cb_handle))
+        self._queue.put((channel, sock_state_cb_handle, calls, waits))
 
 
 # Global shutdown manager instance
@@ -509,7 +550,13 @@ class Channel:
 
         # Initialize _channel to None first to ensure __del__ doesn't fail
         self._channel = None
-        self._lock = threading.RLock()
+        self._lock = threading.Lock()
+
+        # Calls and waits are counted separately because they must be drained
+        # in that order when the channel is destroyed: a call may still submit
+        # a query, whereas a wait only returns once the channel is cancelled.
+        self._calls = _InFlight()
+        self._waits = _InFlight()
 
         # Store flags for later use (default is 0 if not specified)
         self._flags = flags if flags is not None else 0
@@ -612,17 +659,25 @@ class Channel:
         self._destroy_channel()
 
     @contextlib.contextmanager
-    def _capture_channel(self):
+    def _capture_channel(self, in_flight: Optional[_InFlight] = None):
         """
-        Yield the c-ares channel pointer while holding self._lock so that
-        a concurrent close() cannot destroy the channel mid-call.
+        Yield the c-ares channel pointer, counted as in flight so that a
+        concurrent close() cannot destroy the channel mid-call.
+
+        self._lock is only held while reading self._channel: c-ares runs
+        callbacks with its own channel lock held, and such a callback may call
+        back into this Channel from another thread, so holding a Python lock
+        across a c-ares call would invert the two locks.
 
         Raises RuntimeError if the channel has been closed.
         """
-        with self._lock:
-            channel = self._channel
-            if channel is None:
-                raise RuntimeError("Channel is destroyed, no new queries allowed")
+        if in_flight is None:
+            in_flight = self._calls
+        with in_flight:
+            with self._lock:
+                channel = self._channel
+                if channel is None:
+                    raise RuntimeError("Channel is destroyed, no new queries allowed")
             yield channel[0]
 
     def _register_callback_handle(self, callback_data):
@@ -947,7 +1002,9 @@ class Channel:
         # query callback.
 
         # Schedule channel destruction
-        _shutdown_manager.destroy_channel(channel, self._sock_state_cb_handle)
+        _shutdown_manager.destroy_channel(
+            channel, self._sock_state_cb_handle, self._calls, self._waits
+        )
 
     def wait(self, timeout: float=None) -> bool:
         """
@@ -956,7 +1013,7 @@ class Channel:
         Args:
             timeout: Maximum time to wait in seconds. Use -1 for infinite wait.
         """
-        with self._capture_channel() as channel:
+        with self._capture_channel(self._waits) as channel:
             r = _lib.ares_queue_wait_empty(channel,  int(timeout * 1000) if timeout is not None and timeout >= 0 else -1)
         if r == _lib.ARES_SUCCESS:
             return True
