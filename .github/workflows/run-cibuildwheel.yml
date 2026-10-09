@@ -23,9 +23,11 @@ jobs:
       include: ${{ steps.set-matrix.outputs.include }}
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
       - name: Install cibuildwheel
-      # Nb. keep cibuildwheel version pin consistent with job below
-        run: pipx install cibuildwheel==3.4.1
+        run: python -m pip install --group wheels
       - id: set-matrix
         run: |
           MATRIX=$(
@@ -64,11 +66,16 @@ jobs:
       - name: Enable CPython prerelease
         if: ${{ inputs.prerelease-pythons }}
         run: echo "CIBW_ENABLE=cpython-prerelease" >> $GITHUB_ENV
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v4.2.0
+      - uses: actions/setup-python@v7
         with:
-          only: ${{ matrix.only }}
-          output-dir: dist
+          python-version: "3.x"
+      - name: Install cibuildwheel
+        run: python -m pip install --group wheels
+      - name: Build wheels
+        shell: bash
+        env:
+          BUILD_IDENTIFIER: ${{ matrix.only }}
+        run: python -m cibuildwheel --only "$BUILD_IDENTIFIER" --output-dir dist
       - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.only }}
