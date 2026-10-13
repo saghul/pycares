@@ -505,6 +505,7 @@ class Channel:
                  rotate: bool = False,
                  local_ip: Union[str, bytes, None] = None,
                  local_dev: Optional[str] = None,
+                 qcache_max_ttl: Optional[int] = None,
                  resolvconf_path: Union[str, bytes, None] = None) -> None:
 
         # Initialize _channel to None first to ensure __del__ doesn't fail
@@ -570,6 +571,10 @@ class Channel:
         if lookups:
             options.lookups = _ffi.new('char[]', ascii_bytes(lookups))
             optmask = optmask |  _lib.ARES_OPT_LOOKUPS
+        
+        if qcache_max_ttl is not None:
+            options.qcache_max_ttl = qcache_max_ttl
+            optmask = optmask |  _lib.ARES_OPT_QUERY_CACHE
 
         if domains:
             strs = [_ffi.new("char[]", ascii_bytes(i)) for i in domains]
