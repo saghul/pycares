@@ -9,7 +9,7 @@
 ====================================
 
 
-.. py:class:: Channel([flags, timeout, tries, ndots, tcp_port, udp_port, servers, domains, lookups, sock_state_cb, socket_send_buffer_size, socket_receive_buffer_size, rotate, local_ip, local_dev, resolvconf_path])
+.. py:class:: Channel([flags, timeout, tries, ndots, tcp_port, udp_port, servers, domains, lookups, sock_state_cb, socket_send_buffer_size, socket_receive_buffer_size, rotate, local_ip, local_dev, resolvconf_path, qcache_max_ttl])
 
     :param int flags: Flags controlling the behavior of the resolver. See ``constants``
         for available values.
@@ -56,6 +56,8 @@
     :param str local_dev: Sets the local network adapter to use for DNS operations. Linux only.
 
     :param str resolvconf_path: Path to resolv.conf, defaults to /etc/resolv.conf. Unix only.
+
+    :param int qcache_max_ttl: Max TTL in seconds to cache responses. Set to 0 to disable caching. c-ares default: 3600 (1 hour).
 
     The c-ares ``Channel`` provides asynchronous DNS operations.
 
