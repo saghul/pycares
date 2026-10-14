@@ -42,7 +42,7 @@ dependencies = [
 idna = ["idna >= 2.1"]
 
 [dependency-groups]
-wheels = ["cibuildwheel==4.2.0"]
+wheels = ["cibuildwheel==4.3.1"]
 
 [project.urls]
 Homepage = "http://github.com/saghul/pycares"
