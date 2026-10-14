@@ -20,6 +20,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Any, Callable, Literal, Optional, Dict, Union
 from queue import SimpleQueue
+from queue import Empty
 
 IP4 = tuple[str, int]
 IP6 = tuple[str, int, int, int]
@@ -437,22 +438,27 @@ class _ChannelShutdownManager:
         self._queue: SimpleQueue = SimpleQueue()
         self._thread: Optional[threading.Thread] = None
         self._start_lock = threading.Lock()
+        self._stop: bool = False
 
     def _run_safe_shutdown_loop(self) -> None:
         """Process channel destruction requests from the queue."""
-        while True:
-            # Block forever until we get a channel to destroy
-            ch, _ = self._queue.get()
-            channel = ch[0]
+        while not self._stop:
+            try:
+                # Block with a timeout until we get a channel to destroy
+                ch, _ = self._queue.get(timeout=0.1)
+                channel = ch[0]
 
-            # Cancel all pending queries - this will trigger callbacks with ARES_ECANCELLED
-            _lib.ares_cancel(channel)
+                # Cancel all pending queries - this will trigger callbacks with ARES_ECANCELLED
+                _lib.ares_cancel(channel)
 
-            # Wait for all queries to finish
-            _lib.ares_queue_wait_empty(channel, -1)
+                # Wait for all queries to finish
+                _lib.ares_queue_wait_empty(channel, -1)
 
-            # Destroy the channel
-            _lib.ares_destroy(channel)
+                # Destroy the channel
+                _lib.ares_destroy(channel)
+            except Empty:
+                # No channel to destroy yet
+                pass
 
     def start(self) -> None:
         """Start the background thread if not already started."""
@@ -462,6 +468,7 @@ class _ChannelShutdownManager:
             if self._thread is not None:
                 # Started by another thread while waiting for the lock
                 return
+            self._stop = False
             self._thread = threading.Thread(target=self._run_safe_shutdown_loop, daemon=True)
             self._thread.start()
 
@@ -478,6 +485,13 @@ class _ChannelShutdownManager:
         sequentially waiting for queries to end before each destruction.
         """
         self._queue.put((channel, sock_state_cb_handle))
+
+    def stop(self) -> None:
+        """Stop the background thread of the channel destruction manager"""
+        self._stop = True
+        if self._thread is not None:
+            self._thread.join()
+            self._thread = None
 
 
 # Global shutdown manager instance
@@ -946,8 +960,14 @@ class Channel:
         # NB: don't cancel queries here, it may lead to problem if done from a
         # query callback.
 
-        # Schedule channel destruction
-        _shutdown_manager.destroy_channel(channel, self._sock_state_cb_handle)
+        try:
+            # Make sure the shutdown manager is started
+            _shutdown_manager.start()
+            # Schedule channel destruction
+            _shutdown_manager.destroy_channel(channel, self._sock_state_cb_handle)
+        except PythonFinalizationError:
+            # Interpreter is shutting down, impossible to start the thread
+            pass
 
     def wait(self, timeout: float=None) -> bool:
         """
