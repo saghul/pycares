@@ -908,7 +908,8 @@ class DNSTest(unittest.TestCase):
         for record in self.result.answer:
             if type(record.data) == pycares.ARecordData:
                 self.assertNotEqual(record.data.addr, None)
-                self.assertGreater(record.ttl, 0)
+                # RFC 1035 §3.2.1: TTL 0 allows use for this transaction, but not caching
+                self.assertGreaterEqual(record.ttl, 0)
 
     def test_lookup(self):
         self.channel = pycares.Channel(

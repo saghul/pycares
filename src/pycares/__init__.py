@@ -442,7 +442,7 @@ class _ChannelShutdownManager:
         """Process channel destruction requests from the queue."""
         while True:
             # Block forever until we get a channel to destroy
-            ch, _ = self._queue.get()
+            ch, sock_state_cb_handle = self._queue.get()
             channel = ch[0]
 
             # Cancel all pending queries - this will trigger callbacks with ARES_ECANCELLED
@@ -453,6 +453,10 @@ class _ChannelShutdownManager:
 
             # Destroy the channel
             _lib.ares_destroy(channel)
+
+            # Keep the callback handle alive through native destruction, then
+            # release this iteration's objects before blocking for more work.
+            del ch, channel, sock_state_cb_handle
 
     def start(self) -> None:
         """Start the background thread if not already started."""
